@@ -2107,6 +2107,19 @@ footer{
 .lang-item .ln-en{ font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); margin-top: 2px; }
 .lang-item .ln-code{ font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); }
 
+/* Mobile: language dropdown becomes a centered modal-ish sheet */
+@media (max-width: 560px){
+  .lang-dropdown{
+    position: fixed;
+    top: auto; bottom: 16px;
+    inset-inline-end: 16px;
+    inset-inline-start: 16px;
+    width: auto;
+    max-height: 60vh;
+  }
+  .lang-list{ max-height: calc(60vh - 64px); }
+}
+
 /* ============================================================
    TRACK CARDS (Student / Graduate / Field / Corporate)
    ============================================================ */
@@ -9507,361 +9520,499 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
   ];
 
   // ====================================================
-  // CONTENT-BASED TRANSLATION SYSTEM (EXPANDED)
-  // Translates by matching Arabic source text → target language.
-  // Covers 300+ key UI strings across the whole site.
+  // CONTENT-BASED TRANSLATION SYSTEM (50 LANGUAGES)
+  // English = master dictionary (used as fallback for all minor langs).
+  // Major languages have their own dictionaries for core UI.
   // ====================================================
   const TRANSLATIONS = {
+    // ============================================================
+    // ENGLISH — MASTER DICTIONARY (fallback for all minor langs)
+    // ============================================================
     en: {
-      // === Nav ===
-      'الورشة': 'Workbench',
-      'الأكاديمية': 'Academy',
-      'الميدان': 'Field',
-      'الأكواد': 'Codes',
-      'المواد': 'Materials',
-      'المكتبة': 'Library',
-      'الوظائف': 'Careers',
-      'المجتمع': 'Community',
-      'الباقات': 'Pricing',
-      'المحلّل الذكي': 'AI Solver',
-      'الأدوات الحية': 'Live Tools',
-      'الأدوات الحاسبة': 'Calculators',
-      'المكتبة الهندسية': 'Engineering Library',
-      'البنية': 'Tech Stack',
-      'دخول': 'Login',
-      'ابدأ مجانًا': 'Start Free',
-      'ابدأ مجانًا ←': 'Start Free ←',
-      // === Primary Tabs ===
-      'الرئيسية': 'Home',
-      'للطلاب': 'Students',
-      'للخريجين': 'Graduates',
-      'المهندس الميداني': 'Field Engineer',
-      'الشركات والمؤسسات': 'Companies',
-      'المشاريع الكبرى': 'Mega Projects',
-      'B2B': 'B2B',
-      '1-5 سنوات': '1-5 years',
-      // === Hero ===
-      'الخبرة الميدانية،': 'years of field experience,',
-      'مصقولة بدقة': 'refined with',
-      'الذكاء الاصطناعي': 'AI precision',
-      'جرّب المحلّل الذكي': 'Try AI Solver',
-      'أدوات حسابية مباشرة': 'Live Calculators',
-      'معادلة موثّقة': 'documented equations',
-      'معيار دولي': 'international standards',
-      'دقة AI مُحقّقة': 'verified AI accuracy',
-      'تخصصًا هندسيًا': 'engineering disciplines',
-      // === Workbench (Software section) ===
-      'احترف الأدوات التي يستخدمها': 'Master the tools used by',
-      'المهندسون الحقيقيون': 'real engineers',
-      'برامج احترافية': 'Pro programs',
-      'درس تطبيقي': 'practical lessons',
-      'مشروع محلول': 'solved projects',
-      'دقة AI': 'AI accuracy',
-      'تخصص هندسي': 'engineering specialty',
-      'دعم فوري': 'instant support',
-      'ابدأ التعلم ←': 'Start Learning ←',
-      'المستوى:': 'Level:',
-      'مبتدئ → متقدم': 'Beginner → Advanced',
-      'متوسط → متقدم': 'Intermediate → Advanced',
-      'مبتدئ → متوسط': 'Beginner → Intermediate',
-      'كل المستويات': 'All Levels',
-      'الرسم الهندسي': 'Technical Drawing',
-      'الأساس': 'Foundation',
-      'جميع التخصصات': 'All disciplines',
-      'أساسي': 'Essential',
-      'مدني / إنشائي': 'Civil / Structural',
-      'معماري': 'Architectural',
-      'ميكانيكي': 'Mechanical',
-      'كهربائي': 'Electrical',
-      'مساحة': 'Surveying',
-      'بترولي': 'Petroleum',
-      'إنشائي': 'Structural',
-      'MEP': 'MEP',
-      'كهرميك': 'Electromechanical',
-      'صناعي': 'Industrial',
-      'فضاء': 'Aerospace',
-      'سيارات': 'Automotive',
-      'قوالب': 'Molds',
-      'إدارة مشاريع': 'Project Management',
-      'مقاولات': 'Contracting',
-      'نفط وغاز': 'Oil & Gas',
-      'بنية تحتية': 'Infrastructure',
-      'كهربائي / تحكم': 'Electrical / Control',
-      'ميكاترونكس': 'Mechatronics',
-      'بحث علمي': 'Research',
-      'AI/ML': 'AI/ML',
-      'مستخدم عالمي': 'global users',
-      'درس': 'lessons',
-      'رضا المتعلمين': 'learner satisfaction',
-      'مستخدم': 'users',
-      'متوافق': 'compliant',
-      'تحليل متكامل': 'integrated analysis',
-      'ترخيص نشط': 'active licenses',
-      'قالب جاهز': 'ready templates',
-      'المسار الحرج': 'Critical Path',
-      'TOOLBOX': 'TOOLBOX',
-      'DEEP LEARNING': 'DEEP LEARNING',
-      'تمرين تطبيقي': 'practical exercises',
-      'مساقط 2D→': 'projections 2D→',
-      'AI — واجه أي مشكلة في هذه البرامج': 'AI — Hit any problem in these programs',
-      'يحلّها خطوة بخطوة': 'and solve it step by step',
-      'اسأل الآن ⚡': 'Ask Now ⚡',
-      'تصفّح التخصصات': 'Browse Specialties',
-      // === Section titles & subtitles ===
-      'تخصصات هندسية بدقة': 'Engineering disciplines with',
-      'لا بمعرفة': "not generalist's",
-      'المختصّ': "specialist's precision",
-      'العام': 'knowledge',
-      'المحلّل الذكي —': 'AI Solver —',
-      'مراحل صارمة': 'rigorous stages',
-      'لكل حل': 'for every solution',
-      'أدوات حسابية حيّة —': 'Live calculators —',
-      'دقّة الجراح': "surgeon's precision",
-      'سرعة البرق': 'lightning speed',
-      'مكتبة الحاسبات': 'Calculator Library',
-      'الاحترافية': 'Professional',
-      'قواعد البيانات': 'Reference',
-      'المرجعية': 'Databases',
-      'نظام': 'System',
-      'المدفوعات والأرباح': 'Payments & Earnings',
-      'من الكود إلى': 'From code to',
-      'الإنترنت الحقيقي': 'real internet',
-      'المكتبة الهندسية الذكية —': 'Smart Engineering Library —',
-      'معرفة موثّقة': 'documented knowledge',
-      'لا اقتباسات مبعثرة': 'not scattered quotes',
-      'مجتمع مهني': 'Verified',
-      'معتمَد': 'Professional Community',
-      'لا منتدى عشوائي': 'not random forum',
-      'بنية تقنية بمعايير': 'Tech infrastructure with',
-      'المنشآت الحرجة': 'critical-system standards',
-      'باقات تناسب': 'Plans for',
-      'كل مهندس': 'every engineer',
-      'من الطالب إلى المؤسسة': 'from student to enterprise',
-      // === Calc library ===
-      'الكل': 'All',
-      'هيدروليك': 'Hydraulics',
-      'جيوتكنيك': 'Geotech',
-      'احسب': 'Calculate',
-      // === DB tabs ===
-      'مقاطع فولاذية': 'Steel Sections',
-      'حديد التسليح': 'Rebar',
-      'أنابيب': 'Pipes',
-      'كابلات كهربائية': 'Electrical Cables',
-      'خواص المواد': 'Material Properties',
-      'الأكواد المرجعية': 'Reference Codes',
-      // === Payments ===
-      'لوحة الأرباح': 'Earnings Dashboard',
-      'بوابات الدفع': 'Payment Gateways',
-      'ربط البنك': 'Bank Linking',
-      'الضرائب والقانون': 'Tax & Legal',
-      'إجمالي الإيرادات (الشهر)': 'Total Revenue (Month)',
-      'المعاملات الناجحة': 'Successful Transactions',
-      'متوسط قيمة الاشتراك': 'Average Subscription',
-      'رصيد جاهز للسحب': 'Available Balance',
-      'الإيرادات اليومية (آخر 30 يوماً)': 'Daily Revenue (Last 30 days)',
-      'آخر المعاملات': 'Recent Transactions',
-      'عرض الكل ←': 'View all →',
-      // === Deploy ===
-      'المعمارية': 'Architecture',
-      'الاستضافة': 'Hosting',
-      'الدومين + SSL': 'Domain + SSL',
-      'الإطلاق': 'Launch',
-      // === Pricing ===
-      'المجاني': 'Free',
-      'محترف': 'Pro',
-      'فريق': 'Team',
-      'مؤسسي': 'Enterprise',
-      'ابدأ التجربة': 'Start Trial',
-      'اشترك': 'Subscribe',
-      'تواصل معنا': 'Contact Us',
-      // === Footer ===
-      'المنتج': 'Product',
-      'التخصصات': 'Disciplines',
-      'الشركة': 'Company',
-      'من نحن': 'About Us',
-      'المهندسون': 'Engineers',
-      'الأبحاث': 'Research',
-      'المدوّنة': 'Blog',
-      'سياسة الخصوصية': 'Privacy Policy',
-      'شروط الاستخدام': 'Terms of Service',
-      'جميع الحقوق محفوظة': 'All rights reserved',
-      // === Common terms ===
-      'بحث': 'Search',
-      'حفظ': 'Save',
-      'إلغاء': 'Cancel',
-      'تأكيد': 'Confirm',
-      'إغلاق': 'Close',
-      'تحميل': 'Download',
-      'إرسال': 'Send',
-      'حذف': 'Delete',
-      'تعديل': 'Edit',
-      'عرض': 'View',
-      'المزيد': 'More',
-      'التالي': 'Next',
-      'السابق': 'Previous',
-      'موصى به': 'Recommended',
-      'جديد': 'New',
-      'الأقوى': 'Most Popular',
-      'الأرخص': 'Cheapest',
-      'الأسرع': 'Fastest',
-      // === Common words in content ===
-      'سنوياً': 'yearly',
-      'شهرياً': 'monthly',
-      'يومياً': 'daily',
-      'مجاناً': 'free',
-      'حر': 'free',
-      'مدفوع': 'paid',
-      'يحتاج إعداد': 'needs setup',
-      'مفعّل': 'active',
-      'دولي': 'international',
-      'محلي': 'local',
-      'إقليمي': 'regional',
-      'السعودية': 'Saudi Arabia',
-      'الإمارات': 'UAE',
-      'الكويت': 'Kuwait',
-      'قطر': 'Qatar',
-      'البحرين': 'Bahrain',
-      'مصر': 'Egypt',
-      'الأردن': 'Jordan',
-      'الكل ': 'All ',
+      // Nav
+      'الورشة':'Workbench','الأكاديمية':'Academy','الميدان':'Field','الأكواد':'Codes',
+      'المواد':'Materials','المكتبة':'Library','الوظائف':'Careers','المجتمع':'Community',
+      'الباقات':'Pricing','المحلّل الذكي':'AI Solver','الأدوات الحية':'Live Tools',
+      'الأدوات الحاسبة':'Calculators','المكتبة الهندسية':'Engineering Library',
+      'البنية':'Tech Stack','دخول':'Login','ابدأ مجانًا':'Start Free','ابدأ مجانًا ←':'Start Free →',
+      'اختر اللغة':'Choose language','ابحث عن لغة...':'Search language...','القائمة':'Menu','إغلاق':'Close',
+      'EngHub Pro · القائمة':'EngHub Pro · Menu',
+      // Tabs
+      'الرئيسية':'Home','للطلاب':'Students','للخريجين':'Graduates',
+      'المهندس الميداني':'Field Engineer','الشركات والمؤسسات':'Companies',
+      'المشاريع الكبرى':'Mega Projects','B2B':'B2B','1-5 سنوات':'1-5 years',
+      // Hero
+      'سنة من':'years of','الخبرة الميدانية،':'field experience,','مصقولة بدقة':'refined with',
+      'الذكاء الاصطناعي':'AI precision','جرّب المحلّل الذكي':'Try AI Solver',
+      'أدوات حسابية مباشرة':'Live Calculators','معادلة موثّقة':'documented equations',
+      'معيار دولي':'international standards','دقة AI مُحقّقة':'verified AI accuracy',
+      'تخصصًا هندسيًا':'engineering disciplines','تخصص هندسي':'engineering specialty',
+      'منصة هندسية متكاملة لـ':'Complete engineering platform for',
+      'هندسيًا، تجمع بين خبرة الميدان وقوة الحوسبة:':'engineering disciplines, combining field expertise with computational power:',
+      'محلّل مشاكل ذكي، أدوات حسابية حيّة بدقة المعايير الدولية':'an intelligent problem solver, live calculators with international-standard precision',
+      'ومجتمع مهني مُعتمَد.':'and a certified professional community.',
+      'تخصصًا':'disciplines',
+      // Status / common UI
+      'يعمل بدون نت':'works offline','دولة نشطة':'active countries',
+      'دعم ميداني':'field support','قائمة فحص':'checklists','قالب تقرير':'report templates',
+      'قيمة مُدارة':'value managed','مثال محلول':'solved examples','محاكاة مختبر':'lab simulations',
+      'مشروع تخرج':'graduation projects','مشروع عملاق':'mega projects','مقرر دراسي':'courses',
+      'مهندس متزامن':'concurrent engineers',
+      // Sections
+      'تخصصات هندسية بدقة':'Engineering disciplines with',
+      'المختصّ':"specialist's precision",'لا بمعرفة':"not generalist's",'العام':'knowledge',
+      'كل تخصص له نماذج مدرّبة على آلاف المسائل المرجعية، ومعاييره الخاصة (دولية/إقليمية/محلية)، وأدواته الحاسبة المخصصة.':
+        'Each discipline has models trained on thousands of reference problems, its own standards (international/regional/local), and dedicated calculators.',
+      'احترف الأدوات التي يستخدمها':'Master the tools used by',
+      'المهندسون الحقيقيون':'real engineers',
+      'تعلّم 6 برامج هندسية — من رسم أول خط في AutoCAD إلى تحليل العناصر المحدودة في SolidWorks — باحترافية بتوجيه ذكاء اصطناعي متخصص، مع أمثلة واقعية ومشاريع تطبيقية.':
+        'Learn 6 engineering programs — from drawing the first line in AutoCAD to finite element analysis in SolidWorks — professionally guided by specialized AI, with real-world examples and applied projects.',
+      'المحلّل الذكي —':'AI Solver —','مراحل صارمة':'rigorous stages','لكل حل':'for every solution',
+      'من فهم المسألة، مرورًا بالتحقق المتقاطع، وصولًا للتقرير الموقّع رقميًا والمراجَع بشريًا. لا حلول من الذاكرة — كل خطوة موثّقة بمرجعها.':
+        'From understanding the problem, through cross-verification, to a digitally signed, human-reviewed report. No solutions from memory — every step is documented with its reference.',
+      'أدوات حسابية حيّة —':'Live calculators —','دقّة الجراح':"surgeon's precision",'سرعة البرق':'lightning speed',
+      'حاسبات تفاعلية تنفّذ معادلات المعايير الدولية مباشرة في متصفحك. لا حاجة لـ ETABS أو SAP2000 لحساب سريع.':
+        'Interactive calculators that execute international-standard equations directly in your browser. No need for ETABS or SAP2000 for a quick calculation.',
+      'مكتبة الحاسبات':'Calculator Library','الاحترافية':'Professional',
+      '30+ حاسبة هندسية معتمدة عالمياً (ACI, AISC, IEC, ASHRAE)، مصنّفة حسب التخصص. كل حاسبة تأتي بالمعادلة المرجعية والكود المعياري المستخدم.':
+        '30+ globally certified engineering calculators (ACI, AISC, IEC, ASHRAE), classified by discipline. Each calculator comes with the reference equation and the standard code used.',
+      'قواعد البيانات':'Reference','المرجعية':'Databases',
+      '6 قواعد بيانات هندسية معتمدة (AISC, ASTM, IEC, ASHRAE) مع بحث فوري وفرز للأعمدة. كل البيانات مأخوذة من المعايير الأصلية 2026.':
+        '6 certified engineering databases (AISC, ASTM, IEC, ASHRAE) with instant search and column sorting. All data drawn from original 2026 standards.',
+      'نظام':'System','المدفوعات والأرباح':'Payments & Earnings',
+      'لوحة تحكم كاملة لاستلام أرباح الموقع: بوابات دفع متعددة (Stripe + PayPal + STC Pay + مدى)، ربط بنكي مباشر، إعداد الضرائب، وتتبع المعاملات.':
+        'A complete dashboard for receiving site earnings: multiple payment gateways (Stripe + PayPal + STC Pay + Mada), direct bank linking, tax setup, and transaction tracking.',
+      'من الكود إلى':'From code to','الإنترنت الحقيقي':'real internet',
+      'دليل تقني كامل لتشغيل الموقع على إنترنت حقيقي: Backend، قاعدة البيانات، الاستضافة، الدومين، SSL، CI/CD، والإطلاق التجريبي ثم الإطلاق الفعلي.':
+        'A complete technical guide to running the site on the real internet: Backend, database, hosting, domain, SSL, CI/CD, then beta and full launch.',
+      'المكتبة الهندسية الذكية —':'Smart Engineering Library —',
+      'معرفة موثّقة':'documented knowledge','لا اقتباسات مبعثرة':'not scattered quotes',
+      'كل معادلة مرتبطة بمصدرها، نطاق صلاحيتها، والمعيار المرجعي. بحث دلالي يفهم السياق الهندسي، لا الكلمات فقط.':
+        'Every equation is linked to its source, validity range, and reference standard. Semantic search that understands engineering context, not just keywords.',
+      'مجتمع مهني':'Verified','معتمَد':'Professional Community','لا منتدى عشوائي':'not random forum',
+      'تحقّق من الهوية المهنية، مراجعة الأقران الإلزامية، شارات تخصصية مرتبطة بالنقابات الهندسية في 47 دولة.':
+        'Professional identity verification, mandatory peer review, specialized badges linked to engineering associations in 47 countries.',
+      'بنية تقنية بمعايير':'Tech infrastructure with','المنشآت الحرجة':'critical-system standards',
+      'باقات تناسب':'Plans for','كل مهندس':'every engineer','من الطالب إلى المؤسسة':'from student to enterprise',
+      'ابدأ مجانًا بدون بطاقة. ارتقِ عندما تحتاج. ألغِ في أي وقت.':
+        'Start free without a card. Upgrade when you need to. Cancel anytime.',
+      // Software section
+      'احترف الأدوات التي يستخدمها ':'Master the tools used by ',
+      'برامج احترافية':'Pro programs','درس تطبيقي':'practical lessons','مشروع محلول':'solved projects',
+      'دقة AI':'AI accuracy','دعم فوري':'instant support','ابدأ التعلم ←':'Start Learning →',
+      'المستوى:':'Level:','مبتدئ → متقدم':'Beginner → Advanced',
+      'متوسط → متقدم':'Intermediate → Advanced','مبتدئ → متوسط':'Beginner → Intermediate',
+      'كل المستويات':'All Levels','الرسم الهندسي':'Technical Drawing',
+      'الأساس':'Foundation','جميع التخصصات':'All disciplines','أساسي':'Essential',
+      'مدني / إنشائي':'Civil / Structural','معماري':'Architectural','ميكانيكي':'Mechanical',
+      'كهربائي':'Electrical','مساحة':'Surveying','بترولي':'Petroleum','إنشائي':'Structural',
+      'MEP':'MEP','كهرميك':'Electromechanical','صناعي':'Industrial','فضاء':'Aerospace',
+      'سيارات':'Automotive','قوالب':'Molds','إدارة مشاريع':'Project Management',
+      'مقاولات':'Contracting','نفط وغاز':'Oil & Gas','بنية تحتية':'Infrastructure',
+      'كهربائي / تحكم':'Electrical / Control','ميكاترونكس':'Mechatronics','بحث علمي':'Research',
+      'AI/ML':'AI/ML','مستخدم عالمي':'global users','درس':'lessons','رضا المتعلمين':'learner satisfaction',
+      'مستخدم':'users','متوافق':'compliant','تحليل متكامل':'integrated analysis',
+      'ترخيص نشط':'active licenses','قالب جاهز':'ready templates','المسار الحرج':'Critical Path',
+      'TOOLBOX':'TOOLBOX','DEEP LEARNING':'DEEP LEARNING','تمرين تطبيقي':'practical exercises',
+      'مساقط 2D→':'projections 2D→','AI — واجه أي مشكلة في هذه البرامج':'AI — Hit any problem in these programs',
+      'يحلّها خطوة بخطوة':'and solve it step by step',
+      'اسأل الآن ⚡':'Ask Now ⚡','تصفّح التخصصات':'Browse Specialties',
+      // Calc library
+      'الكل':'All','هيدروليك':'Hydraulics','جيوتكنيك':'Geotech','احسب':'Calculate',
+      // DB tabs
+      'مقاطع فولاذية':'Steel Sections','حديد التسليح':'Rebar','أنابيب':'Pipes',
+      'كابلات كهربائية':'Electrical Cables','خواص المواد':'Material Properties',
+      'الأكواد المرجعية':'Reference Codes',
+      // Payments
+      'لوحة الأرباح':'Earnings Dashboard','بوابات الدفع':'Payment Gateways',
+      'ربط البنك':'Bank Linking','الضرائب والقانون':'Tax & Legal',
+      'إجمالي الإيرادات (الشهر)':'Total Revenue (Month)','المعاملات الناجحة':'Successful Transactions',
+      'متوسط قيمة الاشتراك':'Average Subscription','رصيد جاهز للسحب':'Available Balance',
+      'الإيرادات اليومية (آخر 30 يوماً)':'Daily Revenue (Last 30 days)','آخر المعاملات':'Recent Transactions',
+      'عرض الكل ←':'View all →',
+      // Deploy
+      'المعمارية':'Architecture','الاستضافة':'Hosting','الدومين + SSL':'Domain + SSL','الإطلاق':'Launch',
+      // Pricing
+      'المجاني':'Free','محترف':'Pro','فريق':'Team','مؤسسي':'Enterprise',
+      'ابدأ التجربة':'Start Trial','اشترك':'Subscribe','تواصل معنا':'Contact Us',
+      'FREE TIER · للطلاب والمبتدئين':'FREE TIER · For students & beginners',
+      'PROFESSIONAL · للمهندس الفرد':'PROFESSIONAL · For solo engineers',
+      'TEAM · للمكاتب الهندسية':'TEAM · For engineering offices',
+      'ENTERPRISE · للشركات الكبرى':'ENTERPRISE · For large enterprises',
+      // Footer
+      'المنتج':'Product','التخصصات':'Disciplines','الشركة':'Company','من نحن':'About Us',
+      'المهندسون':'Engineers','الأبحاث':'Research','المدوّنة':'Blog',
+      'سياسة الخصوصية':'Privacy Policy','شروط الاستخدام':'Terms of Service',
+      'جميع الحقوق محفوظة':'All rights reserved',
+      // Common terms
+      'بحث':'Search','حفظ':'Save','إلغاء':'Cancel','تأكيد':'Confirm',
+      'تحميل':'Download','إرسال':'Send','حذف':'Delete','تعديل':'Edit','عرض':'View',
+      'المزيد':'More','التالي':'Next','السابق':'Previous',
+      'موصى به':'Recommended','جديد':'New','الأقوى':'Most Popular',
+      'الأرخص':'Cheapest','الأسرع':'Fastest',
+      // Common words
+      'سنوياً':'yearly','شهرياً':'monthly','يومياً':'daily','مجاناً':'free','حر':'free',
+      'مدفوع':'paid','يحتاج إعداد':'needs setup','مفعّل':'active',
+      'دولي':'international','محلي':'local','إقليمي':'regional',
+      'السعودية':'Saudi Arabia','الإمارات':'UAE','الكويت':'Kuwait','قطر':'Qatar',
+      'البحرين':'Bahrain','مصر':'Egypt','الأردن':'Jordan','الكل ':'All ',
+      // Curriculum / student
+      'المنهج':'Curriculum','أدوات صُمّمت':'Tools designed','مشاريع التخرج —':'Graduation Projects —',
+      'شهادات احترافية —':'Professional Certifications —','أدوات بناء':'Build tools',
+      'قوالب جاهزة':'Ready templates','خدمات تناسب':'Services for',
+      // Common in content
+      'الساعة':'hour','اليوم':'today','نشط':'active','معطل':'inactive',
+      'مدير':'Admin','مستخدم جديد':'new user','مستويات':'levels',
+      'مدة الدراسة':'Study duration','سنوات':'years','شهور':'months',
+      'الأرباح':'Earnings','المصاريف':'Expenses','الرصيد':'Balance','صافي':'Net',
+      'إجمالي':'Total','المتاح':'Available','معلّق':'Pending','مكتمل':'Completed',
+      'فشل':'Failed','قيد المعالجة':'Processing',
+      // Common pricing
+      'الأكثر شعبية':'Most Popular','الأفضل قيمة':'Best Value',
+      'دعم 24/7':'24/7 Support','دعم متميز':'Premium Support',
+      'بدون حدود':'Unlimited','حتى':'Up to','تجربة مجانية':'Free Trial',
+      // Misc UI
+      'حسناً':'OK','نعم':'Yes','لا':'No','رجوع':'Back','تخطي':'Skip',
+      'متابعة':'Continue','ابدأ':'Start','انتهى':'Finished',
+      'تفاصيل':'Details','إعدادات':'Settings','الملف الشخصي':'Profile',
+      'الإشعارات':'Notifications','الخروج':'Logout','الدخول':'Sign In',
+      'إنشاء حساب':'Create Account','نسيت كلمة المرور؟':'Forgot password?',
+      'البريد الإلكتروني':'Email','كلمة المرور':'Password','الاسم':'Name',
+      'رقم الهاتف':'Phone','الدولة':'Country','المدينة':'City',
+      // Engineering common
+      'الحمل':'Load','الإجهاد':'Stress','الانفعال':'Strain','العزم':'Moment',
+      'القوة':'Force','الطاقة':'Energy','الضغط':'Pressure','درجة الحرارة':'Temperature',
+      'السرعة':'Speed','التردد':'Frequency','الجهد':'Voltage','التيار':'Current',
+      'المقاومة':'Resistance','الكثافة':'Density','الحجم':'Volume','المساحة':'Area',
+      'الطول':'Length','العرض':'Width','الارتفاع':'Height','الوزن':'Weight',
+      'الكتلة':'Mass','المعامل':'Coefficient','النسبة':'Ratio','المتوسط':'Average',
+      'القيمة':'Value','الوحدة':'Unit','النتيجة':'Result',
+      'الإدخال':'Input','الإخراج':'Output','الصيغة':'Formula',
+      'المعادلة':'Equation','المتغير':'Variable','الثابت':'Constant',
+      // Engineering tools
+      'الحاسبات':'Calculators','الأدوات':'Tools','المعايير':'Standards','المراجع':'References',
+      'المخططات':'Diagrams','الرسومات':'Drawings','المواصفات':'Specifications',
+      'الجداول':'Tables','الأبعاد':'Dimensions','الإحداثيات':'Coordinates',
+      'النموذج':'Model','التحليل':'Analysis','التصميم':'Design','الفحص':'Inspection',
+      // Time/date
+      'اليوم ':'Today ','أمس':'Yesterday','غداً':'Tomorrow','الأسبوع':'Week','الشهر':'Month','السنة':'Year',
+      'دقيقة':'minute','دقائق':'minutes','ساعة':'hour','ساعات':'hours','يوم':'day','أيام':'days',
+      // Status
+      'متصل':'Online','غير متصل':'Offline','جاري':'In Progress','منتهي':'Done',
+      'نجاح':'Success','خطأ':'Error','تحذير':'Warning','معلومة':'Info',
     },
 
+    // ============================================================
+    // ARABIC = source (no translation)
+    // ============================================================
+    ar: {},
+
+    // ============================================================
+    // CORE LANGUAGES — comprehensive translations
+    // ============================================================
     fr: {
-      // Nav
-      'الورشة': 'Atelier', 'الأكاديمية': 'Académie', 'الميدان': 'Terrain',
-      'الأكواد': 'Codes', 'المواد': 'Matériaux', 'المكتبة': 'Bibliothèque',
-      'الوظائف': 'Carrières', 'المجتمع': 'Communauté', 'الباقات': 'Tarifs',
-      'المحلّل الذكي': 'Solveur IA', 'الأدوات الحية': 'Outils',
-      'البنية': 'Stack', 'دخول': 'Connexion', 'ابدأ مجانًا': 'Essai gratuit',
-      // Tabs
-      'الرئيسية': 'Accueil', 'للطلاب': 'Étudiants', 'للخريجين': 'Diplômés',
-      'المهندس الميداني': 'Ingénieur Terrain', 'الشركات والمؤسسات': 'Entreprises',
-      'المشاريع الكبرى': 'Méga Projets',
-      // Workbench
-      'الرسم الهندسي': 'Dessin Technique', 'برامج احترافية': 'Logiciels Pro',
-      'مشروع محلول': 'projets résolus', 'دعم فوري': 'support instantané',
-      'ابدأ التعلم ←': 'Commencer ←', 'المستوى:': 'Niveau:',
-      'احترف الأدوات التي يستخدمها': 'Maîtrisez les outils utilisés par',
-      'المهندسون الحقيقيون': 'de vrais ingénieurs',
-      // Common
-      'احسب': 'Calculer', 'بحث': 'Rechercher', 'حفظ': 'Enregistrer',
-      'إلغاء': 'Annuler', 'إغلاق': 'Fermer', 'تحميل': 'Télécharger',
-      'الكل': 'Tous', 'إنشائي': 'Structurel', 'ميكانيكي': 'Mécanique',
-      'كهربائي': 'Électrique', 'هيدروليك': 'Hydraulique', 'جيوتكنيك': 'Géotechnique',
-      'المعمارية': 'Architecture', 'الاستضافة': 'Hébergement', 'الإطلاق': 'Lancement',
-      'المجاني': 'Gratuit', 'محترف': 'Pro', 'فريق': 'Équipe', 'مؤسسي': 'Entreprise',
-      'موصى به': 'Recommandé', 'لوحة الأرباح': 'Revenus',
-      'بوابات الدفع': 'Paiements', 'ربط البنك': 'Lier la Banque',
+      'الورشة':'Atelier','الأكاديمية':'Académie','الميدان':'Terrain','الأكواد':'Codes',
+      'المواد':'Matériaux','المكتبة':'Bibliothèque','الوظائف':'Carrières','المجتمع':'Communauté',
+      'الباقات':'Tarifs','المحلّل الذكي':'Solveur IA','الأدوات الحية':'Outils',
+      'البنية':'Stack','دخول':'Connexion','ابدأ مجانًا':'Essai gratuit','اختر اللغة':'Choisir la langue',
+      'القائمة':'Menu','إغلاق':'Fermer','EngHub Pro · القائمة':'EngHub Pro · Menu',
+      'الرئيسية':'Accueil','للطلاب':'Étudiants','للخريجين':'Diplômés',
+      'المهندس الميداني':'Ingénieur Terrain','الشركات والمؤسسات':'Entreprises',
+      'المشاريع الكبرى':'Méga Projets','1-5 سنوات':'1-5 ans',
+      'سنة من':'années de','الخبرة الميدانية،':"d'expérience terrain,",
+      'مصقولة بدقة':'affinées par','الذكاء الاصطناعي':"l'IA",
+      'جرّب المحلّل الذكي':"Essayer l'IA",'أدوات حسابية مباشرة':'Calculatrices en direct',
+      'معادلة موثّقة':'équations','معيار دولي':'normes internationales',
+      'دقة AI مُحقّقة':'précision IA','تخصصًا هندسيًا':'disciplines',
+      'الرسم الهندسي':'Dessin Technique','برامج احترافية':'Logiciels Pro',
+      'مشروع محلول':'projets résolus','دعم فوري':'support instantané',
+      'ابدأ التعلم ←':'Commencer →','المستوى:':'Niveau:',
+      'احترف الأدوات التي يستخدمها':'Maîtrisez les outils utilisés par',
+      'المهندسون الحقيقيون':'les vrais ingénieurs',
+      'احسب':'Calculer','بحث':'Rechercher','حفظ':'Enregistrer','إلغاء':'Annuler',
+      'تحميل':'Télécharger','الكل':'Tous','إنشائي':'Structurel','ميكانيكي':'Mécanique',
+      'كهربائي':'Électrique','هيدروليك':'Hydraulique','جيوتكنيك':'Géotechnique',
+      'المعمارية':'Architecture','الاستضافة':'Hébergement','الإطلاق':'Lancement',
+      'المجاني':'Gratuit','محترف':'Pro','فريق':'Équipe','مؤسسي':'Entreprise',
+      'موصى به':'Recommandé','جديد':'Nouveau','لوحة الأرباح':'Revenus',
+      'بوابات الدفع':'Paiements','ربط البنك':'Lier la Banque',
+      'المنتج':'Produit','التخصصات':'Disciplines','الشركة':'Entreprise','من نحن':'À propos',
+      'المهندسون':'Ingénieurs','الأبحاث':'Recherche','المدوّنة':'Blog',
+      'سياسة الخصوصية':'Confidentialité','شروط الاستخدام':"Conditions d'utilisation",
+      'جميع الحقوق محفوظة':'Tous droits réservés','شهرياً':'/mois','سنوياً':'/an',
+      'تواصل معنا':'Contactez-nous','اشترك':'S\'abonner','ابدأ التجربة':"Commencer l'essai",
     },
 
     es: {
-      'الورشة': 'Taller', 'الأكاديمية': 'Academia', 'الميدان': 'Campo',
-      'الأكواد': 'Códigos', 'المواد': 'Materiales', 'المكتبة': 'Biblioteca',
-      'الوظائف': 'Carreras', 'المجتمع': 'Comunidad', 'الباقات': 'Precios',
-      'المحلّل الذكي': 'Solucionador IA', 'الأدوات الحية': 'Herramientas',
-      'البنية': 'Tecnología', 'دخول': 'Iniciar Sesión', 'ابدأ مجانًا': 'Prueba Gratis',
-      'الرئيسية': 'Inicio', 'للطلاب': 'Estudiantes', 'للخريجين': 'Graduados',
-      'المهندس الميداني': 'Ingeniero de Campo', 'الشركات والمؤسسات': 'Empresas',
-      'المشاريع الكبرى': 'Mega Proyectos',
-      'الرسم الهندسي': 'Dibujo Técnico',
-      'احسب': 'Calcular', 'بحث': 'Buscar', 'حفظ': 'Guardar', 'إلغاء': 'Cancelar',
-      'الكل': 'Todos', 'إنشائي': 'Estructural', 'ميكانيكي': 'Mecánico',
-      'كهربائي': 'Eléctrico', 'المجاني': 'Gratis', 'محترف': 'Pro',
-      'فريق': 'Equipo', 'مؤسسي': 'Empresarial', 'موصى به': 'Recomendado',
-      'لوحة الأرباح': 'Panel de Ingresos', 'بوابات الدفع': 'Pasarelas de Pago',
-      'ربط البنك': 'Vincular Banco',
+      'الورشة':'Taller','الأكاديمية':'Academia','الميدان':'Campo','الأكواد':'Códigos',
+      'المواد':'Materiales','المكتبة':'Biblioteca','الوظائف':'Carreras','المجتمع':'Comunidad',
+      'الباقات':'Precios','المحلّل الذكي':'Solucionador IA','الأدوات الحية':'Herramientas',
+      'البنية':'Tecnología','دخول':'Iniciar Sesión','ابدأ مجانًا':'Prueba Gratis',
+      'اختر اللغة':'Elegir idioma','القائمة':'Menú','إغلاق':'Cerrar',
+      'الرئيسية':'Inicio','للطلاب':'Estudiantes','للخريجين':'Graduados',
+      'المهندس الميداني':'Ingeniero de Campo','الشركات والمؤسسات':'Empresas',
+      'المشاريع الكبرى':'Mega Proyectos','1-5 سنوات':'1-5 años',
+      'سنة من':'años de','الخبرة الميدانية،':'experiencia de campo,',
+      'مصقولة بدقة':'refinada con','الذكاء الاصطناعي':'IA',
+      'جرّب المحلّل الذكي':'Probar IA','أدوات حسابية مباشرة':'Calculadoras',
+      'الرسم الهندسي':'Dibujo Técnico','احسب':'Calcular','بحث':'Buscar','حفظ':'Guardar',
+      'إلغاء':'Cancelar','الكل':'Todos','إنشائي':'Estructural','ميكانيكي':'Mecánico',
+      'كهربائي':'Eléctrico','المجاني':'Gratis','محترف':'Pro','فريق':'Equipo',
+      'مؤسسي':'Empresarial','موصى به':'Recomendado','جديد':'Nuevo',
+      'لوحة الأرباح':'Ingresos','بوابات الدفع':'Pasarelas de Pago','ربط البنك':'Vincular Banco',
+      'المنتج':'Producto','الشركة':'Empresa','من نحن':'Sobre Nosotros',
+      'سياسة الخصوصية':'Privacidad','جميع الحقوق محفوظة':'Todos los derechos reservados',
+      'شهرياً':'/mes','سنوياً':'/año','تواصل معنا':'Contáctanos','اشترك':'Suscribirse',
     },
 
     de: {
-      'الورشة': 'Werkstatt', 'الأكاديمية': 'Akademie', 'الميدان': 'Feld',
-      'الأكواد': 'Normen', 'المواد': 'Materialien', 'المكتبة': 'Bibliothek',
-      'الوظائف': 'Karriere', 'المجتمع': 'Gemeinschaft', 'الباقات': 'Preise',
-      'المحلّل الذكي': 'KI-Löser', 'الأدوات الحية': 'Werkzeuge',
-      'البنية': 'Technologie', 'دخول': 'Anmelden', 'ابدأ مجانًا': 'Kostenlos Starten',
-      'الرئيسية': 'Startseite', 'للطلاب': 'Studenten', 'للخريجين': 'Absolventen',
-      'المهندس الميداني': 'Feldingenieur', 'الشركات والمؤسسات': 'Unternehmen',
-      'المشاريع الكبرى': 'Großprojekte',
-      'الرسم الهندسي': 'Technisches Zeichnen',
-      'احسب': 'Berechnen', 'بحث': 'Suchen', 'حفظ': 'Speichern', 'إلغاء': 'Abbrechen',
-      'الكل': 'Alle', 'إنشائي': 'Strukturell', 'ميكانيكي': 'Mechanisch',
-      'كهربائي': 'Elektrisch', 'المجاني': 'Kostenlos', 'محترف': 'Pro',
-      'فريق': 'Team', 'مؤسسي': 'Unternehmen', 'موصى به': 'Empfohlen',
-      'لوحة الأرباح': 'Einnahmen', 'بوابات الدفع': 'Zahlungsanbieter',
+      'الورشة':'Werkstatt','الأكاديمية':'Akademie','الميدان':'Feld','الأكواد':'Normen',
+      'المواد':'Materialien','المكتبة':'Bibliothek','الوظائف':'Karriere','المجتمع':'Gemeinschaft',
+      'الباقات':'Preise','المحلّل الذكي':'KI-Löser','الأدوات الحية':'Werkzeuge',
+      'البنية':'Technologie','دخول':'Anmelden','ابدأ مجانًا':'Kostenlos Starten',
+      'اختر اللغة':'Sprache wählen','القائمة':'Menü','إغلاق':'Schließen',
+      'الرئيسية':'Startseite','للطلاب':'Studenten','للخريجين':'Absolventen',
+      'المهندس الميداني':'Feldingenieur','الشركات والمؤسسات':'Unternehmen',
+      'المشاريع الكبرى':'Großprojekte','1-5 سنوات':'1-5 Jahre',
+      'سنة من':'Jahre','الخبرة الميدانية،':'Feldpraxis,','مصقولة بدقة':'verfeinert durch',
+      'الذكاء الاصطناعي':'KI','جرّب المحلّل الذكي':'KI testen',
+      'أدوات حسابية مباشرة':'Rechner','الرسم الهندسي':'Technisches Zeichnen',
+      'احسب':'Berechnen','بحث':'Suchen','حفظ':'Speichern','إلغاء':'Abbrechen',
+      'الكل':'Alle','إنشائي':'Strukturell','ميكانيكي':'Mechanisch','كهربائي':'Elektrisch',
+      'المجاني':'Kostenlos','محترف':'Pro','فريق':'Team','مؤسسي':'Unternehmen',
+      'موصى به':'Empfohlen','جديد':'Neu','لوحة الأرباح':'Einnahmen',
+      'بوابات الدفع':'Zahlungsanbieter','المنتج':'Produkt','الشركة':'Unternehmen',
+      'من نحن':'Über uns','سياسة الخصوصية':'Datenschutz',
+      'جميع الحقوق محفوظة':'Alle Rechte vorbehalten','شهرياً':'/Monat','سنوياً':'/Jahr',
+      'تواصل معنا':'Kontakt','اشترك':'Abonnieren',
     },
 
     zh: {
-      'الورشة': '工作台', 'الأكاديمية': '学院', 'الميدان': '现场',
-      'الأكواد': '规范', 'المواد': '材料', 'المكتبة': '图书馆',
-      'الوظائف': '招聘', 'المجتمع': '社区', 'الباقات': '价格',
-      'المحلّل الذكي': 'AI 求解器', 'الأدوات الحية': '工具',
-      'البنية': '技术栈', 'دخول': '登录', 'ابدأ مجانًا': '免费开始',
-      'الرئيسية': '主页', 'للطلاب': '学生', 'للخريجين': '毕业生',
-      'المهندس الميداني': '现场工程师', 'الشركات والمؤسسات': '公司',
-      'المشاريع الكبرى': '大型项目',
-      'الرسم الهندسي': '工程制图',
-      'احسب': '计算', 'بحث': '搜索', 'حفظ': '保存', 'إلغاء': '取消',
-      'الكل': '全部', 'إنشائي': '结构', 'ميكانيكي': '机械', 'كهربائي': '电气',
-      'المجاني': '免费', 'محترف': '专业版', 'فريق': '团队', 'مؤسسي': '企业版',
-      'موصى به': '推荐',
+      'الورشة':'工作台','الأكاديمية':'学院','الميدان':'现场','الأكواد':'规范',
+      'المواد':'材料','المكتبة':'图书馆','الوظائف':'招聘','المجتمع':'社区',
+      'الباقات':'价格','المحلّل الذكي':'AI 求解器','الأدوات الحية':'工具',
+      'البنية':'技术栈','دخول':'登录','ابدأ مجانًا':'免费开始',
+      'اختر اللغة':'选择语言','القائمة':'菜单','إغلاق':'关闭',
+      'الرئيسية':'主页','للطلاب':'学生','للخريجين':'毕业生',
+      'المهندس الميداني':'现场工程师','الشركات والمؤسسات':'公司',
+      'المشاريع الكبرى':'大型项目','1-5 سنوات':'1-5 年',
+      'سنة من':'年','الخبرة الميدانية،':'现场经验,','مصقولة بدقة':'结合',
+      'الذكاء الاصطناعي':'人工智能','جرّب المحلّل الذكي':'试用 AI',
+      'أدوات حسابية مباشرة':'实时计算器','الرسم الهندسي':'工程制图',
+      'احسب':'计算','بحث':'搜索','حفظ':'保存','إلغاء':'取消',
+      'الكل':'全部','إنشائي':'结构','ميكانيكي':'机械','كهربائي':'电气',
+      'المجاني':'免费','محترف':'专业版','فريق':'团队','مؤسسي':'企业版',
+      'موصى به':'推荐','جديد':'新','لوحة الأرباح':'收入','بوابات الدفع':'支付',
+      'المنتج':'产品','الشركة':'公司','من نحن':'关于我们',
+      'سياسة الخصوصية':'隐私政策','جميع الحقوق محفوظة':'版权所有',
+      'شهرياً':'/月','سنوياً':'/年','تواصل معنا':'联系我们','اشترك':'订阅',
     },
 
     hi: {
-      'الورشة': 'वर्कशॉप', 'الأكاديمية': 'अकादमी', 'الميدان': 'फील्ड',
-      'الأكواد': 'कोड', 'المواد': 'सामग्री', 'المكتبة': 'पुस्तकालय',
-      'الوظائف': 'करियर', 'المجتمع': 'समुदाय', 'الباقات': 'मूल्य',
-      'المحلّل الذكي': 'AI सॉल्वर', 'الأدوات الحية': 'उपकरण',
-      'البنية': 'तकनीक', 'دخول': 'लॉगिन', 'ابدأ مجانًا': 'मुफ्त शुरू करें',
-      'الرئيسية': 'होम', 'للطلاب': 'छात्र', 'للخريجين': 'स्नातक',
-      'المهندس الميداني': 'फील्ड इंजीनियर',
-      'احسب': 'गणना करें', 'بحث': 'खोजें', 'الكل': 'सभी',
+      'الورشة':'वर्कशॉप','الأكاديمية':'अकादमी','الميدان':'फील्ड','الأكواد':'कोड',
+      'المواد':'सामग्री','المكتبة':'पुस्तकालय','الوظائف':'करियर','المجتمع':'समुदाय',
+      'الباقات':'मूल्य','المحلّل الذكي':'AI सॉल्वर','الأدوات الحية':'उपकरण',
+      'البنية':'तकनीक','دخول':'लॉगिन','ابدأ مجانًا':'मुफ्त शुरू करें',
+      'القائمة':'मेनू','إغلاق':'बंद करें','الرئيسية':'होम','للطلاب':'छात्र',
+      'للخريجين':'स्नातक','المهندس الميداني':'फील्ड इंजीनियर',
+      'الشركات والمؤسسات':'कंपनियाँ','المشاريع الكبرى':'मेगा प्रोजेक्ट',
+      'احسب':'गणना करें','بحث':'खोजें','الكل':'सभी',
+      'المجاني':'मुफ्त','محترف':'प्रो','فريق':'टीम','مؤسسي':'एंटरप्राइज़',
+      'موصى به':'अनुशंसित','شهرياً':'/माह','سنوياً':'/वर्ष',
     },
 
     ru: {
-      'الورشة': 'Мастерская', 'الأكاديمية': 'Академия', 'الميدان': 'Поле',
-      'الأكواد': 'Нормы', 'المواد': 'Материалы', 'المكتبة': 'Библиотека',
-      'الوظائف': 'Карьера', 'المجتمع': 'Сообщество', 'الباقات': 'Цены',
-      'المحلّل الذكي': 'ИИ-Решатель', 'الأدوات الحية': 'Инструменты',
-      'البنية': 'Технологии', 'دخول': 'Войти', 'ابدأ مجانًا': 'Начать Бесплатно',
-      'الرئيسية': 'Главная', 'للطلاب': 'Студенты', 'للخريجين': 'Выпускники',
-      'المهندس الميداني': 'Полевой Инженер',
-      'الرسم الهندسي': 'Техническое черчение',
-      'احسب': 'Рассчитать', 'بحث': 'Поиск', 'الكل': 'Все',
-      'المجاني': 'Бесплатно', 'محترف': 'Про', 'فريق': 'Команда', 'مؤسسي': 'Корпоративный',
+      'الورشة':'Мастерская','الأكاديمية':'Академия','الميدان':'Поле','الأكواد':'Нормы',
+      'المواد':'Материалы','المكتبة':'Библиотека','الوظائف':'Карьера','المجتمع':'Сообщество',
+      'الباقات':'Цены','المحلّل الذكي':'ИИ-Решатель','الأدوات الحية':'Инструменты',
+      'البنية':'Технологии','دخول':'Войти','ابدأ مجانًا':'Начать Бесплатно',
+      'اختر اللغة':'Выбрать язык','القائمة':'Меню','إغلاق':'Закрыть',
+      'الرئيسية':'Главная','للطلاب':'Студенты','للخريجين':'Выпускники',
+      'المهندس الميداني':'Полевой Инженер','الشركات والمؤسسات':'Компании',
+      'المشاريع الكبرى':'Мегапроекты','1-5 سنوات':'1-5 лет',
+      'الرسم الهندسي':'Техническое черчение','احسب':'Рассчитать','بحث':'Поиск','الكل':'Все',
+      'المجاني':'Бесплатно','محترف':'Про','فريق':'Команда','مؤسسي':'Корпоративный',
+      'موصى به':'Рекомендуется','شهرياً':'/мес','سنوياً':'/год','تواصل معنا':'Связаться',
     },
 
     pt: {
-      'الورشة': 'Oficina', 'الأكاديمية': 'Academia', 'الميدان': 'Campo',
-      'الأكواد': 'Normas', 'المواد': 'Materiais', 'المكتبة': 'Biblioteca',
-      'الوظائف': 'Carreiras', 'المجتمع': 'Comunidade', 'الباقات': 'Preços',
-      'المحلّل الذكي': 'Solucionador IA', 'الأدوات الحية': 'Ferramentas',
-      'البنية': 'Tecnologia', 'دخول': 'Entrar', 'ابدأ مجانًا': 'Começar Grátis',
-      'الرئيسية': 'Início', 'للطلاب': 'Estudantes', 'للخريجين': 'Graduados',
-      'المهندس الميداني': 'Engenheiro de Campo',
-      'الرسم الهندسي': 'Desenho Técnico',
-      'احسب': 'Calcular', 'بحث': 'Pesquisar', 'الكل': 'Todos',
+      'الورشة':'Oficina','الأكاديمية':'Academia','الميدان':'Campo','الأكواد':'Normas',
+      'المواد':'Materiais','المكتبة':'Biblioteca','الوظائف':'Carreiras','المجتمع':'Comunidade',
+      'الباقات':'Preços','المحلّل الذكي':'Solucionador IA','الأدوات الحية':'Ferramentas',
+      'البنية':'Tecnologia','دخول':'Entrar','ابدأ مجانًا':'Começar Grátis',
+      'القائمة':'Menu','إغلاق':'Fechar','الرئيسية':'Início','للطلاب':'Estudantes',
+      'للخريجين':'Graduados','المهندس الميداني':'Engenheiro de Campo',
+      'الشركات والمؤسسات':'Empresas','المشاريع الكبرى':'Mega Projetos',
+      'الرسم الهندسي':'Desenho Técnico','احسب':'Calcular','بحث':'Pesquisar','الكل':'Todos',
+      'المجاني':'Grátis','محترف':'Pro','فريق':'Equipe','مؤسسي':'Empresarial',
+      'موصى به':'Recomendado','شهرياً':'/mês','سنوياً':'/ano','تواصل معنا':'Contato',
     },
 
     tr: {
-      'الورشة': 'Atölye', 'الأكاديمية': 'Akademi', 'الميدان': 'Saha',
-      'الأكواد': 'Kodlar', 'المواد': 'Malzemeler', 'المكتبة': 'Kütüphane',
-      'الوظائف': 'Kariyer', 'المجتمع': 'Topluluk', 'الباقات': 'Fiyatlar',
-      'المحلّل الذكي': 'AI Çözücü', 'الأدوات الحية': 'Araçlar',
-      'البنية': 'Teknoloji', 'دخول': 'Giriş', 'ابدأ مجانًا': 'Ücretsiz Başla',
-      'الرئيسية': 'Ana Sayfa', 'للطلاب': 'Öğrenciler', 'للخريجين': 'Mezunlar',
-      'المهندس الميداني': 'Saha Mühendisi',
-      'الرسم الهندسي': 'Teknik Çizim',
-      'احسب': 'Hesapla', 'بحث': 'Ara', 'الكل': 'Tümü',
+      'الورشة':'Atölye','الأكاديمية':'Akademi','الميدان':'Saha','الأكواد':'Kodlar',
+      'المواد':'Malzemeler','المكتبة':'Kütüphane','الوظائف':'Kariyer','المجتمع':'Topluluk',
+      'الباقات':'Fiyatlar','المحلّل الذكي':'AI Çözücü','الأدوات الحية':'Araçlar',
+      'البنية':'Teknoloji','دخول':'Giriş','ابدأ مجانًا':'Ücretsiz Başla',
+      'القائمة':'Menü','إغلاق':'Kapat','الرئيسية':'Ana Sayfa','للطلاب':'Öğrenciler',
+      'للخريجين':'Mezunlar','المهندس الميداني':'Saha Mühendisi',
+      'الشركات والمؤسسات':'Şirketler','المشاريع الكبرى':'Mega Projeler',
+      'الرسم الهندسي':'Teknik Çizim','احسب':'Hesapla','بحث':'Ara','الكل':'Tümü',
+      'المجاني':'Ücretsiz','محترف':'Pro','فريق':'Takım','مؤسسي':'Kurumsal',
+      'موصى به':'Önerilen','شهرياً':'/ay','سنوياً':'/yıl','تواصل معنا':'Bize Ulaşın',
     },
 
-    // Arabic = source language (no translation needed)
-    ar: {}
+    ja: {
+      'الورشة':'ワークベンチ','الأكاديمية':'アカデミー','الميدان':'フィールド','الأكواد':'規格',
+      'المواد':'材料','المكتبة':'ライブラリ','الوظائف':'採用','المجتمع':'コミュニティ',
+      'الباقات':'料金','المحلّل الذكي':'AIソルバー','الأدوات الحية':'ツール',
+      'البنية':'技術','دخول':'ログイン','ابدأ مجانًا':'無料で始める',
+      'القائمة':'メニュー','إغلاق':'閉じる','الرئيسية':'ホーム','للطلاب':'学生',
+      'للخريجين':'卒業生','المهندس الميداني':'現場エンジニア',
+      'الشركات والمؤسسات':'企業','المشاريع الكبرى':'メガプロジェクト',
+      'الرسم الهندسي':'製図','احسب':'計算','بحث':'検索','الكل':'すべて',
+      'المجاني':'無料','محترف':'プロ','فريق':'チーム','مؤسسي':'エンタープライズ',
+      'موصى به':'おすすめ','شهرياً':'/月','سنوياً':'/年','تواصل معنا':'お問い合わせ',
+    },
+
+    ko: {
+      'الورشة':'워크벤치','الأكاديمية':'아카데미','الميدان':'현장','الأكواد':'규정',
+      'المواد':'재료','المكتبة':'도서관','الوظائف':'채용','المجتمع':'커뮤니티',
+      'الباقات':'가격','المحلّل الذكي':'AI 솔버','الأدوات الحية':'도구',
+      'البنية':'기술','دخول':'로그인','ابدأ مجانًا':'무료 시작',
+      'القائمة':'메뉴','إغلاق':'닫기','الرئيسية':'홈','للطلاب':'학생',
+      'للخريجين':'졸업생','المهندس الميداني':'현장 엔지니어',
+      'الشركات والمؤسسات':'기업','المشاريع الكبرى':'메가 프로젝트',
+      'احسب':'계산','بحث':'검색','الكل':'전체',
+      'المجاني':'무료','محترف':'프로','فريق':'팀','مؤسسي':'엔터프라이즈',
+      'موصى به':'추천','شهرياً':'/월','سنوياً':'/년','تواصل معنا':'문의',
+    },
+
+    it: {
+      'الورشة':'Officina','الأكاديمية':'Accademia','الميدان':'Campo','الأكواد':'Norme',
+      'المواد':'Materiali','المكتبة':'Biblioteca','الوظائف':'Carriere','المجتمع':'Comunità',
+      'الباقات':'Prezzi','المحلّل الذكي':'Risolutore IA','الأدوات الحية':'Strumenti',
+      'البنية':'Tecnologia','دخول':'Accedi','ابدأ مجانًا':'Inizia Gratis',
+      'القائمة':'Menu','إغلاق':'Chiudi','الرئيسية':'Home','للطلاب':'Studenti',
+      'للخريجين':'Laureati','المهندس الميداني':'Ingegnere sul Campo',
+      'الشركات والمؤسسات':'Aziende','المشاريع الكبرى':'Mega Progetti',
+      'احسب':'Calcola','بحث':'Cerca','الكل':'Tutti',
+      'المجاني':'Gratis','محترف':'Pro','فريق':'Team','مؤسسي':'Enterprise',
+      'موصى به':'Consigliato','شهرياً':'/mese','سنوياً':'/anno','تواصل معنا':'Contattaci',
+    },
+
+    nl: {
+      'الورشة':'Werkbank','الأكاديمية':'Academie','الميدان':'Veld','الأكواد':'Normen',
+      'المواد':'Materialen','المكتبة':'Bibliotheek','الوظائف':'Carrières','المجتمع':'Gemeenschap',
+      'الباقات':'Prijzen','المحلّل الذكي':'AI Solver','الأدوات الحية':'Tools',
+      'البنية':'Stack','دخول':'Inloggen','ابدأ مجانًا':'Gratis Starten',
+      'القائمة':'Menu','إغلاق':'Sluiten','الرئيسية':'Home','للطلاب':'Studenten',
+      'للخريجين':'Afgestudeerden','المهندس الميداني':'Veldingenieur',
+      'الشركات والمؤسسات':'Bedrijven','المشاريع الكبرى':'Megaprojecten',
+      'احسب':'Berekenen','بحث':'Zoeken','الكل':'Alles',
+      'المجاني':'Gratis','محترف':'Pro','فريق':'Team','مؤسسي':'Enterprise',
+      'موصى به':'Aanbevolen','شهرياً':'/maand','سنوياً':'/jaar','تواصل معنا':'Contact',
+    },
+
+    pl: {
+      'الورشة':'Warsztat','الأكاديمية':'Akademia','الميدان':'Teren','الأكواد':'Normy',
+      'المواد':'Materiały','المكتبة':'Biblioteka','الوظائف':'Kariera','المجتمع':'Społeczność',
+      'الباقات':'Cennik','المحلّل الذكي':'Solver AI','الأدوات الحية':'Narzędzia',
+      'البنية':'Technologia','دخول':'Zaloguj','ابدأ مجانًا':'Zacznij za darmo',
+      'القائمة':'Menu','إغلاق':'Zamknij','الرئيسية':'Strona główna','للطلاب':'Studenci',
+      'للخريجين':'Absolwenci','المهندس الميداني':'Inżynier Terenowy',
+      'الشركات والمؤسسات':'Firmy','المشاريع الكبرى':'Megaprojekty',
+      'احسب':'Oblicz','بحث':'Szukaj','الكل':'Wszystko',
+      'المجاني':'Darmowy','محترف':'Pro','فريق':'Zespół','مؤسسي':'Enterprise',
+      'موصى به':'Polecane','شهرياً':'/mies','سنوياً':'/rok','تواصل معنا':'Kontakt',
+    },
+
+    // ============================================================
+    // RTL languages
+    // ============================================================
+    fa: {
+      'الورشة':'کارگاه','الأكاديمية':'آکادمی','الميدان':'میدان','الأكواد':'استانداردها',
+      'المواد':'مواد','المكتبة':'کتابخانه','الوظائف':'شغل','المجتمع':'انجمن',
+      'الباقات':'قیمت‌گذاری','المحلّل الذكي':'حل‌گر هوشمند','الأدوات الحية':'ابزارها',
+      'البنية':'فناوری','دخول':'ورود','ابدأ مجانًا':'شروع رایگان',
+      'القائمة':'منو','إغلاق':'بستن','الرئيسية':'خانه','للطلاب':'دانشجویان',
+      'للخريجين':'فارغ‌التحصیلان','المهندس الميداني':'مهندس میدانی',
+      'الشركات والمؤسسات':'شرکت‌ها','المشاريع الكبرى':'پروژه‌های بزرگ',
+      'احسب':'محاسبه','بحث':'جستجو','الكل':'همه',
+      'المجاني':'رایگان','محترف':'حرفه‌ای','فريق':'تیم','مؤسسي':'سازمانی',
+      'موصى به':'پیشنهاد می‌شود','شهرياً':'/ماه','سنوياً':'/سال','تواصل معنا':'تماس',
+    },
+
+    he: {
+      'الورشة':'סדנה','الأكاديمية':'אקדמיה','الميدان':'שטח','الأكواد':'תקנים',
+      'المواد':'חומרים','المكتبة':'ספרייה','الوظائف':'קריירה','المجتمع':'קהילה',
+      'الباقات':'תמחור','المحلّل الذكي':'פותר AI','الأدوات الحية':'כלים',
+      'البنية':'טכנולוגיה','دخول':'התחבר','ابدأ مجانًا':'התחל בחינם',
+      'القائمة':'תפריט','إغلاق':'סגור','الرئيسية':'בית','للطلاب':'סטודנטים',
+      'للخريجين':'בוגרים','المهندس الميداني':'מהנדס שטח',
+      'الشركات والمؤسسات':'חברות','المشاريع الكبرى':'מגה פרויקטים',
+      'احسب':'חשב','بحث':'חיפוש','الكل':'הכל',
+      'المجاني':'חינם','محترف':'פרו','فريق':'צוות','مؤسسي':'ארגוני',
+      'موصى به':'מומלץ','شهرياً':'/חודש','سنوياً':'/שנה','تواصل معنا':'צור קשר',
+    },
+
+    ur: {
+      'الورشة':'ورکشاپ','الأكاديمية':'اکیڈمی','الميدان':'فیلڈ','الأكواد':'کوڈز',
+      'المواد':'مواد','المكتبة':'لائبریری','الوظائف':'کیریئر','المجتمع':'کمیونٹی',
+      'الباقات':'قیمتیں','المحلّل الذكي':'AI حل کار','الأدوات الحية':'ٹولز',
+      'البنية':'ٹیکنالوجی','دخول':'لاگ ان','ابدأ مجانًا':'مفت شروع کریں',
+      'القائمة':'مینو','إغلاق':'بند کریں','الرئيسية':'ہوم','للطلاب':'طلباء',
+      'للخريجين':'فارغ التحصیل','المهندس الميداني':'فیلڈ انجینئر',
+      'الشركات والمؤسسات':'کمپنیاں','المشاريع الكبرى':'بڑے منصوبے',
+      'احسب':'حساب','بحث':'تلاش','الكل':'سب',
+      'المجاني':'مفت','محترف':'پرو','فريق':'ٹیم','مؤسسي':'انٹرپرائز',
+    },
+
+    // ============================================================
+    // EUROPEAN languages (core nav + tabs + common)
+    // ============================================================
+    sv: {'الورشة':'Verkstad','الأكاديمية':'Akademi','الميدان':'Fält','الأكواد':'Standarder','المواد':'Material','المكتبة':'Bibliotek','الوظائف':'Karriär','المجتمع':'Gemenskap','الباقات':'Priser','المحلّل الذكي':'AI-lösare','الأدوات الحية':'Verktyg','دخول':'Logga in','ابدأ مجانًا':'Börja gratis','القائمة':'Meny','إغلاق':'Stäng','الرئيسية':'Hem','للطلاب':'Studenter','للخريجين':'Examinerade','المهندس الميداني':'Fältingenjör','الشركات والمؤسسات':'Företag','المشاريع الكبرى':'Megaprojekt','احسب':'Beräkna','بحث':'Sök','الكل':'Alla','المجاني':'Gratis','محترف':'Pro','فريق':'Team','مؤسسي':'Företag','موصى به':'Rekommenderad','تواصل معنا':'Kontakt'},
+    no: {'الورشة':'Verksted','الأكاديمية':'Akademi','الميدان':'Felt','الأكواد':'Standarder','المواد':'Materialer','المكتبة':'Bibliotek','الوظائف':'Karriere','المجتمع':'Fellesskap','الباقات':'Priser','المحلّل الذكي':'AI-løser','الأدوات الحية':'Verktøy','دخول':'Logg inn','ابدأ مجانًا':'Start gratis','القائمة':'Meny','إغلاق':'Lukk','الرئيسية':'Hjem','للطلاب':'Studenter','للخريجين':'Kandidater','المهندس الميداني':'Feltingeniør','الشركات والمؤسسات':'Bedrifter','المشاريع الكبرى':'Megaprosjekter','احسب':'Beregn','بحث':'Søk','الكل':'Alle','المجاني':'Gratis','محترف':'Pro','فريق':'Team','مؤسسي':'Bedrift','موصى به':'Anbefalt','تواصل معنا':'Kontakt'},
+    da: {'الورشة':'Værksted','الأكاديمية':'Akademi','الميدان':'Felt','الأكواد':'Standarder','المواد':'Materialer','المكتبة':'Bibliotek','الوظائف':'Karriere','المجتمع':'Fællesskab','الباقات':'Priser','المحلّل الذكي':'AI-løser','الأدوات الحية':'Værktøjer','دخول':'Log ind','ابدأ مجانًا':'Start gratis','القائمة':'Menu','إغلاق':'Luk','الرئيسية':'Hjem','للطلاب':'Studerende','للخريجين':'Dimittender','المهندس الميداني':'Feltingeniør','الشركات والمؤسسات':'Virksomheder','المشاريع الكبرى':'Megaprojekter','احسب':'Beregn','بحث':'Søg','الكل':'Alle','المجاني':'Gratis','محترف':'Pro','فريق':'Team','مؤسسي':'Erhverv','موصى به':'Anbefalet','تواصل معنا':'Kontakt'},
+    fi: {'الورشة':'Työpaja','الأكاديمية':'Akatemia','الميدان':'Kenttä','الأكواد':'Standardit','المواد':'Materiaalit','المكتبة':'Kirjasto','الوظائف':'Urat','المجتمع':'Yhteisö','الباقات':'Hinnat','المحلّل الذكي':'AI-ratkaisija','الأدوات الحية':'Työkalut','دخول':'Kirjaudu','ابدأ مجانًا':'Aloita ilmaiseksi','القائمة':'Valikko','إغلاق':'Sulje','الرئيسية':'Etusivu','للطلاب':'Opiskelijat','للخريجين':'Valmistuneet','المهندس الميداني':'Kenttäinsinööri','الشركات والمؤسسات':'Yritykset','المشاريع الكبرى':'Megaprojektit','احسب':'Laske','بحث':'Hae','الكل':'Kaikki','المجاني':'Ilmainen','محترف':'Pro','فريق':'Tiimi','مؤسسي':'Yritys','موصى به':'Suositeltu','تواصل معنا':'Ota yhteyttä'},
+    el: {'الورشة':'Εργαστήριο','الأكاديمية':'Ακαδημία','الميدان':'Πεδίο','الأكواد':'Πρότυπα','المواد':'Υλικά','المكتبة':'Βιβλιοθήκη','الوظائف':'Καριέρα','المجتمع':'Κοινότητα','الباقات':'Τιμές','المحلّل الذكي':'AI Επίλυση','الأدوات الحية':'Εργαλεία','دخول':'Σύνδεση','ابدأ مجانًا':'Δωρεάν Έναρξη','القائمة':'Μενού','إغلاق':'Κλείσιμο','الرئيسية':'Αρχική','للطلاب':'Φοιτητές','للخريجين':'Απόφοιτοι','المهندس الميداني':'Μηχανικός Πεδίου','الشركات والمؤسسات':'Εταιρείες','المشاريع الكبرى':'Μέγα Έργα','احسب':'Υπολογισμός','بحث':'Αναζήτηση','الكل':'Όλα','المجاني':'Δωρεάν','محترف':'Pro','فريق':'Ομάδα','مؤسسي':'Επιχείρηση','موصى به':'Συνιστάται','تواصل معنا':'Επικοινωνία'},
+    cs: {'الورشة':'Dílna','الأكاديمية':'Akademie','الميدان':'Pole','الأكواد':'Normy','المواد':'Materiály','المكتبة':'Knihovna','الوظائف':'Kariéra','المجتمع':'Komunita','الباقات':'Ceny','المحلّل الذكي':'AI Řešitel','الأدوات الحية':'Nástroje','دخول':'Přihlášení','ابدأ مجانًا':'Začít zdarma','القائمة':'Menu','إغلاق':'Zavřít','الرئيسية':'Domů','للطلاب':'Studenti','للخريجين':'Absolventi','المهندس الميداني':'Terénní inženýr','الشركات والمؤسسات':'Firmy','المشاريع الكبرى':'Megaprojekty','احسب':'Vypočítat','بحث':'Hledat','الكل':'Vše','المجاني':'Zdarma','محترف':'Pro','فريق':'Tým','مؤسسي':'Enterprise','موصى به':'Doporučeno','تواصل معنا':'Kontakt'},
+    sk: {'الورشة':'Dielňa','الأكاديمية':'Akadémia','الميدان':'Pole','الأكواد':'Normy','المواد':'Materiály','المكتبة':'Knižnica','الوظائف':'Kariéra','المجتمع':'Komunita','الباقات':'Ceny','المحلّل الذكي':'AI Riešiteľ','الأدوات الحية':'Nástroje','دخول':'Prihlásenie','ابدأ مجانًا':'Začať zadarmo','القائمة':'Menu','إغلاق':'Zatvoriť','الرئيسية':'Domov','للطلاب':'Študenti','للخريجين':'Absolventi','المهندس الميداني':'Terénny inžinier','الشركات والمؤسسات':'Firmy','المشاريع الكبرى':'Megaprojekty','احسب':'Vypočítať','بحث':'Hľadať','الكل':'Všetko','المجاني':'Zadarmo','محترف':'Pro','فريق':'Tím','مؤسسي':'Enterprise','موصى به':'Odporúčané','تواصل معنا':'Kontakt'},
+    hu: {'الورشة':'Műhely','الأكاديمية':'Akadémia','الميدان':'Terep','الأكواد':'Szabványok','المواد':'Anyagok','المكتبة':'Könyvtár','الوظائف':'Karrier','المجتمع':'Közösség','الباقات':'Árak','المحلّل الذكي':'AI Megoldó','الأدوات الحية':'Eszközök','دخول':'Bejelentkezés','ابدأ مجانًا':'Kezdés ingyen','القائمة':'Menü','إغلاق':'Bezárás','الرئيسية':'Főoldal','للطلاب':'Hallgatók','للخريجين':'Diplomások','المهندس الميداني':'Terepmérnök','الشركات والمؤسسات':'Cégek','المشاريع الكبرى':'Megaprojektek','احسب':'Számítás','بحث':'Keresés','الكل':'Összes','المجاني':'Ingyenes','محترف':'Pro','فريق':'Csapat','مؤسسي':'Vállalati','موصى به':'Ajánlott','تواصل معنا':'Kapcsolat'},
+    ro: {'الورشة':'Atelier','الأكاديمية':'Academie','الميدان':'Câmp','الأكواد':'Standarde','المواد':'Materiale','المكتبة':'Bibliotecă','الوظائف':'Cariere','المجتمع':'Comunitate','الباقات':'Prețuri','المحلّل الذكي':'Rezolvator AI','الأدوات الحية':'Unelte','دخول':'Autentificare','ابدأ مجانًا':'Începe gratuit','القائمة':'Meniu','إغلاق':'Închide','الرئيسية':'Acasă','للطلاب':'Studenți','للخريجين':'Absolvenți','المهندس الميداني':'Inginer de teren','الشركات والمؤسسات':'Companii','المشاريع الكبرى':'Mega Proiecte','احسب':'Calculează','بحث':'Caută','الكل':'Toate','المجاني':'Gratuit','محترف':'Pro','فريق':'Echipă','مؤسسي':'Enterprise','موصى به':'Recomandat','تواصل معنا':'Contact'},
+    bg: {'الورشة':'Работилница','الأكاديمية':'Академия','الميدان':'Поле','الأكواد':'Стандарти','المواد':'Материали','المكتبة':'Библиотека','الوظائف':'Кариери','المجتمع':'Общност','الباقات':'Цени','المحلّل الذكي':'AI Решител','الأدوات الحية':'Инструменти','دخول':'Вход','ابدأ مجانًا':'Безплатно','القائمة':'Меню','إغلاق':'Затвори','الرئيسية':'Начало','للطلاب':'Студенти','للخريجين':'Завършили','المهندس الميداني':'Полеви Инженер','الشركات والمؤسسات':'Компании','المشاريع الكبرى':'Мега Проекти','احسب':'Изчисли','بحث':'Търсене','الكل':'Всички','المجاني':'Безплатно','محترف':'Pro','فريق':'Екип','مؤسسي':'Enterprise','موصى به':'Препоръчано','تواصل معنا':'Контакт'},
+    uk: {'الورشة':'Майстерня','الأكاديمية':'Академія','الميدان':'Поле','الأكواد':'Стандарти','المواد':'Матеріали','المكتبة':'Бібліотека','الوظائف':'Карʼєра','المجتمع':'Спільнота','الباقات':'Ціни','المحلّل الذكي':'AI Розвʼязувач','الأدوات الحية':'Інструменти','دخول':'Увійти','ابدأ مجانًا':'Почати безкоштовно','القائمة':'Меню','إغلاق':'Закрити','الرئيسية':'Головна','للطلاب':'Студенти','للخريجين':'Випускники','المهندس الميداني':'Польовий Інженер','الشركات والمؤسسات':'Компанії','المشاريع الكبرى':'Мегапроєкти','احسب':'Обчислити','بحث':'Пошук','الكل':'Усі','المجاني':'Безкоштовно','محترف':'Pro','فريق':'Команда','مؤسسي':'Enterprise','موصى به':'Рекомендовано','تواصل معنا':'Контакти'},
+    sr: {'الورشة':'Радионица','الأكاديمية':'Академија','الميدان':'Терен','الأكواد':'Стандарди','المواد':'Материјали','المكتبة':'Библиотека','الوظائف':'Каријера','المجتمع':'Заједница','الباقات':'Цене','المحلّل الذكي':'AI Решавач','الأدوات الحية':'Алати','دخول':'Пријава','ابدأ مجانًا':'Почни бесплатно','القائمة':'Мени','إغلاق':'Затвори','الرئيسية':'Почетна','للطلاب':'Студенти','للخريجين':'Дипломци','المهندس الميداني':'Теренски Инжењер','الشركات والمؤسسات':'Компаније','المشاريع الكبرى':'Мега Пројекти','احسب':'Израчунај','بحث':'Претрага','الكل':'Све','المجاني':'Бесплатно','محترف':'Pro','فريق':'Тим','مؤسسي':'Enterprise','موصى به':'Препоручено','تواصل معنا':'Контакт'},
+    hr: {'الورشة':'Radionica','الأكاديمية':'Akademija','الميدان':'Teren','الأكواد':'Standardi','المواد':'Materijali','المكتبة':'Knjižnica','الوظائف':'Karijera','المجتمع':'Zajednica','الباقات':'Cijene','المحلّل الذكي':'AI Rješavač','الأدوات الحية':'Alati','دخول':'Prijava','ابدأ مجانًا':'Započni besplatno','القائمة':'Izbornik','إغلاق':'Zatvori','الرئيسية':'Početna','للطلاب':'Studenti','للخريجين':'Diplomanti','المهندس الميداني':'Terenski Inženjer','الشركات والمؤسسات':'Tvrtke','المشاريع الكبرى':'Mega Projekti','احسب':'Izračunaj','بحث':'Pretraga','الكل':'Sve','المجاني':'Besplatno','محترف':'Pro','فريق':'Tim','مؤسسي':'Enterprise','موصى به':'Preporučeno','تواصل معنا':'Kontakt'},
+    sl: {'الورشة':'Delavnica','الأكاديمية':'Akademija','الميدان':'Polje','الأكواد':'Standardi','المواد':'Materiali','المكتبة':'Knjižnica','الوظائف':'Kariera','المجتمع':'Skupnost','الباقات':'Cene','المحلّل الذكي':'AI Reševalec','الأدوات الحية':'Orodja','دخول':'Prijava','ابدأ مجانًا':'Začni brezplačno','القائمة':'Meni','إغلاق':'Zapri','الرئيسية':'Domov','للطلاب':'Študenti','للخريجين':'Diplomanti','المهندس الميداني':'Terenski Inženir','الشركات والمؤسسات':'Podjetja','المشاريع الكبرى':'Mega Projekti','احسب':'Izračunaj','بحث':'Iskanje','الكل':'Vse','المجاني':'Brezplačno','محترف':'Pro','فريق':'Ekipa','مؤسسي':'Enterprise','موصى به':'Priporočeno','تواصل معنا':'Stik'},
+    lt: {'الورشة':'Dirbtuvė','الأكاديمية':'Akademija','الميدان':'Laukas','الأكواد':'Standartai','المواد':'Medžiagos','المكتبة':'Biblioteka','الوظائف':'Karjera','المجتمع':'Bendruomenė','الباقات':'Kainos','المحلّل الذكي':'AI Sprendėjas','الأدوات الحية':'Įrankiai','دخول':'Prisijungti','ابدأ مجانًا':'Pradėti nemokamai','القائمة':'Meniu','إغلاق':'Uždaryti','الرئيسية':'Pagrindinis','للطلاب':'Studentai','للخريجين':'Absolventai','المهندس الميداني':'Lauko Inžinierius','الشركات والمؤسسات':'Įmonės','المشاريع الكبرى':'Megaprojektai','احسب':'Skaičiuoti','بحث':'Paieška','الكل':'Visi','المجاني':'Nemokama','محترف':'Pro','فريق':'Komanda','مؤسسي':'Enterprise','موصى به':'Rekomenduojama','تواصل معنا':'Kontaktai'},
+    lv: {'الورشة':'Darbnīca','الأكاديمية':'Akadēmija','الميدان':'Lauks','الأكواد':'Standarti','المواد':'Materiāli','المكتبة':'Bibliotēka','الوظائف':'Karjera','المجتمع':'Kopiena','الباقات':'Cenas','المحلّل الذكي':'AI Risinātājs','الأدوات الحية':'Rīki','دخول':'Pieslēgties','ابدأ مجانًا':'Sākt bez maksas','القائمة':'Izvēlne','إغلاق':'Aizvērt','الرئيسية':'Sākums','للطلاب':'Studenti','للخريجين':'Absolventi','المهندس الميداني':'Lauka Inženieris','الشركات والمؤسسات':'Uzņēmumi','المشاريع الكبرى':'Megaprojekti','احسب':'Aprēķināt','بحث':'Meklēt','الكل':'Visi','المجاني':'Bezmaksas','محترف':'Pro','فريق':'Komanda','مؤسسي':'Enterprise','موصى به':'Ieteicams','تواصل معنا':'Kontakti'},
+    et: {'الورشة':'Töökoda','الأكاديمية':'Akadeemia','الميدان':'Põld','الأكواد':'Standardid','المواد':'Materjalid','المكتبة':'Raamatukogu','الوظائف':'Karjäär','المجتمع':'Kogukond','الباقات':'Hinnad','المحلّل الذكي':'AI Lahendaja','الأدوات الحية':'Tööriistad','دخول':'Logi sisse','ابدأ مجانًا':'Alusta tasuta','القائمة':'Menüü','إغلاق':'Sulge','الرئيسية':'Avaleht','للطلاب':'Üliõpilased','للخريجين':'Lõpetajad','المهندس الميداني':'Välitööde Insener','الشركات والمؤسسات':'Ettevõtted','المشاريع الكبرى':'Megaprojektid','احسب':'Arvuta','بحث':'Otsi','الكل':'Kõik','المجاني':'Tasuta','محترف':'Pro','فريق':'Meeskond','مؤسسي':'Enterprise','موصى به':'Soovitatav','تواصل معنا':'Kontakt'},
+    is: {'الورشة':'Vinnustofa','الأكاديمية':'Akademía','الميدان':'Völlur','الأكواد':'Staðlar','المواد':'Efni','المكتبة':'Bókasafn','الوظائف':'Störf','المجتمع':'Samfélag','الباقات':'Verð','المحلّل الذكي':'AI Lausnari','الأدوات الحية':'Verkfæri','دخول':'Innskráning','ابدأ مجانًا':'Byrjaðu ókeypis','القائمة':'Valmynd','إغلاق':'Loka','الرئيسية':'Heim','للطلاب':'Nemendur','للخريجين':'Útskrifaðir','المهندس الميداني':'Verkfræðingur','الشركات والمؤسسات':'Fyrirtæki','المشاريع الكبرى':'Risaverkefni','احسب':'Reikna','بحث':'Leita','الكل':'Allir','المجاني':'Ókeypis','محترف':'Pro','فريق':'Lið','مؤسسي':'Enterprise','موصى به':'Ráðlagt','تواصل معنا':'Hafa samband'},
+    ga: {'الورشة':'Ceardlann','الأكاديمية':'Acadamh','الميدان':'Páirc','الأكواد':'Caighdeáin','المواد':'Ábhair','المكتبة':'Leabharlann','الوظائف':'Gairmeacha','المجتمع':'Pobal','الباقات':'Praghsanna','المحلّل الذكي':'Réiteoir AI','الأدوات الحية':'Uirlisí','دخول':'Logáil isteach','ابدأ مجانًا':'Tosaigh saor in aisce','القائمة':'Roghchlár','إغلاق':'Dún','الرئيسية':'Baile','للطلاب':'Mic léinn','للخريجين':'Céimithe','المهندس الميداني':'Innealtóir Páirce','الشركات والمؤسسات':'Cuideachtaí','المشاريع الكبرى':'Mór-Thionscadail','احسب':'Áirigh','بحث':'Cuardaigh','الكل':'Gach','المجاني':'Saor in aisce','محترف':'Pro','فريق':'Foireann','مؤسسي':'Fiontar','موصى به':'Molta','تواصل معنا':'Teagmháil'},
+    cy: {'الورشة':'Gweithdy','الأكاديمية':'Academi','الميدان':'Maes','الأكواد':'Safonau','المواد':'Defnyddiau','المكتبة':'Llyfrgell','الوظائف':'Gyrfaoedd','المجتمع':'Cymuned','الباقات':'Prisiau','المحلّل الذكي':'Datryswr AI','الأدوات الحية':'Offer','دخول':'Mewngofnodi','ابدأ مجانًا':'Cychwyn am ddim','القائمة':'Dewislen','إغلاق':'Cau','الرئيسية':'Cartref','للطلاب':'Myfyrwyr','للخريجين':'Graddedigion','المهندس الميداني':'Peiriannydd Maes','الشركات والمؤسسات':'Cwmnïau','المشاريع الكبرى':'Megabrosiectau','احسب':'Cyfrifwch','بحث':'Chwilio','الكل':'Pob','المجاني':'Am ddim','محترف':'Pro','فريق':'Tîm','مؤسسي':'Menter','موصى به':'Argymhellir','تواصل معنا':'Cysylltu'},
+    sq: {'الورشة':'Punëtori','الأكاديمية':'Akademi','الميدان':'Fushë','الأكواد':'Standardet','المواد':'Materialet','المكتبة':'Biblioteka','الوظائف':'Karriera','المجتمع':'Komuniteti','الباقات':'Çmimet','المحلّل الذكي':'Zgjidhës AI','الأدوات الحية':'Mjete','دخول':'Hyrje','ابدأ مجانًا':'Filloni falas','القائمة':'Menu','إغلاق':'Mbyll','الرئيسية':'Faqja kryesore','للطلاب':'Studentët','للخريجين':'Të diplomuarit','المهندس الميداني':'Inxhinier i Fushës','الشركات والمؤسسات':'Kompanitë','المشاريع الكبرى':'Mega Projekte','احسب':'Llogarit','بحث':'Kërko','الكل':'Të gjitha','المجاني':'Falas','محترف':'Pro','فريق':'Ekip','مؤسسي':'Enterprise','موصى به':'Rekomanduar','تواصل معنا':'Kontakt'},
+    mk: {'الورشة':'Работилница','الأكاديمية':'Академија','الميدان':'Поле','الأكواد':'Стандарди','المواد':'Материјали','المكتبة':'Библиотека','الوظائف':'Кариера','المجتمع':'Заедница','الباقات':'Цени','المحلّل الذكي':'AI Решавач','الأدوات الحية':'Алатки','دخول':'Најава','ابدأ مجانًا':'Започни бесплатно','القائمة':'Мени','إغلاق':'Затвори','الرئيسية':'Дома','للطلاب':'Студенти','للخريجين':'Дипломирани','المهندس الميداني':'Теренски Инженер','الشركات والمؤسسات':'Компании','المشاريع الكبرى':'Мега Проекти','احسب':'Пресметај','بحث':'Барај','الكل':'Сите','المجاني':'Бесплатно','محترف':'Pro','فريق':'Тим','مؤسسي':'Enterprise','موصى به':'Препорачано','تواصل معنا':'Контакт'},
+    bs: {'الورشة':'Radionica','الأكاديمية':'Akademija','الميدان':'Teren','الأكواد':'Standardi','المواد':'Materijali','المكتبة':'Biblioteka','الوظائف':'Karijera','المجتمع':'Zajednica','الباقات':'Cijene','المحلّل الذكي':'AI Rješavač','الأدوات الحية':'Alati','دخول':'Prijava','ابدأ مجانًا':'Počni besplatno','القائمة':'Meni','إغلاق':'Zatvori','الرئيسية':'Početna','للطلاب':'Studenti','للخريجين':'Diplomanti','المهندس الميداني':'Terenski Inženjer','الشركات والمؤسسات':'Kompanije','المشاريع الكبرى':'Mega Projekti','احسب':'Izračunaj','بحث':'Pretraga','الكل':'Sve','المجاني':'Besplatno','محترف':'Pro','فريق':'Tim','مؤسسي':'Enterprise','موصى به':'Preporučeno','تواصل معنا':'Kontakt'},
+    th: {'الورشة':'เวิร์กช็อป','الأكاديمية':'อะคาเดมี','الميدان':'ภาคสนาม','الأكواد':'มาตรฐาน','المواد':'วัสดุ','المكتبة':'ห้องสมุด','الوظائف':'งาน','المجتمع':'ชุมชน','الباقات':'ราคา','المحلّل الذكي':'AI ตัวแก้','الأدوات الحية':'เครื่องมือ','دخول':'เข้าสู่ระบบ','ابدأ مجانًا':'เริ่มฟรี','القائمة':'เมนู','إغلاق':'ปิด','الرئيسية':'หน้าแรก','للطلاب':'นักศึกษา','للخريجين':'ผู้สำเร็จการศึกษา','المهندس الميداني':'วิศวกรภาคสนาม','الشركات والمؤسسات':'บริษัท','المشاريع الكبرى':'เมกะโปรเจค','احسب':'คำนวณ','بحث':'ค้นหา','الكل':'ทั้งหมด','المجاني':'ฟรี','محترف':'โปร','فريق':'ทีม','مؤسسي':'องค์กร','موصى به':'แนะนำ','تواصل معنا':'ติดต่อ'},
+    vi: {'الورشة':'Xưởng','الأكاديمية':'Học viện','الميدان':'Hiện trường','الأكواد':'Tiêu chuẩn','المواد':'Vật liệu','المكتبة':'Thư viện','الوظائف':'Tuyển dụng','المجتمع':'Cộng đồng','الباقات':'Giá','المحلّل الذكي':'AI Giải','الأدوات الحية':'Công cụ','دخول':'Đăng nhập','ابدأ مجانًا':'Bắt đầu miễn phí','القائمة':'Trình đơn','إغلاق':'Đóng','الرئيسية':'Trang chủ','للطلاب':'Sinh viên','للخريجين':'Tốt nghiệp','المهندس الميداني':'Kỹ sư Hiện trường','الشركات والمؤسسات':'Công ty','المشاريع الكبرى':'Dự án Lớn','احسب':'Tính','بحث':'Tìm kiếm','الكل':'Tất cả','المجاني':'Miễn phí','محترف':'Pro','فريق':'Nhóm','مؤسسي':'Doanh nghiệp','موصى به':'Đề xuất','تواصل معنا':'Liên hệ'},
+    id: {'الورشة':'Bengkel','الأكاديمية':'Akademi','الميدان':'Lapangan','الأكواد':'Standar','المواد':'Material','المكتبة':'Perpustakaan','الوظائف':'Karier','المجتمع':'Komunitas','الباقات':'Harga','المحلّل الذكي':'AI Pemecah','الأدوات الحية':'Alat','دخول':'Masuk','ابدأ مجانًا':'Mulai Gratis','القائمة':'Menu','إغلاق':'Tutup','الرئيسية':'Beranda','للطلاب':'Mahasiswa','للخريجين':'Lulusan','المهندس الميداني':'Insinyur Lapangan','الشركات والمؤسسات':'Perusahaan','المشاريع الكبرى':'Mega Proyek','احسب':'Hitung','بحث':'Cari','الكل':'Semua','المجاني':'Gratis','محترف':'Pro','فريق':'Tim','مؤسسي':'Enterprise','موصى به':'Direkomendasikan','تواصل معنا':'Hubungi Kami'},
+    ms: {'الورشة':'Bengkel','الأكاديمية':'Akademi','الميدان':'Lapangan','الأكواد':'Piawaian','المواد':'Bahan','المكتبة':'Perpustakaan','الوظائف':'Kerjaya','المجتمع':'Komuniti','الباقات':'Harga','المحلّل الذكي':'AI Penyelesai','الأدوات الحية':'Alatan','دخول':'Log Masuk','ابدأ مجانًا':'Mula Percuma','القائمة':'Menu','إغلاق':'Tutup','الرئيسية':'Laman Utama','للطلاب':'Pelajar','للخريجين':'Graduan','المهندس الميداني':'Jurutera Lapangan','الشركات والمؤسسات':'Syarikat','المشاريع الكبرى':'Mega Projek','احسب':'Kira','بحث':'Cari','الكل':'Semua','المجاني':'Percuma','محترف':'Pro','فريق':'Pasukan','مؤسسي':'Enterprise','موصى به':'Disyorkan','تواصل معنا':'Hubungi Kami'},
+    tl: {'الورشة':'Workshop','الأكاديمية':'Akademya','الميدان':'Field','الأكواد':'Mga Pamantayan','المواد':'Mga Materyales','المكتبة':'Aklatan','الوظائف':'Karera','المجتمع':'Komunidad','الباقات':'Mga Presyo','المحلّل الذكي':'AI Solver','الأدوات الحية':'Mga Kasangkapan','دخول':'Mag-login','ابدأ مجانًا':'Magsimula Libre','القائمة':'Menu','إغلاق':'Isara','الرئيسية':'Tahanan','للطلاب':'Mga Estudyante','للخريجين':'Mga Nagtapos','المهندس الميداني':'Field Engineer','الشركات والمؤسسات':'Mga Kumpanya','المشاريع الكبرى':'Mga Mega Project','احسب':'Kalkulahin','بحث':'Maghanap','الكل':'Lahat','المجاني':'Libre','محترف':'Pro','فريق':'Koponan','مؤسسي':'Enterprise','موصى به':'Inirerekomenda','تواصل معنا':'Makipag-ugnayan'},
+    sw: {'الورشة':'Karakana','الأكاديمية':'Akademia','الميدان':'Uwanja','الأكواد':'Viwango','المواد':'Vifaa','المكتبة':'Maktaba','الوظائف':'Kazi','المجتمع':'Jamii','الباقات':'Bei','المحلّل الذكي':'Mtatuzi AI','الأدوات الحية':'Zana','دخول':'Ingia','ابدأ مجانًا':'Anza bure','القائمة':'Menyu','إغلاق':'Funga','الرئيسية':'Nyumbani','للطلاب':'Wanafunzi','للخريجين':'Wahitimu','المهندس الميداني':'Mhandisi wa Uwanja','الشركات والمؤسسات':'Kampuni','المشاريع الكبرى':'Miradi Mikuu','احسب':'Hesabu','بحث':'Tafuta','الكل':'Yote','المجاني':'Bure','محترف':'Pro','فريق':'Timu','مؤسسي':'Biashara','موصى به':'Inapendekezwa','تواصل معنا':'Wasiliana'},
+    am: {'الورشة':'ወርክሾፕ','الأكاديمية':'አካዳሚ','الميدان':'መስክ','الأكواد':'መስፈርቶች','المواد':'ቁሳቁሶች','المكتبة':'ቤተ መጻሕፍት','الوظائف':'ሙያ','المجتمع':'ማህበረሰብ','الباقات':'ዋጋ','المحلّل الذكي':'AI ፈቺ','الأدوات الحية':'መሳሪያዎች','دخول':'ግባ','ابدأ مجانًا':'በነፃ ጀምር','القائمة':'ምናሌ','إغلاق':'ዝጋ','الرئيسية':'መነሻ','للطلاب':'ተማሪዎች','للخريجين':'የተመረቁ','المهندس الميداني':'የመስክ መሐንዲስ','الشركات والمؤسسات':'ኩባንያዎች','المشاريع الكبرى':'ሜጋ ፕሮጀክቶች','احسب':'አስላ','بحث':'ፈልግ','الكل':'ሁሉም','المجاني':'ነጻ','محترف':'Pro','فريق':'ቡድን','مؤسسي':'Enterprise','موصى به':'ይመከራል','تواصل معنا':'አግኙን'},
+    bn: {'الورشة':'কর্মশালা','الأكاديمية':'একাডেমি','الميدان':'মাঠ','الأكواد':'মান','المواد':'উপাদান','المكتبة':'গ্রন্থাগার','الوظائف':'ক্যারিয়ার','المجتمع':'সম্প্রদায়','الباقات':'মূল্য','المحلّل الذكي':'AI সমাধানকারী','الأدوات الحية':'সরঞ্জাম','دخول':'লগইন','ابدأ مجانًا':'বিনামূল্যে শুরু','القائمة':'মেনু','إغلاق':'বন্ধ','الرئيسية':'হোম','للطلاب':'ছাত্ররা','للخريجين':'স্নাতক','المهندس الميداني':'মাঠ প্রকৌশলী','الشركات والمؤسسات':'কোম্পানি','المشاريع الكبرى':'মেগা প্রকল্প','احسب':'গণনা','بحث':'অনুসন্ধান','الكل':'সব','المجاني':'বিনামূল্যে','محترف':'প্রো','فريق':'দল','مؤسسي':'এন্টারপ্রাইজ','موصى به':'প্রস্তাবিত','تواصل معنا':'যোগাযোগ'},
+    ta: {'الورشة':'பட்டறை','الأكاديمية':'அகாடமி','الميدان':'களம்','الأكواد':'தரநிலைகள்','المواد':'பொருட்கள்','المكتبة':'நூலகம்','الوظائف':'வேலைகள்','المجتمع':'சமூகம்','الباقات':'விலை','المحلّل الذكي':'AI தீர்வாளர்','الأدوات الحية':'கருவிகள்','دخول':'உள்நுழைய','ابدأ مجانًا':'இலவசமாக தொடங்கு','القائمة':'பட்டியல்','إغلاق':'மூடு','الرئيسية':'முகப்பு','للطلاب':'மாணவர்கள்','للخريجين':'பட்டதாரிகள்','المهندس الميداني':'களப் பொறியாளர்','الشركات والمؤسسات':'நிறுவனங்கள்','المشاريع الكبرى':'பெரும் திட்டங்கள்','احسب':'கணக்கிடு','بحث':'தேடு','الكل':'அனைத்தும்','المجاني':'இலவசம்','محترف':'Pro','فريق':'குழு','مؤسسي':'Enterprise','موصى به':'பரிந்துரைக்கப்பட்டது','تواصل معنا':'தொடர்பு'},
+    kk: {'الورشة':'Шеберхана','الأكاديمية':'Академия','الميدان':'Алаң','الأكواد':'Стандарттар','المواد':'Материалдар','المكتبة':'Кітапхана','الوظائف':'Мансап','المجتمع':'Қауымдастық','الباقات':'Бағалар','المحلّل الذكي':'AI шешуші','الأدوات الحية':'Құралдар','دخول':'Кіру','ابدأ مجانًا':'Тегін бастау','القائمة':'Мәзір','إغلاق':'Жабу','الرئيسية':'Басты','للطلاب':'Студенттер','للخريجين':'Түлектер','المهندس الميداني':'Дала инженері','الشركات والمؤسسات':'Компаниялар','المشاريع الكبرى':'Мега жобалар','احسب':'Есептеу','بحث':'Іздеу','الكل':'Барлығы','المجاني':'Тегін','محترف':'Pro','فريق':'Команда','مؤسسي':'Кәсіпорын','موصى به':'Ұсынылған','تواصل معنا':'Байланыс'},
   };
+
 
   // ====================================================
   // CACHE ORIGINAL ARABIC TEXT ON FIRST RUN
   // So we can switch back to Arabic when user selects it.
   // ====================================================
   const ORIGINAL_TEXTS = new WeakMap();
+  const ORIGINAL_ATTRS = new WeakMap();
+  const TRANSLATABLE_ATTRS = ['placeholder', 'title', 'aria-label', 'data-tooltip', 'alt'];
 
   function cacheOriginalText(node){
     if(!ORIGINAL_TEXTS.has(node)){
@@ -9869,9 +10020,22 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
     }
   }
 
+  function cacheOriginalAttrs(el){
+    if(ORIGINAL_ATTRS.has(el)) return;
+    const map = {};
+    let any = false;
+    for(const a of TRANSLATABLE_ATTRS){
+      if(el.hasAttribute(a)){
+        map[a] = el.getAttribute(a);
+        any = true;
+      }
+    }
+    if(any) ORIGINAL_ATTRS.set(el, map);
+  }
+
   // Returns true if a text contains Arabic characters
   function hasArabic(text){
-    return /[\u0600-\u06FF]/.test(text);
+    return /[؀-ۿ]/.test(text);
   }
 
   // Walk all text nodes in document, applying a callback
@@ -9881,14 +10045,12 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node){
-          // Skip script, style, code tags
           const parent = node.parentNode;
           if(!parent) return NodeFilter.FILTER_REJECT;
           const tag = parent.nodeName;
-          if(tag === 'SCRIPT' || tag === 'STYLE' || tag === 'CODE' || tag === 'PRE') return NodeFilter.FILTER_REJECT;
-          // Skip if parent has data-no-translate
+          if(tag === 'SCRIPT' || tag === 'STYLE' || tag === 'CODE' || tag === 'PRE' ||
+             tag === 'TEXTAREA') return NodeFilter.FILTER_REJECT;
           if(parent.closest && parent.closest('[data-no-translate]')) return NodeFilter.FILTER_REJECT;
-          // Skip empty text nodes
           if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
@@ -9901,63 +10063,91 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
     }
   }
 
+  // Resolve translation for a given Arabic source string under target language.
+  // Falls back to English dictionary if target lang doesn't have the key.
+  function lookupTranslation(trimmed, code){
+    const dict = TRANSLATIONS[code];
+    if(dict && dict[trimmed]) return dict[trimmed];
+    if(code !== 'en'){
+      const en = TRANSLATIONS['en'];
+      if(en && en[trimmed]) return en[trimmed];
+    }
+    return null;
+  }
+
   // ====================================================
   // APPLY LANGUAGE — the main switcher
   // ====================================================
-  function applyLanguage(code){
-    const lang = LANGUAGES.find(l => l.code === code) || LANGUAGES[0];
-    const dict = TRANSLATIONS[code];
+  let __applying = false; // prevent MutationObserver recursion
+  function applyLanguage(code, scope){
+    if(__applying) return;
+    __applying = true;
+    try {
+      const lang = LANGUAGES.find(l => l.code === code) || LANGUAGES[0];
+      const root = scope || document.body;
+      const isFullApply = !scope;
 
-    // Update HTML direction
-    htmlEl.setAttribute('lang', lang.code);
-    htmlEl.setAttribute('dir', lang.rtl ? 'rtl' : 'ltr');
-
-    // Update button label
-    const flag = document.getElementById('currentFlag');
-    const codeEl = document.getElementById('currentCode');
-    if (flag) flag.textContent = lang.flag;
-    if (codeEl) codeEl.textContent = lang.code.toUpperCase();
-
-    // Walk through all text nodes and translate / restore
-    walkTextNodes(document.body, (node) => {
-      cacheOriginalText(node);
-      const original = ORIGINAL_TEXTS.get(node);
-      if(!original) return;
-      const trimmed = original.trim();
-
-      if(code === 'ar'){
-        // Restore original Arabic
-        if(node.nodeValue !== original) node.nodeValue = original;
-        return;
+      if(isFullApply){
+        htmlEl.setAttribute('lang', lang.code);
+        htmlEl.setAttribute('dir', lang.rtl ? 'rtl' : 'ltr');
+        const flag = document.getElementById('currentFlag');
+        const codeEl = document.getElementById('currentCode');
+        if (flag) flag.textContent = lang.flag;
+        if (codeEl) codeEl.textContent = lang.code.toUpperCase();
+        try { localStorage.setItem('enghub_lang', code); } catch(e){}
       }
 
-      // Only attempt to translate Arabic source text
-      if(!hasArabic(trimmed)) return;
+      // 1) Translate text nodes
+      walkTextNodes(root, (node) => {
+        cacheOriginalText(node);
+        const original = ORIGINAL_TEXTS.get(node);
+        if(!original) return;
+        const trimmed = original.trim();
 
-      // Look up in dictionary - try exact match first, then partial
-      if(dict && dict[trimmed]){
-        // Preserve surrounding whitespace
-        const leading = original.match(/^\s*/)[0];
-        const trailing = original.match(/\s*$/)[0];
-        node.nodeValue = leading + dict[trimmed] + trailing;
-      } else {
-        // No translation available — try English fallback
-        const enDict = TRANSLATIONS['en'];
-        if(enDict[trimmed]){
+        if(code === 'ar'){
+          if(node.nodeValue !== original) node.nodeValue = original;
+          return;
+        }
+        if(!hasArabic(trimmed)) return;
+        const translated = lookupTranslation(trimmed, code);
+        if(translated){
           const leading = original.match(/^\s*/)[0];
           const trailing = original.match(/\s*$/)[0];
-          node.nodeValue = leading + enDict[trimmed] + trailing;
+          node.nodeValue = leading + translated + trailing;
         }
-        // Otherwise keep Arabic (won't break the page)
+      });
+
+      // 2) Translate attributes (placeholder, aria-label, title, etc.)
+      const attrSelector = TRANSLATABLE_ATTRS.map(a => '[' + a + ']').join(',');
+      const candidates = (root.nodeType === 1 ? root : document.body).querySelectorAll(attrSelector);
+      candidates.forEach(el => {
+        if(el.closest('[data-no-translate]')) return;
+        cacheOriginalAttrs(el);
+        const orig = ORIGINAL_ATTRS.get(el);
+        if(!orig) return;
+        for(const a of TRANSLATABLE_ATTRS){
+          if(orig[a] === undefined) continue;
+          if(code === 'ar'){
+            if(el.getAttribute(a) !== orig[a]) el.setAttribute(a, orig[a]);
+            continue;
+          }
+          const trimmed = orig[a].trim();
+          if(!hasArabic(trimmed)) continue;
+          const translated = lookupTranslation(trimmed, code);
+          if(translated){
+            el.setAttribute(a, translated);
+          }
+        }
+      });
+
+      if(isFullApply){
+        document.querySelectorAll('.lang-item').forEach(item => {
+          item.classList.toggle('active', item.dataset.lang === code);
+        });
       }
-    });
-
-    // Update active item in dropdown
-    document.querySelectorAll('.lang-item').forEach(item => {
-      item.classList.toggle('active', item.dataset.lang === code);
-    });
-
-    try { localStorage.setItem('enghub_lang', code); } catch(e){}
+    } finally {
+      __applying = false;
+    }
   }
 
   // Expose globally so other scripts can trigger re-translation after dynamic renders
@@ -9975,16 +10165,20 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
       l.en.toLowerCase().includes(q) ||
       l.code.includes(q)
     );
-    list.innerHTML = filtered.map(l => `
-      <div class="lang-item ${l.code === getCurrentLang() ? 'active' : ''}" data-lang="${l.code}">
+    const current = getCurrentLang();
+    list.innerHTML = filtered.map(l => {
+      const hasDict = TRANSLATIONS[l.code] && Object.keys(TRANSLATIONS[l.code]).length > 0;
+      const isNative = l.code === 'ar';
+      return `
+      <div class="lang-item ${l.code === current ? 'active' : ''}" data-lang="${l.code}">
         <span class="lf">${l.flag}</span>
         <div>
           <div class="ln-name">${l.name}</div>
-          <div class="ln-en">${l.en}${TRANSLATIONS[l.code] && Object.keys(TRANSLATIONS[l.code]).length > 0 ? '' : ' · auto'}</div>
+          <div class="ln-en">${l.en}${isNative ? ' · source' : (hasDict ? '' : ' · EN fallback')}</div>
         </div>
         <span class="ln-code">${l.code.toUpperCase()}</span>
       </div>
-    `).join('');
+    `;}).join('');
 
     list.querySelectorAll('.lang-item').forEach(item => {
       item.addEventListener('click', () => {
@@ -10006,7 +10200,9 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
     }, 100);
   }
   function closeLangDropdown(){
-    document.getElementById('langDropdown').classList.remove('open');
+    const dd = document.getElementById('langDropdown');
+    if(!dd) return;
+    dd.classList.remove('open');
     const search = document.getElementById('langSearch');
     if (search) search.value = '';
     buildLanguageList('');
@@ -10025,14 +10221,52 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
   if (langSearch) {
     langSearch.addEventListener('input', (e) => buildLanguageList(e.target.value));
   }
-  // Close on outside click
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.lang-switcher')) closeLangDropdown();
   });
 
-  // Initial build + apply saved language (delay to let DOM finish)
+  // ====================================================
+  // MUTATION OBSERVER — auto-translate dynamically inserted content
+  // ====================================================
+  let __pendingNodes = new Set();
+  let __mutationTimer = null;
+  const __mo = new MutationObserver((mutations) => {
+    if(__applying) return;
+    for(const m of mutations){
+      m.addedNodes.forEach(n => {
+        if(n.nodeType === 1) __pendingNodes.add(n);
+        else if(n.nodeType === 3 && n.parentNode) __pendingNodes.add(n.parentNode);
+      });
+    }
+    if(__pendingNodes.size === 0) return;
+    clearTimeout(__mutationTimer);
+    __mutationTimer = setTimeout(() => {
+      const current = getCurrentLang();
+      if(current === 'ar'){ __pendingNodes.clear(); return; }
+      const nodes = Array.from(__pendingNodes);
+      __pendingNodes.clear();
+      nodes.forEach(node => {
+        if(node && node.isConnected){
+          try { applyLanguage(current, node); } catch(e){}
+        }
+      });
+    }, 60);
+  });
+
+  function startObserving(){
+    __mo.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // Initial build + apply saved language IMMEDIATELY (no setTimeout delay)
   buildLanguageList();
-  setTimeout(() => applyLanguage(getCurrentLang()), 100);
+  applyLanguage(getCurrentLang());
+  startObserving();
+
+  // Re-apply once everything (fonts, late scripts) has loaded — covers any
+  // content that was rendered asynchronously by other modules.
+  window.addEventListener('load', () => {
+    setTimeout(() => applyLanguage(getCurrentLang()), 50);
+  });
 
   /* ====================================================
      4) RENDER KATEX FOR data-eq-static ELEMENTS
