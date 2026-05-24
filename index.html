@@ -10201,7 +10201,7 @@ window.addEventListener('load', () => {
           ['عزم الزاوية (الجاذبية)', `${fmt(M_corner_gravity,2)} kN·m`],
           ['عزم العمود (الجانبي)', `${fmt(M_column_lateral,2)} kN·m`],
           ['العزم التصميمي للزاوية', `${fmt(M_total,2)} kN·m`, 'big'],
-          ['القص في القاعدة', `${fmt(V_base,2)} kN']
+          ['القص في القاعدة', `${fmt(V_base,2)} kN`]
         ],
         verify:`Mmax ≈ ${fmt(M_total,1)} — للتحقق الدقيق استخدم تحليل عناصر (ETABS/SAP2000)`,
         msg:`عزم التصميم في الزاوية ${fmt(M_total,1)} kN·m`, status:'ok'
