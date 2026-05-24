@@ -5325,7 +5325,7 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
       <button class="db-tab" data-db="rebar">🔩 حديد التسليح <span class="cnt">22</span></button>
       <button class="db-tab" data-db="pipes">🚿 أنابيب <span class="cnt">24</span></button>
       <button class="db-tab" data-db="cables">⚡ كابلات كهربائية <span class="cnt">15</span></button>
-      <button class="db-tab" data-db="materials">🧪 خواص المواد <span class="cnt">33</span></button>
+      <button class="db-tab" data-db="materials">🧪 خواص المواد <span class="cnt">133</span></button>
       <button class="db-tab" data-db="codes">📋 الأكواد المرجعية <span class="cnt">52</span></button>
     </div>
 
@@ -5448,8 +5448,8 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
           <input class="db-search" data-search="materials" placeholder="ابحث: فولاذ، خرسانة، Al, Steel..." />
         </div>
         <div class="db-stats">
-          <span>إجمالي: <b id="db-count-materials">33</b></span>
-          <span>المعروض: <b id="db-shown-materials">33</b></span>
+          <span>إجمالي: <b id="db-count-materials">133</b></span>
+          <span>المعروض: <b id="db-shown-materials">133</b></span>
         </div>
       </div>
       <div class="mat-grid" id="materialsGrid"></div>
@@ -13668,6 +13668,140 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
     // Glass / Ceramic
     {name:'زجاج عادي',               en:'Soda-Lime Glass',       cat:'glass',     rho:2500, E:70000,  fy:0,    fu:50,   nu:0.22, k:1.0,   alpha:9e-6},
     {name:'زجاج مقوّى',               en:'Tempered Glass',        cat:'glass',     rho:2500, E:70000,  fy:0,    fu:120,  nu:0.22, k:1.0,   alpha:9e-6},
+
+    /* ════════════════════════════════════════════════════════════
+       SESSION 7 EXPANSION — adds 70+ materials (total 103)
+       Sources: AISC Steel Manual, ASM Handbook, Eurocode, ASTM,
+       ACI 318, ASHRAE Fundamentals, Engineering Toolbox.
+       ════════════════════════════════════════════════════════════ */
+
+    /* === STEELS (expanded) === */
+    {name:'فولاذ كربوني C1018',       en:'Steel C1018 (Low Carbon)', cat:'metal', rho:7870, E:200000, fy:370, fu:440, nu:0.29, k:51.9, alpha:11.7e-6},
+    {name:'فولاذ كربوني C1045',       en:'Steel C1045 (Medium)',   cat:'metal', rho:7850, E:200000, fy:530, fu:625, nu:0.29, k:49.8, alpha:11.7e-6},
+    {name:'فولاذ كربوني C1095',       en:'Steel C1095 (High)',     cat:'metal', rho:7850, E:200000, fy:700, fu:1200, nu:0.29, k:48, alpha:11.3e-6},
+    {name:'فولاذ AISI 4140',          en:'Steel AISI 4140',        cat:'metal', rho:7850, E:200000, fy:655, fu:1020, nu:0.29, k:42.7, alpha:12.3e-6},
+    {name:'فولاذ AISI 4340',          en:'Steel AISI 4340',        cat:'metal', rho:7850, E:200000, fy:710, fu:1100, nu:0.29, k:42.6, alpha:12.3e-6},
+    {name:'فولاذ S235 (أوروبي)',     en:'Steel S235',            cat:'metal', rho:7850, E:210000, fy:235, fu:360, nu:0.30, k:50, alpha:12e-6},
+    {name:'فولاذ S275 (أوروبي)',     en:'Steel S275',            cat:'metal', rho:7850, E:210000, fy:275, fu:430, nu:0.30, k:50, alpha:12e-6},
+    {name:'فولاذ S460 (HSLA)',       en:'Steel S460 HSLA',       cat:'metal', rho:7850, E:210000, fy:460, fu:570, nu:0.30, k:42, alpha:12e-6},
+    {name:'فولاذ مقاوم 410',         en:'Stainless 410 Martensitic', cat:'metal', rho:7740, E:200000, fy:275, fu:485, nu:0.27, k:24.9, alpha:9.9e-6},
+    {name:'فولاذ مقاوم 430',         en:'Stainless 430 Ferritic',  cat:'metal', rho:7700, E:200000, fy:240, fu:450, nu:0.30, k:26.1, alpha:10.4e-6},
+    {name:'فولاذ مقاوم 904L',        en:'Stainless 904L Super',    cat:'metal', rho:7900, E:190000, fy:220, fu:490, nu:0.28, k:11.5, alpha:15.3e-6},
+    {name:'فولاذ Duplex 2205',        en:'Duplex 2205',           cat:'metal', rho:7800, E:200000, fy:450, fu:655, nu:0.30, k:19, alpha:13e-6},
+    {name:'فولاذ مجلفن',              en:'Galvanized Steel',       cat:'metal', rho:7800, E:200000, fy:230, fu:310, nu:0.29, k:50, alpha:11.7e-6},
+    {name:'حديد زهر رمادي',           en:'Gray Cast Iron',         cat:'metal', rho:7200, E:100000, fy:0,   fu:200, nu:0.26, k:53.3, alpha:10.5e-6},
+    {name:'حديد زهر مرن',             en:'Ductile Iron 65-45-12',  cat:'metal', rho:7100, E:165000, fy:310, fu:450, nu:0.28, k:35.2, alpha:11.8e-6},
+    {name:'حديد مطاوع',               en:'Wrought Iron',           cat:'metal', rho:7700, E:190000, fy:210, fu:330, nu:0.30, k:78, alpha:11.5e-6},
+
+    /* === ALUMINUM ALLOYS === */
+    {name:'ألومنيوم 1100-O',          en:'Aluminum 1100-O',        cat:'metal', rho:2710, E:69000, fy:34, fu:90, nu:0.33, k:222, alpha:23.6e-6},
+    {name:'ألومنيوم 2024-T3',         en:'Aluminum 2024-T3',       cat:'metal', rho:2780, E:73100, fy:345, fu:483, nu:0.33, k:121, alpha:22.9e-6},
+    {name:'ألومنيوم 3003-H14',        en:'Aluminum 3003-H14',      cat:'metal', rho:2730, E:69000, fy:145, fu:150, nu:0.33, k:159, alpha:23.2e-6},
+    {name:'ألومنيوم 5052-H32',        en:'Aluminum 5052-H32',      cat:'metal', rho:2680, E:70000, fy:193, fu:228, nu:0.33, k:138, alpha:23.8e-6},
+    {name:'ألومنيوم 5083',            en:'Aluminum 5083 (Marine)', cat:'metal', rho:2660, E:70300, fy:145, fu:290, nu:0.33, k:117, alpha:23.8e-6},
+    {name:'ألومنيوم 6063-T5',         en:'Aluminum 6063-T5',       cat:'metal', rho:2700, E:68900, fy:145, fu:185, nu:0.33, k:209, alpha:23.4e-6},
+    {name:'ألومنيوم 7050',            en:'Aluminum 7050-T7451',    cat:'metal', rho:2830, E:71700, fy:490, fu:550, nu:0.33, k:157, alpha:23.5e-6},
+
+    /* === COPPER / BRASS / BRONZE === */
+    {name:'نحاس ألفا',                en:'Alpha Brass C26000 (70/30)', cat:'metal', rho:8530, E:110000, fy:124, fu:340, nu:0.34, k:120, alpha:19.9e-6},
+    {name:'نحاس بيتا',                en:'Beta Brass C28000',      cat:'metal', rho:8390, E:105000, fy:138, fu:380, nu:0.34, k:125, alpha:20.8e-6},
+    {name:'برونز قصدير',              en:'Tin Bronze C90500',      cat:'metal', rho:8800, E:103000, fy:152, fu:310, nu:0.34, k:75, alpha:18e-6},
+    {name:'برونز فوسفوري',            en:'Phosphor Bronze C51000', cat:'metal', rho:8860, E:110000, fy:393, fu:550, nu:0.34, k:81, alpha:17.8e-6},
+    {name:'برونز ألومنيوم',           en:'Aluminum Bronze C95400', cat:'metal', rho:7780, E:110000, fy:240, fu:585, nu:0.32, k:59, alpha:16.2e-6},
+    {name:'نحاس C10100 OFE',          en:'Copper C10100',          cat:'metal', rho:8940, E:115000, fy:69, fu:220, nu:0.34, k:391, alpha:17e-6},
+
+    /* === OTHER METALS === */
+    {name:'زنك (نقي)',                en:'Zinc',                   cat:'metal', rho:7140, E:108000, fy:90, fu:170, nu:0.25, k:116, alpha:30.2e-6},
+    {name:'رصاص (نقي)',               en:'Lead',                   cat:'metal', rho:11340, E:14000, fy:5, fu:18, nu:0.44, k:35, alpha:28.9e-6},
+    {name:'قصدير (نقي)',              en:'Tin',                    cat:'metal', rho:7280, E:50000, fy:11, fu:22, nu:0.36, k:66, alpha:22e-6},
+    {name:'نيكل (نقي)',               en:'Nickel',                 cat:'metal', rho:8900, E:200000, fy:148, fu:462, nu:0.31, k:90.9, alpha:13.4e-6},
+    {name:'Inconel 718',              en:'Inconel 718',            cat:'metal', rho:8190, E:204000, fy:1100, fu:1280, nu:0.29, k:11.4, alpha:13e-6},
+    {name:'Monel 400',                en:'Monel 400',              cat:'metal', rho:8800, E:179000, fy:240, fu:550, nu:0.32, k:21.8, alpha:13.9e-6},
+    {name:'Hastelloy C276',           en:'Hastelloy C276',         cat:'metal', rho:8890, E:205000, fy:355, fu:790, nu:0.31, k:9.8, alpha:11.2e-6},
+    {name:'مغنيسيوم AZ91D',           en:'Magnesium AZ91D',        cat:'metal', rho:1810, E:45000, fy:160, fu:240, nu:0.35, k:72, alpha:26e-6},
+    {name:'تنغستن (نقي)',             en:'Tungsten',               cat:'metal', rho:19250, E:411000, fy:550, fu:980, nu:0.28, k:173, alpha:4.5e-6},
+    {name:'مولبدنوم (نقي)',           en:'Molybdenum',             cat:'metal', rho:10220, E:329000, fy:425, fu:655, nu:0.32, k:138, alpha:4.8e-6},
+    {name:'تيتانيوم Grade 2',         en:'Titanium Grade 2 CP',    cat:'metal', rho:4510, E:103000, fy:275, fu:345, nu:0.34, k:16.4, alpha:8.6e-6},
+
+    /* === CONCRETES (expanded) === */
+    {name:'خرسانة C15',               en:'Concrete C15',           cat:'concrete', rho:2400, E:22000, fy:0, fu:15, nu:0.20, k:1.4, alpha:10e-6},
+    {name:'خرسانة C60',               en:'Concrete C60',           cat:'concrete', rho:2450, E:41000, fy:0, fu:60, nu:0.20, k:1.4, alpha:10e-6},
+    {name:'خرسانة C70',               en:'Concrete C70 HSC',       cat:'concrete', rho:2500, E:43000, fy:0, fu:70, nu:0.20, k:1.5, alpha:10e-6},
+    {name:'خرسانة C90 UHPC',          en:'Concrete C90 UHPC',      cat:'concrete', rho:2550, E:47000, fy:0, fu:90, nu:0.20, k:1.6, alpha:10e-6},
+    {name:'خرسانة C120 UHPC',         en:'Concrete C120 UHPC',     cat:'concrete', rho:2600, E:50000, fy:0, fu:120, nu:0.21, k:1.7, alpha:10e-6},
+    {name:'خرسانة خفيفة LWC 25',      en:'Lightweight Concrete',   cat:'concrete', rho:1800, E:18000, fy:0, fu:25, nu:0.20, k:0.6, alpha:8e-6},
+    {name:'خرسانة رغوية',             en:'Foam Concrete (CLC)',    cat:'concrete', rho:600, E:1500, fy:0, fu:2, nu:0.20, k:0.11, alpha:8e-6},
+    {name:'خرسانة مسلحة بألياف',     en:'Fiber-Reinforced Concrete', cat:'concrete', rho:2400, E:30000, fy:0, fu:35, nu:0.22, k:1.4, alpha:10e-6},
+    {name:'خرسانة مسبقة الإجهاد',    en:'Prestressed Concrete C50', cat:'concrete', rho:2450, E:38000, fy:0, fu:50, nu:0.20, k:1.4, alpha:10e-6},
+    {name:'خرسانة معاد تدويرها',     en:'Recycled Aggregate Conc.', cat:'concrete', rho:2300, E:24000, fy:0, fu:25, nu:0.20, k:1.3, alpha:11e-6},
+    {name:'مونة أسمنتية',            en:'Cement Mortar',          cat:'concrete', rho:2100, E:15000, fy:0, fu:10, nu:0.20, k:0.93, alpha:11e-6},
+
+    /* === WOODS (expanded) === */
+    {name:'صنوبر سكوتلندي',           en:'Scots Pine',             cat:'wood', rho:520, E:10100, fy:0, fu:55, nu:0.30, k:0.12, alpha:5e-6},
+    {name:'أرز',                      en:'Cedar',                  cat:'wood', rho:380, E:7700, fy:0, fu:55, nu:0.30, k:0.11, alpha:3.6e-6},
+    {name:'ماهوجني',                  en:'Mahogany',               cat:'wood', rho:660, E:9500, fy:0, fu:80, nu:0.32, k:0.16, alpha:4.2e-6},
+    {name:'بلوط أحمر',                en:'Red Oak',                cat:'wood', rho:740, E:12500, fy:0, fu:100, nu:0.35, k:0.17, alpha:4.6e-6},
+    {name:'بامبو',                    en:'Bamboo',                 cat:'wood', rho:700, E:20000, fy:0, fu:140, nu:0.30, k:0.19, alpha:5e-6},
+    {name:'خشب مغلّف LVL',             en:'Laminated Veneer Lumber', cat:'wood', rho:550, E:13800, fy:0, fu:60, nu:0.30, k:0.13, alpha:4e-6},
+    {name:'خشب CLT',                  en:'Cross-Laminated Timber', cat:'wood', rho:480, E:11000, fy:0, fu:24, nu:0.30, k:0.13, alpha:4e-6},
+
+    /* === MASONRY === */
+    {name:'طوب طيني',                en:'Clay Brick',             cat:'masonry', rho:1900, E:13000, fy:0, fu:15, nu:0.15, k:0.72, alpha:5e-6},
+    {name:'بلوك خرساني مجوف',         en:'Hollow Concrete Block',  cat:'masonry', rho:1500, E:14000, fy:0, fu:8, nu:0.18, k:0.8, alpha:9e-6},
+    {name:'بلوك خفيف (AAC)',          en:'AAC Block',              cat:'masonry', rho:600, E:2000, fy:0, fu:5, nu:0.20, k:0.16, alpha:8e-6},
+    {name:'حجر جيري',                 en:'Limestone',              cat:'masonry', rho:2600, E:55000, fy:0, fu:60, nu:0.25, k:2.2, alpha:8e-6},
+    {name:'جرانيت',                   en:'Granite',                cat:'masonry', rho:2700, E:60000, fy:0, fu:150, nu:0.20, k:2.8, alpha:7.5e-6},
+    {name:'رخام',                     en:'Marble',                 cat:'masonry', rho:2700, E:70000, fy:0, fu:100, nu:0.27, k:2.5, alpha:7e-6},
+    {name:'حجر رملي',                 en:'Sandstone',              cat:'masonry', rho:2400, E:20000, fy:0, fu:80, nu:0.24, k:1.8, alpha:11.5e-6},
+    {name:'جبس',                      en:'Gypsum Board',           cat:'masonry', rho:850, E:2000, fy:0, fu:5, nu:0.20, k:0.17, alpha:18e-6},
+
+    /* === POLYMERS (expanded) === */
+    {name:'PET',                      en:'Polyethylene Terephthalate', cat:'polymer', rho:1380, E:3100, fy:55, fu:75, nu:0.40, k:0.24, alpha:60e-6},
+    {name:'PP',                       en:'Polypropylene',          cat:'polymer', rho:905, E:1500, fy:30, fu:35, nu:0.42, k:0.22, alpha:150e-6},
+    {name:'LDPE',                     en:'Low-Density Polyethylene', cat:'polymer', rho:920, E:300, fy:10, fu:15, nu:0.45, k:0.33, alpha:200e-6},
+    {name:'PS',                       en:'Polystyrene',            cat:'polymer', rho:1050, E:3300, fy:40, fu:55, nu:0.34, k:0.13, alpha:70e-6},
+    {name:'PMMA (Acrylic)',           en:'PMMA Acrylic',           cat:'polymer', rho:1190, E:3000, fy:70, fu:72, nu:0.37, k:0.19, alpha:75e-6},
+    {name:'PEEK',                     en:'PEEK',                   cat:'polymer', rho:1320, E:3600, fy:97, fu:100, nu:0.39, k:0.25, alpha:47e-6},
+    {name:'Nylon 6,6',                en:'Nylon 6,6 (PA66)',       cat:'polymer', rho:1140, E:2900, fy:75, fu:82, nu:0.39, k:0.25, alpha:80e-6},
+    {name:'PTFE (Teflon)',            en:'PTFE Teflon',            cat:'polymer', rho:2150, E:550, fy:21, fu:31, nu:0.46, k:0.25, alpha:135e-6},
+    {name:'POM (Delrin)',             en:'POM Acetal',             cat:'polymer', rho:1410, E:3100, fy:69, fu:75, nu:0.35, k:0.31, alpha:110e-6},
+    {name:'PUR (مرن)',                en:'Polyurethane (Flexible)', cat:'polymer', rho:1100, E:25, fy:0, fu:30, nu:0.49, k:0.21, alpha:200e-6},
+
+    /* === COMPOSITES (expanded) === */
+    {name:'كاربون UD (طولي)',         en:'Carbon UD Longitudinal', cat:'composite', rho:1550, E:181000, fy:0, fu:1500, nu:0.28, k:10, alpha:0.02e-6},
+    {name:'كاربون UD (عرضي)',         en:'Carbon UD Transverse',   cat:'composite', rho:1550, E:10300, fy:0, fu:40, nu:0.27, k:0.7, alpha:23e-6},
+    {name:'كيفلر 49',                 en:'Kevlar 49',              cat:'composite', rho:1440, E:125000, fy:0, fu:3600, nu:0.34, k:0.04, alpha:-4.9e-6},
+    {name:'GFRP بطبقات',              en:'GFRP Cross-ply',         cat:'composite', rho:1900, E:24000, fy:0, fu:480, nu:0.27, k:0.5, alpha:9e-6},
+    {name:'CFRP بطبقات',              en:'CFRP Cross-ply',         cat:'composite', rho:1600, E:69000, fy:0, fu:600, nu:0.30, k:5, alpha:1e-6},
+    {name:'BFRP (بازلت)',             en:'Basalt FRP',             cat:'composite', rho:1900, E:50000, fy:0, fu:1200, nu:0.30, k:0.6, alpha:8e-6},
+
+    /* === CERAMICS === */
+    {name:'ألومينا 99%',              en:'Alumina (Al₂O₃) 99%',    cat:'ceramic', rho:3900, E:380000, fy:0, fu:400, nu:0.22, k:30, alpha:8.1e-6},
+    {name:'كربيد السيليكون',          en:'Silicon Carbide (SiC)',  cat:'ceramic', rho:3100, E:410000, fy:0, fu:550, nu:0.14, k:120, alpha:4e-6},
+    {name:'زركونيا',                  en:'Zirconia (ZrO₂)',        cat:'ceramic', rho:6080, E:200000, fy:0, fu:900, nu:0.30, k:2.5, alpha:10.5e-6},
+    {name:'نيتريد السيليكون',         en:'Silicon Nitride (Si₃N₄)', cat:'ceramic', rho:3200, E:310000, fy:0, fu:700, nu:0.27, k:30, alpha:3.2e-6},
+
+    /* === BITUMEN / ASPHALT === */
+    {name:'إسفلت طرق',                en:'Asphalt Concrete',       cat:'bitumen', rho:2350, E:3000, fy:0, fu:3, nu:0.35, k:1.4, alpha:30e-6},
+    {name:'بيتومين 60/70',            en:'Bitumen 60/70 Pen Grade', cat:'bitumen', rho:1020, E:50, fy:0, fu:0.5, nu:0.49, k:0.17, alpha:600e-6},
+
+    /* === GLASS (expanded) === */
+    {name:'زجاج رقائقي',              en:'Laminated Glass',        cat:'glass', rho:2500, E:70000, fy:0, fu:70, nu:0.22, k:0.9, alpha:9e-6},
+    {name:'زجاج بوروسيليكات',        en:'Borosilicate (Pyrex)',   cat:'glass', rho:2230, E:64000, fy:0, fu:50, nu:0.20, k:1.1, alpha:3.3e-6},
+
+    /* === SOILS (expanded) === */
+    {name:'تربة طينية مشبعة',         en:'Saturated Clay (CH)',    cat:'soil', rho:1800, E:8, fy:0, fu:0, nu:0.45, k:1.1, alpha:0},
+    {name:'تربة طينية رملية',         en:'Sandy Clay (CL)',        cat:'soil', rho:1900, E:18, fy:0, fu:0, nu:0.35, k:1.3, alpha:0},
+    {name:'تربة عضوية',               en:'Organic Peat',           cat:'soil', rho:900, E:1, fy:0, fu:0, nu:0.40, k:0.4, alpha:0},
+    {name:'حصى مدور',                 en:'Rounded Gravel',         cat:'soil', rho:2000, E:80, fy:0, fu:0, nu:0.30, k:1.7, alpha:0},
+    {name:'سيلت (طمي)',               en:'Silt (ML)',              cat:'soil', rho:1850, E:12, fy:0, fu:0, nu:0.35, k:1.2, alpha:0},
+
+    /* === INSULATION === */
+    {name:'صوف صخري',                 en:'Rock Wool',              cat:'insulation', rho:80, E:5, fy:0, fu:0.05, nu:0.30, k:0.040, alpha:0},
+    {name:'صوف زجاجي',                en:'Glass Wool',             cat:'insulation', rho:30, E:3, fy:0, fu:0.03, nu:0.30, k:0.038, alpha:0},
+    {name:'بوليسترين XPS',            en:'XPS Foam',               cat:'insulation', rho:32, E:25, fy:0, fu:0.3, nu:0.25, k:0.029, alpha:80e-6},
+    {name:'بوليسترين EPS',            en:'EPS Foam',               cat:'insulation', rho:20, E:5, fy:0, fu:0.1, nu:0.20, k:0.036, alpha:60e-6},
+    {name:'بولي يوريثان رغوي',        en:'PU Foam Insulation',     cat:'insulation', rho:35, E:8, fy:0, fu:0.2, nu:0.30, k:0.022, alpha:100e-6},
   ];
 
   /* =====================================
@@ -13906,6 +14040,19 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
         renderTable(dbId);
       });
     });
+
+    // 3D viewer for steel sections (Session 7)
+    if(dbId === 'steelSections'){
+      table.querySelectorAll('tbody tr').forEach((tr, i) => {
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', () => {
+          const sortedData = data;
+          if(sortedData[i] && window.EngHubSteel3D){
+            window.EngHubSteel3D.show(sortedData[i]);
+          }
+        });
+      });
+    }
   }
 
   /* =====================================
@@ -13931,7 +14078,11 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
       soil: 'تربة',
       polymer: 'بوليمر',
       composite: 'مركّب',
-      glass: 'زجاج'
+      glass: 'زجاج',
+      masonry: 'بناء/حجر',
+      ceramic: 'سيراميك',
+      bitumen: 'بيتومين',
+      insulation: 'عزل'
     };
 
     grid.innerHTML = data.map(m => `
@@ -14931,6 +15082,294 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => { if (window.innerWidth > 900) close(); }, 100);
   });
+})();
+</script>
+
+<!-- ============================================================
+     SESSION 7 — 3D Steel Section Viewer (Three.js)
+     Click any W-shape row in the steel sections table to open
+     an interactive 3D visualization with dimension callouts.
+     ============================================================ -->
+<style>
+.s3d-modal{
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.s3d-modal.open{ display: flex; animation: tabFadeIn .25s ease; }
+.s3d-box{
+  background: var(--bg-2); border: 1px solid var(--line-strong);
+  border-radius: 18px; padding: 24px; max-width: 900px; width: 100%;
+  max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+}
+.s3d-head{
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+.s3d-title{ font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--accent); }
+.s3d-sub{ font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+.s3d-close{
+  background: transparent; border: 1px solid var(--line);
+  color: var(--ink-2); padding: 7px 14px; border-radius: 6px;
+  font-family: var(--font-mono); font-size: 12px; cursor: pointer;
+}
+.s3d-close:hover{ color: var(--danger); border-color: var(--danger); }
+
+.s3d-grid{
+  display: grid; grid-template-columns: 1fr 240px;
+  gap: 18px; flex: 1; min-height: 400px;
+}
+@media (max-width: 720px){ .s3d-grid{ grid-template-columns: 1fr; } }
+
+.s3d-canvas{
+  width: 100%; height: 420px;
+  background: linear-gradient(180deg, var(--bg-deep), var(--bg));
+  border: 1px solid var(--line); border-radius: 12px;
+  position: relative; overflow: hidden;
+}
+.s3d-canvas canvas{ display: block; width: 100%; height: 100%; }
+.s3d-hint{
+  position: absolute; bottom: 10px; right: 10px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--ink-4);
+  background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;
+  pointer-events: none;
+}
+
+.s3d-info{
+  display: flex; flex-direction: column; gap: 6px;
+  font-family: var(--font-mono); font-size: 12px;
+}
+.s3d-info .row{
+  display: flex; justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--bg-deep); border-radius: 5px;
+  border-right: 2px solid var(--accent);
+}
+.s3d-info .row .k{ color: var(--ink-3); }
+.s3d-info .row .v{ color: var(--ink); font-weight: 700; }
+
+.s3d-controls{
+  display: flex; gap: 6px; margin-top: 12px;
+}
+.s3d-ctrl{
+  flex: 1; padding: 7px; background: var(--input-bg);
+  border: 1px solid var(--line); color: var(--ink-2);
+  border-radius: 6px; cursor: pointer; font-family: var(--font-mono);
+  font-size: 11px;
+}
+.s3d-ctrl:hover{ border-color: var(--accent); color: var(--accent); }
+.s3d-ctrl.active{ background: var(--accent); color: #fff; border-color: var(--accent); }
+</style>
+
+<div class="s3d-modal" id="s3dModal">
+  <div class="s3d-box">
+    <div class="s3d-head">
+      <div>
+        <div class="s3d-title" id="s3dTitle">—</div>
+        <div class="s3d-sub" id="s3dSub">AISC 16th Edition · W-Shape</div>
+      </div>
+      <button class="s3d-close" id="s3dClose">× إغلاق (Esc)</button>
+    </div>
+    <div class="s3d-grid">
+      <div class="s3d-canvas" id="s3dCanvas">
+        <div class="s3d-hint">🖱 اسحب للدوران · عجلة الماوس للتكبير</div>
+      </div>
+      <div class="s3d-info" id="s3dInfo"></div>
+    </div>
+    <div class="s3d-controls">
+      <button class="s3d-ctrl active" data-view="iso">منظوري</button>
+      <button class="s3d-ctrl" data-view="front">أمامي</button>
+      <button class="s3d-ctrl" data-view="side">جانبي</button>
+      <button class="s3d-ctrl" data-view="top">علوي</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   SESSION 7 — 3D Steel Section Viewer (Three.js W-shape)
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  if(typeof THREE === 'undefined'){ console.warn('Three.js not loaded'); return; }
+
+  let renderer, scene, camera, mesh, animFrame, rot = {x: -0.3, y: 0.6}, dragging = false, last = null, zoom = 1;
+  const modal = document.getElementById('s3dModal');
+  const canvasWrap = document.getElementById('s3dCanvas');
+  const titleEl = document.getElementById('s3dTitle');
+  const subEl = document.getElementById('s3dSub');
+  const infoEl = document.getElementById('s3dInfo');
+
+  function init(){
+    if(renderer) return;
+    const canvas = document.createElement('canvas');
+    canvasWrap.appendChild(canvas);
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(35, 1, 0.1, 1000);
+    camera.position.set(0, 0, 10);
+    // Lights
+    const a = new THREE.AmbientLight(0xffffff, 0.55); scene.add(a);
+    const d1 = new THREE.DirectionalLight(0xffffff, 0.7); d1.position.set(5, 8, 7); scene.add(d1);
+    const d2 = new THREE.DirectionalLight(0xFF6B35, 0.3); d2.position.set(-6, -4, 5); scene.add(d2);
+
+    // Interaction
+    canvas.addEventListener('mousedown', e => { dragging = true; last = {x: e.clientX, y: e.clientY}; });
+    canvas.addEventListener('mousemove', e => {
+      if(!dragging) return;
+      rot.y += (e.clientX - last.x) * 0.01;
+      rot.x += (e.clientY - last.y) * 0.01;
+      rot.x = Math.max(-1.5, Math.min(1.5, rot.x));
+      last = {x: e.clientX, y: e.clientY};
+    });
+    window.addEventListener('mouseup', () => { dragging = false; });
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      zoom *= (e.deltaY > 0 ? 1.1 : 0.9);
+      zoom = Math.max(0.3, Math.min(3, zoom));
+    }, { passive: false });
+
+    // Touch
+    canvas.addEventListener('touchstart', e => {
+      if(e.touches.length === 1){ dragging = true; last = {x: e.touches[0].clientX, y: e.touches[0].clientY}; }
+    });
+    canvas.addEventListener('touchmove', e => {
+      if(dragging && e.touches.length === 1){
+        rot.y += (e.touches[0].clientX - last.x) * 0.01;
+        rot.x += (e.touches[0].clientY - last.y) * 0.01;
+        rot.x = Math.max(-1.5, Math.min(1.5, rot.x));
+        last = {x: e.touches[0].clientX, y: e.touches[0].clientY};
+        e.preventDefault();
+      }
+    }, { passive: false });
+    canvas.addEventListener('touchend', () => { dragging = false; });
+  }
+
+  function buildWShape(d, bf, tf, tw){
+    // d, bf, tf, tw in inches — normalize to scene units
+    const scale = 0.3;  // 1 inch = 0.3 scene units (~3" depth fills 1 unit)
+    const D = d * scale, BF = bf * scale, TF = tf * scale, TW = tw * scale;
+    const length = D * 2.5;  // beam length for visualization
+
+    // Use ExtrudeGeometry — define I-shape as 2D outline, extrude through length
+    const shape = new THREE.Shape();
+    const hb = BF / 2, hd = D / 2, htw = TW / 2;
+    // I-beam cross-section (12 corners) — starts top-left, goes clockwise
+    shape.moveTo(-hb,  hd);
+    shape.lineTo( hb,  hd);
+    shape.lineTo( hb,  hd - TF);
+    shape.lineTo( htw, hd - TF);
+    shape.lineTo( htw, -hd + TF);
+    shape.lineTo( hb, -hd + TF);
+    shape.lineTo( hb, -hd);
+    shape.lineTo(-hb, -hd);
+    shape.lineTo(-hb, -hd + TF);
+    shape.lineTo(-htw, -hd + TF);
+    shape.lineTo(-htw,  hd - TF);
+    shape.lineTo(-hb,  hd - TF);
+    shape.lineTo(-hb,  hd);
+
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: length, bevelEnabled: true,
+      bevelSegments: 2, bevelSize: 0.005, bevelThickness: 0.005
+    });
+    geo.translate(0, 0, -length / 2);
+    geo.computeVertexNormals();
+
+    const mat = new THREE.MeshPhongMaterial({
+      color: 0xFF6B35, specular: 0xffffff, shininess: 30,
+      flatShading: false
+    });
+    return new THREE.Mesh(geo, mat);
+  }
+
+  function buildEdges(mesh){
+    const edges = new THREE.EdgesGeometry(mesh.geometry, 30);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, opacity: 0.4, transparent: true });
+    const lines = new THREE.LineSegments(edges, lineMat);
+    return lines;
+  }
+
+  function resize(){
+    const w = canvasWrap.clientWidth, h = canvasWrap.clientHeight;
+    if(!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+
+  function loop(){
+    if(!mesh) return;
+    mesh.rotation.x = rot.x;
+    mesh.rotation.y = rot.y;
+    camera.position.z = 10 * zoom;
+    renderer.render(scene, camera);
+    animFrame = requestAnimationFrame(loop);
+  }
+
+  function show(section){
+    init();
+    // Clear previous mesh
+    if(mesh){ scene.remove(mesh); mesh.geometry.dispose(); }
+    mesh = buildWShape(section.d, section.bf, section.tf, section.tw);
+    scene.add(mesh);
+    // Add edges as child for crisper look
+    const edges = buildEdges(mesh);
+    mesh.add(edges);
+
+    // Reset rotation/zoom defaults
+    rot = {x: -0.3, y: 0.6}; zoom = 1;
+
+    titleEl.textContent = section.name;
+    subEl.textContent = `AISC 16th Edition · W-Shape · ${section.w} lb/ft`;
+    infoEl.innerHTML = `
+      <div class="row"><span class="k">d (depth)</span><span class="v">${section.d}″ (${(section.d*25.4).toFixed(1)} mm)</span></div>
+      <div class="row"><span class="k">b_f (flange)</span><span class="v">${section.bf}″ (${(section.bf*25.4).toFixed(1)} mm)</span></div>
+      <div class="row"><span class="k">t_f (flange thk)</span><span class="v">${section.tf}″ (${(section.tf*25.4).toFixed(1)} mm)</span></div>
+      <div class="row"><span class="k">t_w (web thk)</span><span class="v">${section.tw}″ (${(section.tw*25.4).toFixed(1)} mm)</span></div>
+      <div class="row"><span class="k">A (مساحة)</span><span class="v">${section.A} in²</span></div>
+      <div class="row"><span class="k">I_x</span><span class="v">${section.Ix} in⁴</span></div>
+      <div class="row"><span class="k">S_x</span><span class="v">${section.Sx} in³</span></div>
+      <div class="row"><span class="k">Z_x (plastic)</span><span class="v">${section.Zx} in³</span></div>
+      <div class="row"><span class="k">r_x</span><span class="v">${section.rx}″</span></div>
+      <div class="row"><span class="k">الوزن</span><span class="v">${section.w} lb/ft (${(section.w*1.488).toFixed(1)} kg/m)</span></div>
+    `;
+
+    modal.classList.add('open');
+    // Wait for layout then size
+    setTimeout(resize, 50);
+    if(animFrame) cancelAnimationFrame(animFrame);
+    loop();
+  }
+
+  function hide(){
+    modal.classList.remove('open');
+    if(animFrame){ cancelAnimationFrame(animFrame); animFrame = null; }
+  }
+
+  // View buttons
+  document.querySelectorAll('.s3d-ctrl').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.s3d-ctrl').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const v = btn.dataset.view;
+      if(v === 'iso')    { rot = {x:-0.3, y:0.6}; }
+      else if(v === 'front'){ rot = {x:0, y:0}; }
+      else if(v === 'side') { rot = {x:0, y:Math.PI/2}; }
+      else if(v === 'top')  { rot = {x:-Math.PI/2, y:0}; }
+    });
+  });
+
+  document.getElementById('s3dClose').addEventListener('click', hide);
+  modal.addEventListener('click', e => { if(e.target === modal) hide(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') hide(); });
+  window.addEventListener('resize', () => { if(renderer) resize(); });
+
+  window.EngHubSteel3D = { show, hide };
 })();
 </script>
 
