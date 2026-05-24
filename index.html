@@ -6306,6 +6306,802 @@ h2{ font-size:15px; color:#0A2540; border-right:4px solid #FF6B35; padding-right
 })();
 </script>
 
+<!-- ============================================================
+     SESSION 8 (FINAL) — PROJECTS HUB
+     Multi-calculation projects + signed PDF reports
+     + drawn signature pad + SHA-256 content integrity hash
+     ============================================================ -->
+<style>
+.ph-section{
+  background: var(--bg); border-top: 1px solid var(--line);
+  padding: 80px 0;
+}
+.ph-top-grid{
+  display: grid; grid-template-columns: 1.5fr 1fr;
+  gap: 18px; margin-bottom: 24px;
+}
+@media (max-width: 800px){ .ph-top-grid{ grid-template-columns: 1fr; } }
+
+.ph-card{
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 20px;
+}
+.ph-card-head{
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+}
+.ph-card-title{ font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+.ph-card-sub{ font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.06em; }
+
+.ph-signer{ display: flex; gap: 14px; align-items: center; }
+.ph-sig-img{
+  width: 72px; height: 72px; border-radius: 8px;
+  background: var(--bg-deep); border: 1px solid var(--line-strong);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.ph-sig-img img{ width: 100%; height: 100%; object-fit: contain; }
+.ph-sig-img.empty{
+  color: var(--ink-4); font-family: var(--font-mono); font-size: 9px;
+  text-align: center; line-height: 1.3;
+}
+.ph-signer-fields{ flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.ph-fld input{
+  background: var(--input-bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 7px 10px; color: var(--ink);
+  font-family: var(--font-ar); font-size: 12.5px; outline: none; width: 100%;
+}
+.ph-fld input:focus{ border-color: var(--accent); }
+.ph-fld label{ font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-4); letter-spacing: 0.06em; margin-bottom: 2px; display: block; }
+
+.ph-actions{ display: flex; gap: 8px; margin-top: 10px; }
+.ph-btn{
+  padding: 8px 14px; border-radius: 6px;
+  background: var(--accent); color: #fff; border: none;
+  font-family: var(--font-display); font-weight: 600; font-size: 12px;
+  cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.ph-btn:hover{ background: var(--accent-2); }
+.ph-btn.ghost{ background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.ph-btn.ghost:hover{ background: rgba(255,107,53,0.08); }
+.ph-btn.danger{ background: var(--danger); }
+.ph-btn.danger:hover{ background: #c91b00; }
+
+.ph-stats-row{
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  font-family: var(--font-mono);
+}
+.ph-stat{
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 8px; padding: 12px; text-align: center;
+}
+.ph-stat .n{
+  font-family: var(--font-display); font-weight: 700;
+  font-size: 22px; color: var(--accent); line-height: 1;
+}
+.ph-stat .l{ font-size: 10px; color: var(--ink-4); margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+.ph-projects-list{
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; overflow: hidden;
+}
+.ph-project{
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+  cursor: pointer; transition: background .15s;
+}
+.ph-project:last-child{ border-bottom: none; }
+.ph-project:hover{ background: rgba(140,180,220,0.04); }
+.ph-project.expanded{ background: rgba(255,107,53,0.04); }
+.ph-project-head{
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 14px; align-items: center;
+}
+.ph-project-name{ font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--ink); }
+.ph-project-meta{ font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+.ph-project-count{
+  background: rgba(255,107,53,0.12); color: var(--accent);
+  padding: 4px 10px; border-radius: 5px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+}
+.ph-project-actions{ display: flex; gap: 6px; }
+
+.ph-calcs{
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  display: none;
+}
+.ph-project.expanded .ph-calcs{ display: block; }
+.ph-calc-item{
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 8px; padding: 12px 14px;
+  margin-bottom: 8px;
+  display: grid; grid-template-columns: 1fr auto;
+  gap: 10px; align-items: center;
+}
+.ph-calc-title{ font-family: var(--font-display); font-weight: 600; font-size: 13px; }
+.ph-calc-ref{ font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-top: 3px; }
+.ph-calc-del{
+  background: transparent; border: 1px solid var(--line); color: var(--ink-4);
+  padding: 5px 8px; border-radius: 5px; cursor: pointer; font-size: 11px;
+}
+.ph-calc-del:hover{ color: var(--danger); border-color: var(--danger); }
+
+.ph-empty{
+  padding: 40px 20px; text-align: center;
+  color: var(--ink-3); font-family: var(--font-ar);
+}
+.ph-empty-ico{ font-size: 40px; opacity: 0.3; margin-bottom: 10px; }
+
+/* Signature pad modal */
+.ph-sig-modal{
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px); z-index: 9001;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.ph-sig-modal.open{ display: flex; }
+.ph-sig-box{
+  background: var(--bg-2); border: 1px solid var(--line-strong);
+  border-radius: 16px; padding: 24px; max-width: 500px; width: 100%;
+}
+.ph-sig-pad{
+  width: 100%; height: 200px;
+  background: #fff; border: 2px dashed var(--accent);
+  border-radius: 10px; cursor: crosshair;
+  touch-action: none;
+}
+.ph-sig-hint{ font-family: var(--font-ar); font-size: 12px; color: var(--ink-3); text-align: center; margin-top: 10px; }
+
+/* Save-to-project button injected into calculator cards */
+.cl-save-project-btn{
+  background: transparent; border: 1px dashed var(--accent); color: var(--accent);
+  padding: 8px 14px; border-radius: 6px; cursor: pointer;
+  font-family: var(--font-display); font-weight: 600; font-size: 12px;
+  margin-top: 6px; width: 100%;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.cl-save-project-btn:hover{ background: rgba(255,107,53,0.08); }
+
+/* New project / save modal */
+.ph-prompt-modal{
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  z-index: 9002; display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.ph-prompt-modal.open{ display: flex; }
+.ph-prompt-box{
+  background: var(--bg-2); border: 1px solid var(--line-strong);
+  border-radius: 14px; padding: 24px; max-width: 460px; width: 100%;
+}
+.ph-prompt-title{ font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-bottom: 14px; }
+.ph-prompt-box input, .ph-prompt-box select, .ph-prompt-box textarea{
+  width: 100%; background: var(--input-bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; color: var(--ink);
+  font-family: var(--font-ar); font-size: 13px; outline: none; margin-bottom: 10px;
+}
+.ph-prompt-box input:focus, .ph-prompt-box select:focus{ border-color: var(--accent); }
+.ph-prompt-actions{ display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+</style>
+
+<section id="projects-hub" class="ph-section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">PROJECTS HUB · SIGNED REPORTS · LOCAL VAULT</div>
+      <h2 class="section-title">إدارة المشاريع <span class="accent">والتقارير الموقّعة</span></h2>
+      <p class="section-desc">احفظ حساباتك في مشاريع، اجمع عدة حسابات في تقرير PDF واحد، وقّعه رقمياً بتوقيعك المرسوم + hash SHA-256 يثبت سلامة المحتوى. كل البيانات محلية في متصفحك.</p>
+    </div>
+
+    <div class="ph-top-grid reveal">
+      <!-- Signer profile -->
+      <div class="ph-card">
+        <div class="ph-card-head">
+          <div>
+            <div class="ph-card-title">ملف المهندس الموقّع</div>
+            <div class="ph-card-sub">يظهر على كل تقرير PDF</div>
+          </div>
+        </div>
+        <div class="ph-signer">
+          <div class="ph-sig-img" id="phSigImg">
+            <span class="ph-sig-img-empty">انقر<br>لرسم<br>التوقيع</span>
+          </div>
+          <div class="ph-signer-fields">
+            <div class="ph-fld"><label>الاسم</label><input type="text" id="phSignerName" placeholder="م. أحمد العتيبي" /></div>
+            <div class="ph-fld"><label>رقم الترخيص</label><input type="text" id="phSignerLicense" placeholder="PE-12345" /></div>
+            <div class="ph-fld"><label>الشركة / المكتب</label><input type="text" id="phSignerOrg" placeholder="مكتب البناء الهندسي" /></div>
+          </div>
+        </div>
+        <div class="ph-actions">
+          <button class="ph-btn ghost" id="phSigDraw">✍ ارسم التوقيع</button>
+          <button class="ph-btn ghost" id="phSigClear">مسح</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="ph-card">
+        <div class="ph-card-head">
+          <div>
+            <div class="ph-card-title">إحصائيات الخزينة</div>
+            <div class="ph-card-sub">محفوظ محلياً (localStorage)</div>
+          </div>
+        </div>
+        <div class="ph-stats-row">
+          <div class="ph-stat"><div class="n" id="phStatProj">0</div><div class="l">مشاريع</div></div>
+          <div class="ph-stat"><div class="n" id="phStatCalcs">0</div><div class="l">حسابات</div></div>
+          <div class="ph-stat"><div class="n" id="phStatReports">0</div><div class="l">تقارير</div></div>
+          <div class="ph-stat"><div class="n" id="phStatSigned">0</div><div class="l">موقّعة</div></div>
+        </div>
+        <div class="ph-actions" style="margin-top:14px;">
+          <button class="ph-btn" id="phNewProject">+ مشروع جديد</button>
+          <button class="ph-btn ghost" id="phExportAll">⇩ تصدير كامل JSON</button>
+          <button class="ph-btn ghost" id="phImportAll">⇧ استيراد</button>
+          <input type="file" id="phImportFile" accept=".json" style="display:none;" />
+        </div>
+      </div>
+    </div>
+
+    <div class="ph-projects-list reveal" id="phProjectsList"></div>
+  </div>
+</section>
+
+<!-- Signature pad modal -->
+<div class="ph-sig-modal" id="phSigModal">
+  <div class="ph-sig-box">
+    <div class="ph-prompt-title">ارسم توقيعك</div>
+    <canvas class="ph-sig-pad" id="phSigPad" width="600" height="200"></canvas>
+    <div class="ph-sig-hint">استخدم الماوس أو إصبعك للرسم على المنطقة البيضاء</div>
+    <div class="ph-prompt-actions">
+      <button class="ph-btn ghost" id="phSigPadClear">مسح</button>
+      <button class="ph-btn ghost" id="phSigPadCancel">إلغاء</button>
+      <button class="ph-btn" id="phSigPadSave">حفظ التوقيع ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Save-to-project prompt modal -->
+<div class="ph-prompt-modal" id="phSaveModal">
+  <div class="ph-prompt-box">
+    <div class="ph-prompt-title" id="phSaveTitle">حفظ في مشروع</div>
+    <label style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3); display:block; margin-bottom:5px;">اختر المشروع</label>
+    <select id="phSaveProject"></select>
+    <label style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3); display:block; margin-bottom:5px;">عنوان الحساب (اختياري)</label>
+    <input type="text" id="phSaveLabel" placeholder="مثال: عمود الطابق الأرضي C1" />
+    <div class="ph-prompt-actions">
+      <button class="ph-btn ghost" id="phSaveCancel">إلغاء</button>
+      <button class="ph-btn" id="phSaveConfirm">حفظ ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- New project prompt -->
+<div class="ph-prompt-modal" id="phNewModal">
+  <div class="ph-prompt-box">
+    <div class="ph-prompt-title">مشروع جديد</div>
+    <input type="text" id="phNewName" placeholder="اسم المشروع (مثل: برج النخيل)" />
+    <input type="text" id="phNewCode" placeholder="رمز المشروع (TWR-001)" />
+    <input type="text" id="phNewLocation" placeholder="الموقع (جدة، السعودية)" />
+    <div class="ph-prompt-actions">
+      <button class="ph-btn ghost" id="phNewCancel">إلغاء</button>
+      <button class="ph-btn" id="phNewConfirm">إنشاء ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   SESSION 8 — PROJECTS HUB + SIGNED PDF REPORTS
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  const STORE = 'enghub_projects_v1';
+  const REPORTS_STORE = 'enghub_reports_log_v1';
+
+  function loadState(){
+    try { const raw = localStorage.getItem(STORE); if(raw) return JSON.parse(raw); } catch(e){}
+    return {
+      signer: { name:'', license:'', org:'', sigImage:'' },
+      projects: []
+    };
+  }
+  function save(){ try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} }
+  function logReport(report){
+    try {
+      const list = JSON.parse(localStorage.getItem(REPORTS_STORE) || '[]');
+      list.unshift(report); localStorage.setItem(REPORTS_STORE, JSON.stringify(list.slice(0, 100)));
+    } catch(e){}
+  }
+  function countReports(){
+    try { return JSON.parse(localStorage.getItem(REPORTS_STORE) || '[]').length; } catch(e){ return 0; }
+  }
+
+  let state = loadState();
+  let expanded = null;
+  let pendingSave = null;  // { calcId, title, inputs, results, ref }
+
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function fmtDate(ts){ return new Date(ts).toLocaleDateString('ar-EG', {dateStyle:'medium'}); }
+  function uid(p){ return p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
+
+  /* ── SHA-256 hash via SubtleCrypto ── */
+  async function sha256(text){
+    try {
+      const buf = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    } catch(e){ return 'unavailable'; }
+  }
+
+  /* ── Render ── */
+  function render(){
+    document.getElementById('phStatProj').textContent = state.projects.length;
+    document.getElementById('phStatCalcs').textContent = state.projects.reduce((s,p) => s + p.calculations.length, 0);
+    document.getElementById('phStatReports').textContent = countReports();
+    document.getElementById('phStatSigned').textContent = countReports();
+
+    // Signer fields
+    document.getElementById('phSignerName').value = state.signer.name || '';
+    document.getElementById('phSignerLicense').value = state.signer.license || '';
+    document.getElementById('phSignerOrg').value = state.signer.org || '';
+    const sigBox = document.getElementById('phSigImg');
+    if(state.signer.sigImage){
+      sigBox.innerHTML = `<img src="${state.signer.sigImage}" alt="توقيع">`;
+      sigBox.classList.remove('empty');
+    } else {
+      sigBox.innerHTML = '<span class="ph-sig-img-empty" style="font-family:var(--font-mono); font-size:9px; text-align:center; line-height:1.3; color:var(--ink-4);">انقر<br>لرسم<br>التوقيع</span>';
+      sigBox.classList.add('empty');
+    }
+
+    // Projects list
+    const list = document.getElementById('phProjectsList');
+    if(state.projects.length === 0){
+      list.innerHTML = `<div class="ph-empty"><div class="ph-empty-ico">📂</div>لا توجد مشاريع بعد<br><span style="font-size:12px; color:var(--ink-4); margin-top:6px; display:inline-block;">اضغط "+ مشروع جديد" للبدء</span></div>`;
+      return;
+    }
+    list.innerHTML = state.projects.map(p => `
+      <div class="ph-project ${expanded===p.id?'expanded':''}" data-pid="${p.id}">
+        <div class="ph-project-head">
+          <div>
+            <div class="ph-project-name">${escapeHtml(p.name)} <span style="color:var(--ink-4); font-weight:400; font-family:var(--font-mono); font-size:11px;">· ${escapeHtml(p.code)}</span></div>
+            <div class="ph-project-meta">📍 ${escapeHtml(p.location || '—')} · أُنشئ ${fmtDate(p.createdAt)}</div>
+          </div>
+          <span class="ph-project-count">${p.calculations.length} حساب</span>
+          <div class="ph-project-actions" onclick="event.stopPropagation();">
+            <button class="ph-btn" data-pdf="${p.id}" ${p.calculations.length===0?'disabled style=\"opacity:0.4; cursor:not-allowed;\"':''}>📄 PDF موقّع</button>
+            <button class="ph-btn danger" data-del="${p.id}">🗑</button>
+          </div>
+        </div>
+        <div class="ph-calcs">
+          ${p.calculations.length === 0
+            ? '<div style="font-family:var(--font-ar); font-size:12px; color:var(--ink-4); padding:10px; text-align:center;">لا توجد حسابات محفوظة — استخدم زر "حفظ في مشروع" أسفل أي حاسبة</div>'
+            : p.calculations.map(c => `
+              <div class="ph-calc-item">
+                <div>
+                  <div class="ph-calc-title">${escapeHtml(c.title)}</div>
+                  <div class="ph-calc-ref">${escapeHtml(c.ref)} · ${fmtDate(c.addedAt)}</div>
+                </div>
+                <button class="ph-calc-del" data-del-calc="${p.id}|${c.id}">×</button>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    // Wire up
+    list.querySelectorAll('.ph-project').forEach(el => {
+      el.addEventListener('click', () => {
+        const pid = el.dataset.pid;
+        expanded = expanded === pid ? null : pid;
+        render();
+      });
+    });
+    list.querySelectorAll('[data-pdf]').forEach(b => b.addEventListener('click', () => generatePdf(b.dataset.pdf)));
+    list.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => deleteProject(b.dataset.del)));
+    list.querySelectorAll('[data-del-calc]').forEach(b => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const [pid, cid] = b.dataset.delCalc.split('|');
+      deleteCalc(pid, cid);
+    }));
+  }
+
+  /* ── Project CRUD ── */
+  function newProject(name, code, location){
+    if(!name.trim()){ alert('اسم المشروع مطلوب'); return; }
+    state.projects.unshift({
+      id: uid('p'), name: name.trim(), code: (code||'').trim() || 'AUTO-' + state.projects.length,
+      location: (location||'').trim(),
+      calculations: [], createdAt: Date.now(), updatedAt: Date.now()
+    });
+    save(); render();
+  }
+  function deleteProject(pid){
+    const p = state.projects.find(x => x.id === pid);
+    if(!p) return;
+    if(!confirm(`حذف "${p.name}" مع كل حساباته؟`)) return;
+    state.projects = state.projects.filter(x => x.id !== pid);
+    save(); render();
+  }
+  function deleteCalc(pid, cid){
+    const p = state.projects.find(x => x.id === pid); if(!p) return;
+    p.calculations = p.calculations.filter(c => c.id !== cid);
+    p.updatedAt = Date.now();
+    save(); render();
+  }
+
+  /* ── Signer ── */
+  ['phSignerName','phSignerLicense','phSignerOrg'].forEach(id => {
+    document.getElementById(id).addEventListener('input', (e) => {
+      const k = id.replace('phSigner','').toLowerCase();
+      state.signer[k] = e.target.value;
+      save();
+    });
+  });
+
+  /* ── Signature pad ── */
+  const sigModal = document.getElementById('phSigModal');
+  const pad = document.getElementById('phSigPad');
+  const padCtx = pad.getContext('2d');
+  let drawing = false, lastPt = null;
+
+  function resizePad(){
+    const rect = pad.getBoundingClientRect();
+    pad.width = rect.width * 2;  // retina
+    pad.height = rect.height * 2;
+    padCtx.scale(2, 2);
+    padCtx.lineWidth = 2.5;
+    padCtx.lineCap = 'round';
+    padCtx.lineJoin = 'round';
+    padCtx.strokeStyle = '#0A2540';
+    padCtx.fillStyle = '#fff';
+    padCtx.fillRect(0, 0, rect.width, rect.height);
+  }
+  function getPt(e){
+    const r = pad.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
+  pad.addEventListener('mousedown', e => { drawing = true; lastPt = getPt(e); });
+  pad.addEventListener('mousemove', e => {
+    if(!drawing) return;
+    const p = getPt(e);
+    padCtx.beginPath(); padCtx.moveTo(lastPt.x, lastPt.y); padCtx.lineTo(p.x, p.y); padCtx.stroke();
+    lastPt = p;
+  });
+  ['mouseup','mouseleave'].forEach(ev => pad.addEventListener(ev, () => { drawing = false; }));
+  pad.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; lastPt = getPt(e); }, {passive:false});
+  pad.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if(!drawing) return;
+    const p = getPt(e);
+    padCtx.beginPath(); padCtx.moveTo(lastPt.x, lastPt.y); padCtx.lineTo(p.x, p.y); padCtx.stroke();
+    lastPt = p;
+  }, {passive:false});
+  pad.addEventListener('touchend', () => { drawing = false; });
+
+  document.getElementById('phSigDraw').addEventListener('click', () => {
+    sigModal.classList.add('open');
+    setTimeout(() => {
+      resizePad();
+      if(state.signer.sigImage){
+        const img = new Image();
+        img.onload = () => padCtx.drawImage(img, 0, 0, pad.width/2, pad.height/2);
+        img.src = state.signer.sigImage;
+      }
+    }, 50);
+  });
+  document.getElementById('phSigImg').addEventListener('click', () => document.getElementById('phSigDraw').click());
+  document.getElementById('phSigPadClear').addEventListener('click', resizePad);
+  document.getElementById('phSigPadCancel').addEventListener('click', () => sigModal.classList.remove('open'));
+  document.getElementById('phSigPadSave').addEventListener('click', () => {
+    state.signer.sigImage = pad.toDataURL('image/png');
+    save(); render(); sigModal.classList.remove('open');
+  });
+  document.getElementById('phSigClear').addEventListener('click', () => {
+    if(!confirm('مسح التوقيع المحفوظ؟')) return;
+    state.signer.sigImage = ''; save(); render();
+  });
+
+  /* ── New project modal ── */
+  const newModal = document.getElementById('phNewModal');
+  document.getElementById('phNewProject').addEventListener('click', () => {
+    document.getElementById('phNewName').value = '';
+    document.getElementById('phNewCode').value = '';
+    document.getElementById('phNewLocation').value = '';
+    newModal.classList.add('open');
+    setTimeout(() => document.getElementById('phNewName').focus(), 50);
+  });
+  document.getElementById('phNewCancel').addEventListener('click', () => newModal.classList.remove('open'));
+  document.getElementById('phNewConfirm').addEventListener('click', () => {
+    newProject(document.getElementById('phNewName').value, document.getElementById('phNewCode').value, document.getElementById('phNewLocation').value);
+    newModal.classList.remove('open');
+  });
+
+  /* ── Save calculation to project (called from calculator cards) ── */
+  const saveModal = document.getElementById('phSaveModal');
+  function openSaveModal(payload){
+    pendingSave = payload;
+    const sel = document.getElementById('phSaveProject');
+    sel.innerHTML = state.projects.length === 0
+      ? '<option value="">— لا يوجد مشاريع، أنشئ واحداً أولاً —</option>'
+      : state.projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.code)})</option>`).join('');
+    sel.innerHTML += '<option value="__new__">+ مشروع جديد</option>';
+    document.getElementById('phSaveLabel').value = payload.title || '';
+    saveModal.classList.add('open');
+    setTimeout(() => document.getElementById('phSaveLabel').focus(), 50);
+  }
+  document.getElementById('phSaveCancel').addEventListener('click', () => saveModal.classList.remove('open'));
+  document.getElementById('phSaveConfirm').addEventListener('click', () => {
+    const pid = document.getElementById('phSaveProject').value;
+    const label = document.getElementById('phSaveLabel').value.trim();
+    if(!pid){ alert('اختر مشروعاً'); return; }
+    if(pid === '__new__'){
+      saveModal.classList.remove('open');
+      document.getElementById('phNewProject').click();
+      return;
+    }
+    if(!pendingSave) return;
+    const proj = state.projects.find(p => p.id === pid);
+    proj.calculations.push({
+      id: uid('c'), calcId: pendingSave.calcId,
+      title: label || pendingSave.title || 'حساب جديد',
+      inputs: pendingSave.inputs, results: pendingSave.results,
+      ref: pendingSave.ref || '', addedAt: Date.now()
+    });
+    proj.updatedAt = Date.now();
+    save(); render(); saveModal.classList.remove('open');
+    showToast(`تم حفظ "${label||pendingSave.title}" في ${proj.name} ✓`);
+  });
+
+  function showToast(msg){
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:12px 22px;border-radius:8px;font-family:var(--font-ar);font-size:13px;z-index:9999;box-shadow:0 10px 30px rgba(0,0,0,0.3);';
+    t.textContent = msg; document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+
+  /* ── PDF generation (multi-calc signed report) ── */
+  async function generatePdf(pid){
+    const p = state.projects.find(x => x.id === pid);
+    if(!p) return;
+    if(p.calculations.length === 0){ alert('لا توجد حسابات في هذا المشروع'); return; }
+
+    const reportId = 'EHR-' + Date.now().toString(36).toUpperCase();
+    const now = new Date();
+    const generatedAt = now.toLocaleString('ar-EG');
+    const isoTs = now.toISOString();
+    const content = JSON.stringify({ pid, project: p.name, calcs: p.calculations.map(c => ({id:c.id, title:c.title, ref:c.ref, addedAt:c.addedAt})), reportId, ts: isoTs });
+    const hash = await sha256(content);
+    const hashShort = hash.substring(0, 16).toUpperCase();
+
+    const calcsHtml = p.calculations.map((c, i) => {
+      const inputsRows = Object.entries(c.inputs || {}).map(([k,v]) => `<tr><td class="il">${escapeHtml(k)}</td><td>${escapeHtml(String(v))}</td></tr>`).join('');
+      const resultsRows = (c.results || []).map(r => {
+        if(Array.isArray(r)){
+          const [k, v, st] = r;
+          const color = st==='big'?'#FF6B35':st==='ok'?'#00A040':st==='warn'?'#E69500':st==='bad'?'#D32F2F':'#0A1628';
+          return `<tr><td>${escapeHtml(k)}</td><td style="color:${color}; font-weight:700; direction:ltr; text-align:left;">${escapeHtml(v)}</td></tr>`;
+        }
+        return `<tr><td>${escapeHtml(r.k||r.label||'')}</td><td style="direction:ltr; text-align:left;">${escapeHtml(r.v||r.value||'')}</td></tr>`;
+      }).join('');
+      return `
+        <div class="calc-block">
+          <div class="calc-head">
+            <span class="calc-num">#${i+1}</span>
+            <div>
+              <div class="calc-title">${escapeHtml(c.title)}</div>
+              <div class="calc-ref">${escapeHtml(c.ref)}</div>
+            </div>
+          </div>
+          ${inputsRows ? `<h4>المعطيات</h4><table>${inputsRows}</table>` : ''}
+          ${resultsRows ? `<h4>النتائج</h4><table>${resultsRows}</table>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    const sigBlock = state.signer.sigImage
+      ? `<img src="${state.signer.sigImage}" style="height:60px; object-fit:contain;" />`
+      : `<div style="height:60px; border-bottom:1px solid #999;"></div>`;
+
+    const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<title>تقرير ${p.name} — ${reportId}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+@page{ size:A4; margin:15mm 12mm; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Cairo",sans-serif;color:#0A1628;line-height:1.6;background:#fff;}
+.no-print{background:#0A2540;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.no-print button{background:#FF6B35;color:#fff;border:none;padding:10px 22px;font-family:inherit;font-size:14px;cursor:pointer;border-radius:4px;font-weight:600;}
+.report{max-width:740px;margin:0 auto;padding:0 20px 60px;}
+.cover{border:2px solid #0A2540;padding:24px;margin-bottom:30px;}
+.stamp{display:inline-block;padding:6px 16px;background:#FF6B35;color:#fff;font-family:"Inter";font-size:12px;letter-spacing:2px;font-weight:700;margin-bottom:14px;}
+h1{font-size:30px;color:#0A2540;margin-bottom:8px;}
+.cover-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-top:16px;font-size:13px;}
+.cover-meta div{display:flex;justify-content:space-between;padding:6px 10px;background:#f5f7fa;border-radius:4px;}
+.cover-meta b{color:#0A2540;}
+h2{font-size:18px;color:#0A2540;border-right:5px solid #FF6B35;padding-right:12px;margin:30px 0 14px;}
+.calc-block{margin-bottom:30px;padding:18px;border:1px solid #e8eaed;border-radius:8px;break-inside:avoid;}
+.calc-head{display:flex;gap:14px;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #eee;}
+.calc-num{display:inline-block;width:36px;height:36px;background:#FF6B35;color:#fff;border-radius:50%;text-align:center;line-height:36px;font-family:"Inter";font-weight:700;font-size:14px;}
+.calc-title{font-size:15px;font-weight:700;color:#0A2540;}
+.calc-ref{font-family:"Inter";font-size:10px;color:#666;margin-top:3px;letter-spacing:1px;}
+h4{font-size:11px;color:#666;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin:14px 0 6px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+table td{padding:6px 10px;border-bottom:1px dashed #ddd;}
+table td.il{font-family:"Inter";color:#666;width:40%;direction:ltr;text-align:left;}
+.sig-area{margin-top:50px;padding:20px;background:#fafbfc;border:1px solid #e8eaed;border-radius:8px;page-break-inside:avoid;}
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:20px;}
+.sig-block{text-align:center;}
+.sig-block .name{font-family:"Cairo";font-weight:700;font-size:13px;color:#0A2540;margin-top:6px;}
+.sig-block .role{font-family:"Inter";font-size:10px;color:#666;letter-spacing:1px;}
+.sig-line{border-top:1px solid #999;margin-top:6px;padding-top:6px;}
+.integrity{font-family:"Inter";font-size:10px;color:#666;background:#f0f0f0;padding:10px;border-radius:4px;border-right:3px solid #FF6B35;line-height:1.7;direction:ltr;text-align:left;}
+.integrity .hash{font-weight:700;color:#FF6B35;word-break:break-all;}
+.footer{margin-top:30px;padding-top:12px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-family:"Inter";font-size:10px;color:#888;}
+.disclaimer{margin-top:14px;padding:10px;background:#fff5f5;border:1px dashed #D32F2F;border-radius:4px;font-size:10.5px;color:#666;line-height:1.6;}
+.disclaimer b{color:#D32F2F;}
+@media print{.no-print{display:none;}body{background:#fff;}.calc-block{break-inside:avoid;}}
+</style></head><body>
+<div class="no-print">
+  <span>تقرير ${reportId} — اضغط للطباعة أو حفظ كـ PDF</span>
+  <button onclick="window.print()">طباعة / PDF</button>
+</div>
+<div class="report">
+  <div class="cover">
+    <span class="stamp">SIGNED ENGINEERING REPORT</span>
+    <h1>${escapeHtml(p.name)}</h1>
+    <div style="font-family:Cairo; font-size:14px; color:#666; margin-top:4px;">${escapeHtml(p.location || '')}</div>
+    <div class="cover-meta">
+      <div><span>رمز المشروع</span><b>${escapeHtml(p.code)}</b></div>
+      <div><span>Report ID</span><b style="direction:ltr;">${reportId}</b></div>
+      <div><span>عدد الحسابات</span><b>${p.calculations.length}</b></div>
+      <div><span>تاريخ الإصدار</span><b>${generatedAt}</b></div>
+      <div><span>المهندس الموقّع</span><b>${escapeHtml(state.signer.name || '—')}</b></div>
+      <div><span>رقم الترخيص</span><b style="direction:ltr;">${escapeHtml(state.signer.license || '—')}</b></div>
+    </div>
+  </div>
+
+  <h2>الحسابات المُدرَجة</h2>
+  ${calcsHtml}
+
+  <div class="sig-area">
+    <h2 style="margin-top:0;">التوقيع الرقمي</h2>
+    <div class="sig-grid">
+      <div class="sig-block">
+        ${sigBlock}
+        <div class="sig-line">
+          <div class="name">${escapeHtml(state.signer.name || 'المهندس الموقّع')}</div>
+          <div class="role">${escapeHtml(state.signer.org || 'المهندس المسؤول')} · ${escapeHtml(state.signer.license || '—')}</div>
+        </div>
+      </div>
+      <div class="sig-block">
+        <div style="height:60px;"></div>
+        <div class="sig-line">
+          <div class="name">الاستشاري</div>
+          <div class="role">المراجعة والاعتماد</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="integrity">
+      <b>Integrity Hash (SHA-256):</b><br>
+      <span class="hash">${hash}</span><br>
+      <b>Short ID:</b> ${hashShort} · <b>Timestamp:</b> ${isoTs}<br>
+      <b>Verification:</b> أي تعديل على محتوى التقرير سيغيّر الـ Hash بالكامل.
+    </div>
+
+    <div class="disclaimer">
+      <b>إخلاء مسؤولية:</b> هذا التقرير مُنتج آلياً من EngHub Pro — محرّك قواعد هندسية صريحة. التوقيع الرقمي المرسوم يُمثّل تأكيد المُنشئ، لكن للاعتماد الرسمي للمخططات التنفيذية يلزم توقيع يدوي + ختم مهندس مرخّص في الولاية القضائية المعنية. EngHub Pro لا تتحمل المسؤولية التنفيذية.
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>EngHub Pro · Projects Hub</span>
+    <span>${reportId} · Page 1</span>
+  </div>
+</div></body></html>`;
+
+    const w = window.open('', '_blank');
+    if(!w){ alert('السماح بالنوافذ المنبثقة مطلوب لتوليد التقرير'); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+
+    logReport({ id: reportId, projectId: pid, projectName: p.name, hash, ts: Date.now(), calcCount: p.calculations.length });
+    render();
+  }
+
+  /* ── Import/Export ── */
+  document.getElementById('phExportAll').addEventListener('click', () => {
+    const data = JSON.stringify(state, null, 2);
+    const blob = new Blob([data], {type: 'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `enghub-projects-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById('phImportAll').addEventListener('click', () => document.getElementById('phImportFile').click());
+  document.getElementById('phImportFile').addEventListener('change', (e) => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = (ev) => {
+      try {
+        const imp = JSON.parse(ev.target.result);
+        if(imp.projects && Array.isArray(imp.projects)){
+          if(!confirm(`استيراد ${imp.projects.length} مشروع؟ سيُدمج مع الحالي.`)) return;
+          state.projects = imp.projects.concat(state.projects);
+          if(imp.signer && imp.signer.name) state.signer = imp.signer;
+          save(); render();
+          showToast('تم الاستيراد ✓');
+        }
+      } catch(err){ alert('ملف غير صالح'); }
+    };
+    r.readAsText(f);
+  });
+
+  /* ── Inject "Save to Project" buttons into calculator cards ── */
+  function injectSaveButtons(){
+    if(!window.CALCS) return;
+    document.querySelectorAll('.cl-card').forEach(card => {
+      const id = card.dataset.id;
+      if(!id || card.querySelector('.cl-save-project-btn')) return;
+      const body = card.querySelector('.cl-card-body');
+      if(!body) return;
+      const btn = document.createElement('button');
+      btn.className = 'cl-save-project-btn';
+      btn.innerHTML = '💾 حفظ في مشروع';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const def = window.CALCS[id]; if(!def) return;
+        // Gather inputs + results from rendered card
+        const inputs = {};
+        def.inputs.forEach(inp => {
+          const el = document.getElementById(`cl_${id}_${inp.id}`);
+          if(el) inputs[inp.label] = el.value + (inp.unit?` ${inp.unit}`:'');
+        });
+        const resultDiv = document.getElementById('cl-result-' + id);
+        const results = [];
+        if(resultDiv){
+          resultDiv.querySelectorAll('.cl-row').forEach(row => {
+            const k = row.querySelector('.cl-row-k')?.textContent?.trim() || '';
+            const v = row.querySelector('.cl-row-v')?.textContent?.trim() || '';
+            if(k) results.push([k, v]);
+          });
+        }
+        openSaveModal({ calcId: id, title: def.title, inputs, results, ref: def.ref || def.tag || '' });
+      });
+      body.appendChild(btn);
+    });
+  }
+
+  // Inject after a delay (let calc-library render first)
+  setTimeout(injectSaveButtons, 800);
+  setInterval(injectSaveButtons, 3000);  // re-inject if filter changes
+
+  // Close modals on backdrop click + Esc
+  [sigModal, saveModal, newModal].forEach(m => {
+    m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){
+      sigModal.classList.remove('open');
+      saveModal.classList.remove('open');
+      newModal.classList.remove('open');
+    }
+  });
+
+  // Public API
+  window.EngHubProjects = {
+    get state(){ return state; },
+    newProject, deleteProject, deleteCalc, generatePdf,
+    addToProject: (pid, calc) => {
+      const p = state.projects.find(x => x.id === pid); if(!p) return false;
+      p.calculations.push({ id: uid('c'), ...calc, addedAt: Date.now() });
+      p.updatedAt = Date.now(); save(); render(); return true;
+    },
+    reset(){ localStorage.removeItem(STORE); localStorage.removeItem(REPORTS_STORE); state = loadState(); render(); }
+  };
+
+  render();
+})();
+</script>
+
 <!-- ===================== DEPLOYMENT / GO-LIVE ===================== -->
 <section id="deploy" class="deploy-section">
   <div class="container">
