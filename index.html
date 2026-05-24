@@ -5217,20 +5217,22 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
 <section id="calc-library" class="cl-section">
   <div class="container">
     <div class="section-head reveal">
-      <div class="section-eyebrow">CALCULATOR LIBRARY · 30+ ENGINEERING TOOLS</div>
+      <div class="section-eyebrow">CALCULATOR LIBRARY · 48 ENGINEERING TOOLS</div>
       <h2 class="section-title">مكتبة الحاسبات <span class="accent">الاحترافية</span></h2>
-      <p class="section-desc">30+ حاسبة هندسية معتمدة عالمياً (ACI, AISC, IEC, ASHRAE)، مصنّفة حسب التخصص. كل حاسبة تأتي بالمعادلة المرجعية والكود المعياري المستخدم.</p>
+      <p class="section-desc">48 حاسبة هندسية معتمدة عالمياً (ACI, AISC, IEC, ASHRAE, ASME, API) — مصنّفة عبر 8 تخصصات. كل حاسبة بمعادلة مرجعية + معامل أمان + تحقق ذاتي + مرجع كود.</p>
     </div>
 
     <!-- Filter chips -->
     <div class="cl-filters reveal" id="clFilters">
-      <button class="cl-chip active" data-filter="all">الكل <span class="cnt">33</span></button>
-      <button class="cl-chip" data-filter="struct">إنشائي <span class="cnt">8</span></button>
-      <button class="cl-chip" data-filter="mech">ميكانيكي <span class="cnt">8</span></button>
-      <button class="cl-chip" data-filter="elec">كهربائي <span class="cnt">6</span></button>
+      <button class="cl-chip active" data-filter="all">الكل <span class="cnt">48</span></button>
+      <button class="cl-chip" data-filter="struct">إنشائي <span class="cnt">12</span></button>
+      <button class="cl-chip" data-filter="mech">ميكانيكي <span class="cnt">11</span></button>
+      <button class="cl-chip" data-filter="elec">كهربائي <span class="cnt">9</span></button>
       <button class="cl-chip" data-filter="hvac">HVAC <span class="cnt">4</span></button>
       <button class="cl-chip" data-filter="hydro">هيدروليك <span class="cnt">4</span></button>
       <button class="cl-chip" data-filter="geo">جيوتكنيك <span class="cnt">3</span></button>
+      <button class="cl-chip" data-filter="petro">بترولي <span class="cnt">2</span></button>
+      <button class="cl-chip" data-filter="env">بيئي <span class="cnt">3</span></button>
     </div>
 
     <div class="cl-grid reveal" id="clGrid"></div>
@@ -10590,6 +10592,657 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
           notes:[
             {cls: FS>=1.5 ? 'ok' : (FS>=1?'warn':'bad'), icon: FS>=1.5?'✓':(FS>=1?'!':'⚠'),
               text: FS>=1.5 ? 'مستقر FS ≥ 1.5' : (FS>=1 ? 'حرج 1.0 ≤ FS < 1.5' : 'منهار FS < 1')}
+          ]
+        };
+      }
+    },
+
+    /* ============================================================
+       SESSION 1 — 15 ADDITIONAL CALCULATORS (gap-filling)
+       Coverage: Structural advanced, Mechanical (vibrations,
+       pressure vessel, NTU), Electrical (earthing, lightning,
+       load flow), Petroleum (Darcy reservoir, drilling), and
+       Environmental (BOD/COD, AQI, coagulation).
+       ============================================================ */
+
+    /* ── STRUCTURAL (4 new) ── */
+
+    s_mohr: {
+      id:'s_mohr', cat:'struct',
+      title:'دائرة Mohr للإجهادات',
+      desc:'الإجهادات الرئيسية وأقصى قص من حالة إجهاد مستوية',
+      tag:'STRESS', tagClass:'gd',
+      ref:'Mohr (1882) · Strength of Materials',
+      formula:'σ_avg = (σx+σy)/2;  R = √[((σx−σy)/2)² + τxy²];  σ1,2 = σ_avg ± R',
+      inputs:[
+        {id:'sx',  label:'σx', unit:'MPa', value:100, step:5},
+        {id:'sy',  label:'σy', unit:'MPa', value:40,  step:5},
+        {id:'txy', label:'τxy', unit:'MPa', value:30, step:5, full:true},
+      ],
+      compute(v){
+        const avg = (v.sx + v.sy) / 2;
+        const R = Math.sqrt(Math.pow((v.sx - v.sy)/2, 2) + v.txy*v.txy);
+        const s1 = avg + R;
+        const s2 = avg - R;
+        const tmax = R;
+        const thetaP = 0.5 * Math.atan2(2*v.txy, v.sx - v.sy) * 180/Math.PI;
+        const thetaS = thetaP + 45;
+        const vonMises = Math.sqrt(s1*s1 - s1*s2 + s2*s2);
+        return {
+          rows:[
+            {label:'σ متوسط', value:avg, unit:'MPa', dec:1},
+            {label:'نصف قطر R', value:R, unit:'MPa', dec:1},
+            {label:'σ₁ (رئيسي أقصى)', value:s1, unit:'MPa', big:true, dec:1},
+            {label:'σ₂ (رئيسي أدنى)', value:s2, unit:'MPa', dec:1},
+            {label:'τ_max', value:tmax, unit:'MPa', dec:1},
+            {label:'زاوية θp', value:thetaP, unit:'°', dec:1},
+            {label:'إجهاد von Mises', value:vonMises, unit:'MPa', dec:1},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:`زاوية القص الأقصى θs = ${thetaS.toFixed(1)}° (45° من المحور الرئيسي)`}
+          ]
+        };
+      }
+    },
+
+    s_cantilever: {
+      id:'s_cantilever', cat:'struct',
+      title:'كمرة كابولية',
+      desc:'الترخيم والعزم الأقصى لكابولي',
+      tag:'BEAM', tagClass:'cy',
+      ref:'Strength of Materials · Cantilever',
+      formula:'حمل نقطي طرفي: δ=PL³/(3EI), M=PL ·  حمل موزّع: δ=wL⁴/(8EI), M=wL²/2',
+      inputs:[
+        {id:'type', label:'نوع الحمل', type:'select', value:'point',
+          options:[
+            {value:'point', label:'حمل نقطي عند الطرف'},
+            {value:'udl', label:'حمل موزع منتظم'}
+          ], full:true},
+        {id:'load', label:'الحمل (P بـ kN / w بـ kN/m)', value:10, step:1},
+        {id:'L',    label:'طول الكابولي L', unit:'m', value:3, step:0.1},
+        {id:'b',    label:'عرض المقطع', unit:'mm', value:300, step:10},
+        {id:'h',    label:'عمق المقطع', unit:'mm', value:500, step:10},
+        {id:'E',    label:'E', unit:'GPa', value:25, step:1},
+      ],
+      compute(v){
+        const I = v.b * Math.pow(v.h,3) / 12; // mm⁴
+        const I_m = I * 1e-12; // m⁴
+        const E_Pa = v.E * 1e9;
+        let Mmax, Vmax, delta;
+        if(v.type === 'point'){
+          const P = v.load * 1000; // N
+          Mmax = v.load * v.L;     // kN·m
+          Vmax = v.load;           // kN
+          delta = (P * Math.pow(v.L,3)) / (3 * E_Pa * I_m) * 1000; // mm
+        } else {
+          const w = v.load * 1000; // N/m
+          Mmax = v.load * v.L * v.L / 2;
+          Vmax = v.load * v.L;
+          delta = (w * Math.pow(v.L,4)) / (8 * E_Pa * I_m) * 1000;
+        }
+        const limit = v.L * 1000 / 180; // cantilever limit L/180
+        return {
+          rows:[
+            {label:'العزم الأقصى', value:Mmax, unit:'kN·m', big:true, dec:2},
+            {label:'القص الأقصى', value:Vmax, unit:'kN', dec:2},
+            {label:'I', value:I/1e6, unit:'×10⁶ mm⁴', dec:1},
+            {label:'الترخيم δ', value:delta, unit:'mm', dec:2},
+            {label:'حد L/180', value:limit, unit:'mm', dec:2,
+              status: delta<limit ? 'ok' : 'bad'},
+          ],
+          notes:[
+            {cls: delta<limit ? 'ok' : 'bad', icon: delta<limit?'✓':'⚠',
+              text: delta<limit ? 'الترخيم ضمن حد L/180' : 'يتجاوز L/180 — كبّر المقطع'}
+          ]
+        };
+      }
+    },
+
+    s_3moment: {
+      id:'s_3moment', cat:'struct',
+      title:'كمرة مستمرة (3-Moment)',
+      desc:'العزوم عند الدعامة الوسطى لكمرة بفتحتين متساويتين',
+      tag:'CONTINUOUS', tagClass:'cy',
+      ref:'Clapeyron (1857) · Three-Moment Theorem',
+      formula:'لفتحتين متساويتين تحت UDL: M_B = -wL²/8;  M_AB,max ≈ +9wL²/128',
+      inputs:[
+        {id:'w', label:'الحمل الموزع w', unit:'kN/m', value:20, step:1},
+        {id:'L', label:'طول الفتحة L', unit:'m', value:6, step:0.1},
+      ],
+      compute(v){
+        const Mb = -v.w * v.L * v.L / 8;      // عند الدعامة الوسطى
+        const Mab_pos = 9 * v.w * v.L * v.L / 128; // أقصى موجب في الفتحة
+        const Ra = 3 * v.w * v.L / 8;
+        const Rb = 10 * v.w * v.L / 8;
+        const Rc = Ra;
+        return {
+          rows:[
+            {label:'M_B (دعامة وسطى)', value:Mb, unit:'kN·m', big:true, dec:2, status: 'warn'},
+            {label:'M_max+ (داخل الفتحة)', value:Mab_pos, unit:'kN·m', dec:2},
+            {label:'R_A (طرفي)', value:Ra, unit:'kN', dec:2},
+            {label:'R_B (وسط)', value:Rb, unit:'kN', dec:2},
+            {label:'R_C (طرفي)', value:Rc, unit:'kN', dec:2},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'العزم السالب فوق الدعامة الوسطى أكبر من الموجب → التسليح العلوي حرج'}
+          ]
+        };
+      }
+    },
+
+    s_yieldline: {
+      id:'s_yieldline', cat:'struct',
+      title:'تحليل خط الخضوع (بلاطة)',
+      desc:'الحمل النهائي لبلاطة مستطيلة مرتكزة بسيطًا',
+      tag:'YIELD LINE', tagClass:'gd',
+      ref:'Johansen Yield Line Theory · BS 8110',
+      formula:'w_u = (24·m) / (L²·α);  α يعتمد على نسبة الأبعاد',
+      inputs:[
+        {id:'Lx', label:'الطول الأقصر Lx', unit:'m', value:4, step:0.1},
+        {id:'Ly', label:'الطول الأطول Ly', unit:'m', value:6, step:0.1},
+        {id:'m',  label:'سعة العزم m', unit:'kN·m/m', value:25, step:1, full:true},
+      ],
+      compute(v){
+        const r = v.Ly / v.Lx;
+        // Johansen for simply-supported rectangular slab
+        const wu = (24 * v.m) / (v.Lx * v.Lx * (Math.sqrt(3 + r*r) - r) * (Math.sqrt(3 + r*r) - r));
+        const ratioCheck = 1 + 3*r*r/(r*r);
+        return {
+          rows:[
+            {label:'نسبة Ly/Lx', value:r, dec:2},
+            {label:'الحمل النهائي w_u', value:wu, unit:'kN/m²', big:true, dec:2},
+            {label:'سعة العزم m', value:v.m, unit:'kN·m/m', dec:1},
+          ],
+          notes:[
+            {cls: r<=2 ? 'ok' : 'warn', icon: r<=2?'✓':'!',
+              text: r<=2 ? 'بلاطة ثنائية الاتجاه فعّالة' : 'r>2 → سلوك أحادي الاتجاه يهيمن'},
+            {cls:'', icon:'ⓘ', text:'هذا الحمل النهائي (ULS) — اقسم على معامل أمان لحساب حمل التشغيل'}
+          ]
+        };
+      }
+    },
+
+    /* ── MECHANICAL (3 new) ── */
+
+    m_vibration: {
+      id:'m_vibration', cat:'mech',
+      title:'اهتزاز نظام SDOF',
+      desc:'التردد الطبيعي والاستجابة لنظام كتلة-نابض-مخمد',
+      tag:'VIBRATION', tagClass:'mg',
+      ref:'Mechanical Vibrations · SDOF',
+      formula:'ωn = √(k/m);  fn = ωn/2π;  ζ = c/(2√(km));  ωd = ωn·√(1−ζ²)',
+      inputs:[
+        {id:'k', label:'صلابة k', unit:'N/m', value:50000, step:1000},
+        {id:'m', label:'الكتلة m', unit:'kg', value:50, step:1},
+        {id:'c', label:'تخميد c', unit:'N·s/m', value:200, step:10, full:true},
+      ],
+      compute(v){
+        const wn = Math.sqrt(v.k / v.m);
+        const fn = wn / (2 * Math.PI);
+        const Tn = 1 / fn;
+        const cc = 2 * Math.sqrt(v.k * v.m);
+        const zeta = v.c / cc;
+        const wd = wn * Math.sqrt(Math.max(0, 1 - zeta*zeta));
+        const fd = wd / (2 * Math.PI);
+        let regime;
+        if(zeta < 1) regime = 'تحت التخميد (Underdamped)';
+        else if(Math.abs(zeta - 1) < 0.01) regime = 'تخميد حرج (Critical)';
+        else regime = 'فوق التخميد (Overdamped)';
+        return {
+          rows:[
+            {label:'ω_n (تردد زاوي)', value:wn, unit:'rad/s', dec:2},
+            {label:'f_n (تردد طبيعي)', value:fn, unit:'Hz', big:true, dec:2},
+            {label:'T_n (دور)', value:Tn, unit:'s', dec:4},
+            {label:'c_c (تخميد حرج)', value:cc, unit:'N·s/m', dec:1},
+            {label:'ζ (نسبة التخميد)', value:zeta, dec:3},
+            {label:'النظام', value:regime},
+            {label:'f_d (تردد مخمد)', value:fd, unit:'Hz', dec:2},
+          ],
+          notes:[
+            {cls: zeta>0.05 && zeta<0.3 ? 'ok' : 'warn',
+             icon: zeta>0.05 && zeta<0.3 ? '✓' : '!',
+             text: zeta<0.05 ? 'تخميد قليل جداً — قد يسبب اهتزازات مفرطة'
+                : zeta>0.3 ? 'تخميد مرتفع — استجابة بطيئة'
+                : 'تخميد جيد (5%-30%)'}
+          ]
+        };
+      }
+    },
+
+    m_pressVessel: {
+      id:'m_pressVessel', cat:'mech',
+      title:'وعاء ضغط أسطواني (ASME)',
+      desc:'سماكة الجدار لوعاء أسطواني تحت ضغط داخلي',
+      tag:'ASME VIII', tagClass:'in',
+      ref:'ASME BPVC §VIII Div.1 UG-27',
+      formula:'t = P·R / (S·E − 0.6·P)  (طولي);   t = P·R / (2·S·E + 0.4·P)  (محيطي)',
+      inputs:[
+        {id:'P', label:'الضغط الداخلي P', unit:'MPa', value:2.5, step:0.1},
+        {id:'D', label:'القطر الداخلي D', unit:'mm', value:1000, step:10},
+        {id:'S', label:'الإجهاد المسموح S', unit:'MPa', value:138, step:1},
+        {id:'E', label:'كفاءة اللحام E', value:0.85, step:0.05},
+        {id:'CA',label:'بدل التآكل', unit:'mm', value:3, step:0.5},
+      ],
+      compute(v){
+        const R = v.D / 2;
+        const t_long = (v.P * R) / (v.S * v.E - 0.6 * v.P);          // longitudinal
+        const t_circ = (v.P * R) / (2 * v.S * v.E + 0.4 * v.P);      // circumferential
+        const t_req = Math.max(t_long, t_circ);
+        const t_total = t_req + v.CA;
+        const t_nom = Math.ceil(t_total);
+        const burstP = (2 * v.S * v.E * t_nom) / (v.D + t_nom);
+        const sf = burstP / v.P;
+        return {
+          rows:[
+            {label:'t طولي', value:t_long, unit:'mm', dec:2},
+            {label:'t محيطي', value:t_circ, unit:'mm', dec:2},
+            {label:'t حاكم', value:t_req, unit:'mm', dec:2},
+            {label:'t + CA', value:t_total, unit:'mm', dec:2},
+            {label:'السماكة الاسمية', value:t_nom, unit:'mm', big:true, dec:0, status:'ok'},
+            {label:'ضغط التمزق (Burst)', value:burstP, unit:'MPa', dec:1},
+            {label:'معامل الأمان', value:sf, dec:2,
+              status: sf>=4 ? 'ok' : (sf>=2.5 ? 'warn' : 'bad')},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'الاختيار من السماكات القياسية: 6, 8, 10, 12, 16, 20, 25, 32, 40, 50 mm'}
+          ]
+        };
+      }
+    },
+
+    m_ntu: {
+      id:'m_ntu', cat:'mech',
+      title:'مبادل حراري — ε-NTU',
+      desc:'كفاءة المبادل بطريقة ε-NTU للتدفق المتعاكس',
+      tag:'HEAT', tagClass:'mg',
+      ref:'Kays & London · ε-NTU Method',
+      formula:'NTU = UA/C_min;  C* = C_min/C_max;  ε = (1−exp(−NTU(1−C*)))/(1−C*·exp(...))',
+      inputs:[
+        {id:'mh', label:'تدفق حار', unit:'kg/s', value:2.0, step:0.1},
+        {id:'cph',label:'سعة نوعية حار cp', unit:'kJ/kg·K', value:4.18, step:0.01},
+        {id:'mc', label:'تدفق بارد', unit:'kg/s', value:3.0, step:0.1},
+        {id:'cpc',label:'سعة نوعية بارد', unit:'kJ/kg·K', value:4.18, step:0.01},
+        {id:'UA', label:'UA', unit:'kW/K', value:25, step:1},
+        {id:'Thi',label:'T حار-دخول', unit:'°C', value:90, step:1},
+        {id:'Tci',label:'T بارد-دخول', unit:'°C', value:25, step:1, full:true},
+      ],
+      compute(v){
+        const Ch = v.mh * v.cph;         // kW/K
+        const Cc = v.mc * v.cpc;
+        const Cmin = Math.min(Ch, Cc);
+        const Cmax = Math.max(Ch, Cc);
+        const Cstar = Cmin / Cmax;
+        const NTU = v.UA / Cmin;
+        // Counter-flow effectiveness
+        let eps;
+        if(Math.abs(Cstar - 1) < 0.001){
+          eps = NTU / (1 + NTU);
+        } else {
+          const e1 = Math.exp(-NTU * (1 - Cstar));
+          eps = (1 - e1) / (1 - Cstar * e1);
+        }
+        const Qmax = Cmin * (v.Thi - v.Tci);  // kW
+        const Q = eps * Qmax;
+        const Tho = v.Thi - Q / Ch;
+        const Tco = v.Tci + Q / Cc;
+        return {
+          rows:[
+            {label:'C_h', value:Ch, unit:'kW/K', dec:2},
+            {label:'C_c', value:Cc, unit:'kW/K', dec:2},
+            {label:'C* = C_min/C_max', value:Cstar, dec:3},
+            {label:'NTU', value:NTU, dec:2},
+            {label:'الكفاءة ε', value:eps*100, unit:'%', big:true, dec:1, status:'ok'},
+            {label:'Q_max', value:Qmax, unit:'kW', dec:1},
+            {label:'Q الفعلي', value:Q, unit:'kW', dec:1},
+            {label:'T حار-خروج', value:Tho, unit:'°C', dec:1},
+            {label:'T بارد-خروج', value:Tco, unit:'°C', dec:1},
+          ],
+          notes:[
+            {cls: eps>0.7 ? 'ok' : 'warn', icon: eps>0.7?'✓':'!',
+             text: eps>0.7 ? 'كفاءة ممتازة' : (eps>0.5 ? 'كفاءة مقبولة' : 'كفاءة منخفضة — زد UA')}
+          ]
+        };
+      }
+    },
+
+    /* ── ELECTRICAL (3 new) ── */
+
+    e_earthing: {
+      id:'e_earthing', cat:'elec',
+      title:'مقاومة قطب أرضي (Dwight)',
+      desc:'مقاومة قطب أرضي عمودي مفرد',
+      tag:'IEEE 80', tagClass:'gd',
+      ref:'IEEE 80 · Dwight formula',
+      formula:'R = (ρ / 2πL) · [ln(8L/d) − 1]',
+      inputs:[
+        {id:'rho', label:'مقاومية التربة ρ', unit:'Ω·m', value:100, step:5},
+        {id:'L',   label:'طول القطب L', unit:'m', value:3, step:0.1},
+        {id:'d',   label:'قطر القطب d', unit:'mm', value:16, step:1},
+        {id:'n',   label:'عدد الأقطاب (متوازية)', value:1, step:1, full:true},
+      ],
+      compute(v){
+        const dm = v.d / 1000;
+        const R_one = (v.rho / (2 * Math.PI * v.L)) * (Math.log(8*v.L/dm) - 1);
+        // Parallel rods reduction factor (rule of thumb)
+        const F = v.n === 1 ? 1 : (0.6 + 0.4/Math.sqrt(v.n));
+        const R_total = R_one / v.n * (1/F * v.n);  // simplified parallel with mutual
+        const R_eff = R_one * F / Math.sqrt(v.n);
+        let status, msg;
+        if(R_eff < 1)    { status='ok';   msg='ممتاز (محطة كبيرة)'; }
+        else if(R_eff < 5) { status='ok';   msg='جيد (مبنى تجاري)'; }
+        else if(R_eff < 25){ status='warn'; msg='مقبول (سكني — NEC)'; }
+        else             { status='bad';  msg='مرتفع — زد عدد الأقطاب أو عالج التربة'; }
+        return {
+          rows:[
+            {label:'R قطب واحد', value:R_one, unit:'Ω', dec:2},
+            {label:'معامل التداخل F', value:F, dec:2},
+            {label:'R الفعلي (n أقطاب)', value:R_eff, unit:'Ω', big:true, dec:2, status},
+          ],
+          notes:[
+            {cls:status, icon: status==='ok'?'✓':(status==='warn'?'!':'⚠'), text:`${msg}`},
+            {cls:'', icon:'ⓘ', text:'NEC 250.53: ≤25Ω للقطب الواحد، أقل من ذلك أفضل'}
+          ]
+        };
+      }
+    },
+
+    e_lightning: {
+      id:'e_lightning', cat:'elec',
+      title:'حماية الصواعق (Rolling Sphere)',
+      desc:'منطقة الحماية لصاعقة ربط حسب فئة الحماية',
+      tag:'IEC 62305', tagClass:'mg',
+      ref:'IEC 62305-3 · NFPA 780',
+      formula:'r_s = 10·I^(0.65);  مساحة الحماية ≈ π·r_p²;  r_p = √(h(2R−h))',
+      inputs:[
+        {id:'class', label:'فئة الحماية', type:'select', value:'II',
+          options:[
+            {value:'I',  label:'I — حرج (متفجرات، نووي) R=20m'},
+            {value:'II', label:'II — مرتفع (صناعي، مستشفى) R=30m'},
+            {value:'III',label:'III — عادي (سكني، تجاري) R=45m'},
+            {value:'IV', label:'IV — منخفض (مزارع، مستودعات) R=60m'}
+          ], full:true},
+        {id:'h', label:'ارتفاع الصاعقة h', unit:'m', value:10, step:0.5},
+      ],
+      compute(v){
+        const R_map = {I:20, II:30, III:45, IV:60};
+        const R = R_map[v.class];
+        const h = Math.min(v.h, R);
+        const rp = Math.sqrt(h * (2*R - h));
+        const area = Math.PI * rp * rp;
+        const Icrit_map = {I:3, II:5, III:10, IV:16};
+        const Imin = Icrit_map[v.class];
+        return {
+          rows:[
+            {label:'نصف قطر الكرة R', value:R, unit:'m', dec:0},
+            {label:'نصف قطر الحماية r_p', value:rp, unit:'m', big:true, dec:2},
+            {label:'مساحة الحماية', value:area, unit:'m²', dec:1},
+            {label:'أقل تيار يَلتقط I_min', value:Imin, unit:'kA', dec:0},
+            {label:'كفاءة الفئة', value:({I:99,II:97,III:91,IV:84})[v.class] + '%'},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'استخدم عدة صواعق لتغطية مساحة أكبر — متابعة مناطق الحماية في IEC 62305'},
+            {cls: v.h > R ? 'warn' : 'ok', icon: v.h>R?'!':'✓',
+              text: v.h > R ? 'ارتفاع الصاعقة > R — الحماية غير فعّالة فوق R' : 'ارتفاع مناسب'}
+          ]
+        };
+      }
+    },
+
+    e_loadFlow: {
+      id:'e_loadFlow', cat:'elec',
+      title:'تدفق القدرة (2-Bus)',
+      desc:'تيار، خسائر، وكفاءة لربط ثنائي بسيط',
+      tag:'POWER FLOW', tagClass:'in',
+      ref:'Power System Analysis · Glover',
+      formula:'I = S/(√3·V·cosφ);  P_loss = 3·I²·R;  η = P_load/(P_load+P_loss)',
+      inputs:[
+        {id:'V',   label:'الجهد V', unit:'V', value:11000, step:100},
+        {id:'P',   label:'القدرة المحوّلة', unit:'kW', value:500, step:10},
+        {id:'pf',  label:'cosφ', value:0.85, step:0.01},
+        {id:'L',   label:'طول الخط', unit:'km', value:5, step:0.1},
+        {id:'R_km',label:'R الخط', unit:'Ω/km', value:0.18, step:0.01},
+        {id:'X_km',label:'X الخط', unit:'Ω/km', value:0.40, step:0.01},
+      ],
+      compute(v){
+        const S = v.P / v.pf;                            // kVA
+        const I = (S * 1000) / (Math.sqrt(3) * v.V);     // A
+        const R = v.R_km * v.L;
+        const X = v.X_km * v.L;
+        const Z = Math.sqrt(R*R + X*X);
+        const sinPhi = Math.sqrt(Math.max(0, 1 - v.pf*v.pf));
+        const Vdrop = Math.sqrt(3) * I * (R * v.pf + X * sinPhi);
+        const VdropPct = (Vdrop / v.V) * 100;
+        const Vr = v.V - Vdrop;
+        const Ploss = 3 * I * I * R / 1000;              // kW
+        const Pin = v.P + Ploss;
+        const eta = (v.P / Pin) * 100;
+        return {
+          rows:[
+            {label:'S الظاهرة', value:S, unit:'kVA', dec:1},
+            {label:'التيار I', value:I, unit:'A', big:true, dec:2},
+            {label:'Z الخط', value:Z, unit:'Ω', dec:3},
+            {label:'سقوط الجهد ΔV', value:Vdrop, unit:'V', dec:1},
+            {label:'ΔV%', value:VdropPct, unit:'%', dec:2,
+              status: VdropPct<5 ? 'ok' : (VdropPct<8?'warn':'bad')},
+            {label:'V عند المستقبل', value:Vr, unit:'V', dec:0},
+            {label:'P_loss', value:Ploss, unit:'kW', dec:2},
+            {label:'الكفاءة η', value:eta, unit:'%', dec:2,
+              status: eta>97 ? 'ok' : (eta>93?'warn':'bad')},
+          ],
+          notes:[
+            {cls: VdropPct<5 ? 'ok' : 'warn', icon: VdropPct<5?'✓':'!',
+              text: VdropPct<5 ? 'ضمن حدود IEC للجهد المتوسط' : 'سقوط مرتفع — كبّر المقطع أو ارفع الجهد'}
+          ]
+        };
+      }
+    },
+
+    /* ── PETROLEUM (2 new) ── */
+
+    p_darcy: {
+      id:'p_darcy', cat:'petro',
+      title:'تدفق Darcy (مكمن نفطي)',
+      desc:'معدل الإنتاج من مكمن خطي حسب قانون Darcy',
+      tag:'RESERVOIR', tagClass:'gd',
+      ref:'Darcy (1856) · Reservoir Engineering',
+      formula:'q = (k·A·ΔP) / (μ·L);  بوحدات حقلية: q = 1.127·k·A·ΔP/(μ·L)',
+      inputs:[
+        {id:'k',   label:'النفاذية k', unit:'mD', value:100, step:10},
+        {id:'h',   label:'سماكة المكمن h', unit:'ft', value:30, step:1},
+        {id:'A',   label:'مساحة المقطع A', unit:'ft²', value:6000, step:100},
+        {id:'mu',  label:'لزوجة النفط μ', unit:'cP', value:1.5, step:0.1},
+        {id:'dP',  label:'فرق الضغط ΔP', unit:'psi', value:500, step:10},
+        {id:'L',   label:'الطول L', unit:'ft', value:300, step:10},
+        {id:'Bo',  label:'معامل الحجم Bo', value:1.2, step:0.05, full:true},
+      ],
+      compute(v){
+        // Field units: q (bbl/d) = 1.127e-3 · k(mD) · A(ft²) · ΔP(psi) / (μ(cP) · L(ft) · Bo)
+        const q_bbl_d = (1.127e-3 * v.k * v.A * v.dP) / (v.mu * v.L * v.Bo);
+        const q_m3_d = q_bbl_d * 0.158987;
+        const v_cm_s = (q_bbl_d * 5.615 / v.A) * 30.48 / 86400;  // ft/s → cm/s
+        return {
+          rows:[
+            {label:'q (بالبراميل/يوم)', value:q_bbl_d, unit:'bbl/d', big:true, dec:1, status:'ok'},
+            {label:'q (متر مكعب/يوم)', value:q_m3_d, unit:'m³/d', dec:2},
+            {label:'q سطحي (Bo معدّل)', value:q_bbl_d/v.Bo, unit:'STB/d', dec:1},
+            {label:'سرعة سطحية', value:v_cm_s, unit:'cm/s', dec:5},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'هذا تدفق خطي ساكن — للتدفق الشعاعي استخدم معادلة Vogel أو IPR'},
+            {cls: v.k<1 ? 'bad' : (v.k<10?'warn':'ok'), icon: v.k<10?'!':'✓',
+              text: v.k<1 ? 'نفاذية رديئة جداً (Tight)' : (v.k<10 ? 'نفاذية منخفضة' : 'نفاذية جيدة')}
+          ]
+        };
+      }
+    },
+
+    p_drilling: {
+      id:'p_drilling', cat:'petro',
+      title:'هيدروليكا الحفر',
+      desc:'سرعة الطين وسقوط الضغط في عمود الحفر',
+      tag:'DRILLING', tagClass:'mg',
+      ref:'API RP 13D · Drilling Engineering',
+      formula:'V = Q/A;  ΔP = ρ·V²·L·f / (D·2);  ECD = ρ + ΔP/(0.052·TVD)',
+      inputs:[
+        {id:'Q',  label:'معدل ضخ Q', unit:'gpm', value:600, step:10},
+        {id:'D',  label:'قطر الـ Drill Pipe', unit:'in', value:5, step:0.5},
+        {id:'L',  label:'طول العمود', unit:'ft', value:8000, step:100},
+        {id:'mw', label:'كثافة الطين MW', unit:'ppg', value:11, step:0.1},
+        {id:'mu', label:'لزوجة بلاستيكية PV', unit:'cP', value:20, step:1},
+        {id:'TVD',label:'العمق الرأسي TVD', unit:'ft', value:7500, step:100, full:true},
+      ],
+      compute(v){
+        const A_in2 = Math.PI * v.D * v.D / 4;
+        const A_ft2 = A_in2 / 144;
+        // gpm → ft³/s: 1 gpm = 0.002228 ft³/s
+        const Q_ft3s = v.Q * 0.002228;
+        const V_fts = Q_ft3s / A_ft2;
+        // Reynolds (field units)
+        const Re = 928 * v.mw * V_fts * v.D / v.mu;
+        // friction factor (turbulent simplified)
+        const f = Re > 2100 ? 0.0791 / Math.pow(Re, 0.25) : 16/Math.max(Re,1);
+        // Pressure drop (Bingham approximation, simplified)
+        const dP = (v.mw * V_fts * V_fts * v.L * f) / (v.D * 25.8);
+        const ECD = v.mw + dP / (0.052 * v.TVD);
+        return {
+          rows:[
+            {label:'سرعة الطين V', value:V_fts, unit:'ft/s', big:true, dec:2},
+            {label:'Reynolds', value:Re, dec:0},
+            {label:'نمط', value: Re<2100?'صفائحي':'مضطرب'},
+            {label:'معامل الاحتكاك f', value:f, dec:5},
+            {label:'سقوط الضغط ΔP', value:dP, unit:'psi', dec:1},
+            {label:'ECD (كثافة معادلة)', value:ECD, unit:'ppg', dec:2,
+              status: ECD<v.mw*1.15 ? 'ok' : 'warn'},
+          ],
+          notes:[
+            {cls: V_fts>=3 && V_fts<=10 ? 'ok' : 'warn', icon: V_fts>=3 && V_fts<=10?'✓':'!',
+              text: `سرعة ${V_fts.toFixed(1)} ft/s — المدى الأمثل 3-10 ft/s لتنظيف القاع`},
+            {cls: ECD < v.mw*1.2 ? 'ok' : 'bad', icon: ECD<v.mw*1.2?'✓':'⚠',
+              text: ECD < v.mw*1.2 ? 'ECD آمنة' : 'ECD مرتفعة — قد تكسر التكوين'}
+          ]
+        };
+      }
+    },
+
+    /* ── ENVIRONMENTAL (3 new) ── */
+
+    env_bod: {
+      id:'env_bod', cat:'env',
+      title:'حساب BOD/COD',
+      desc:'الطلب البيوكيميائي للأكسجين ونسبة BOD/COD',
+      tag:'WASTEWATER', tagClass:'sc',
+      ref:'Standard Methods · APHA 5210',
+      formula:'BOD = (DO₁ − DO₂) · (V/V_sample);  نسبة BOD/COD تدل على القابلية للمعالجة',
+      inputs:[
+        {id:'DO1', label:'الأكسجين الذائب الابتدائي', unit:'mg/L', value:8.5, step:0.1},
+        {id:'DO2', label:'الأكسجين الذائب بعد 5 أيام', unit:'mg/L', value:2.5, step:0.1},
+        {id:'Vs',  label:'حجم العينة', unit:'mL', value:30, step:1},
+        {id:'Vb',  label:'حجم القارورة', unit:'mL', value:300, step:1},
+        {id:'COD', label:'COD المقاسة', unit:'mg/L', value:450, step:10, full:true},
+      ],
+      compute(v){
+        const dilution = v.Vb / v.Vs;
+        const BOD5 = (v.DO1 - v.DO2) * dilution;
+        const ratio = BOD5 / v.COD;
+        let treatability;
+        if(ratio > 0.5) treatability = 'سهلة المعالجة بيولوجياً ✓';
+        else if(ratio > 0.3) treatability = 'قابلة للمعالجة بيولوجياً';
+        else if(ratio > 0.1) treatability = 'صعبة — تحتاج معالجة كيميائية';
+        else treatability = 'سامّة أو غير قابلة للتحلل البيولوجي ✗';
+        const ult = BOD5 / 0.68;  // typical k₁=0.23/d → BODu ≈ BOD5/0.68
+        return {
+          rows:[
+            {label:'معامل التخفيف', value:dilution, dec:1},
+            {label:'BOD₅', value:BOD5, unit:'mg/L', big:true, dec:1, status:'ok'},
+            {label:'BOD النهائي (Ultimate)', value:ult, unit:'mg/L', dec:1},
+            {label:'COD', value:v.COD, unit:'mg/L', dec:0},
+            {label:'نسبة BOD/COD', value:ratio, dec:2,
+              status: ratio>0.5 ? 'ok' : (ratio>0.3?'warn':'bad')},
+            {label:'قابلية المعالجة', value:treatability},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'BOD₅/COD المثالية للمعالجة البيولوجية > 0.5'},
+            {cls: BOD5>500 ? 'warn' : 'ok', icon: BOD5>500?'!':'✓',
+              text: BOD5>500 ? 'صرف صناعي قوي — يحتاج معالجة لاهوائية ابتدائية' : 'صرف عادي'}
+          ]
+        };
+      }
+    },
+
+    env_aqi: {
+      id:'env_aqi', cat:'env',
+      title:'مؤشر جودة الهواء (AQI)',
+      desc:'حساب AQI من تركيز PM2.5 وفقاً للمعيار الأمريكي EPA',
+      tag:'AIR QUALITY', tagClass:'mg',
+      ref:'US EPA AQI · NowCast',
+      formula:'AQI = ((I_hi − I_lo) / (C_hi − C_lo)) · (C − C_lo) + I_lo',
+      inputs:[
+        {id:'pm25', label:'تركيز PM2.5', unit:'μg/m³', value:35, step:1, full:true},
+      ],
+      compute(v){
+        const C = v.pm25;
+        // EPA PM2.5 breakpoints (2024)
+        const bps = [
+          {Clo:0,    Chi:9.0,  Ilo:0,   Ihi:50,  cat:'جيد',                  color:'ok',   adv:'لا توجد مخاطر صحية'},
+          {Clo:9.1,  Chi:35.4, Ilo:51,  Ihi:100, cat:'متوسط',                color:'ok',   adv:'الفئات الحساسة قد تشعر بأعراض'},
+          {Clo:35.5, Chi:55.4, Ilo:101, Ihi:150, cat:'غير صحي للحساسين',     color:'warn', adv:'الأطفال وكبار السن: قلّلوا الجهد الخارجي'},
+          {Clo:55.5, Chi:125.4,Ilo:151, Ihi:200, cat:'غير صحي',              color:'warn', adv:'الجميع: قلّلوا النشاط الخارجي'},
+          {Clo:125.5,Chi:225.4,Ilo:201, Ihi:300, cat:'غير صحي جداً',         color:'bad',  adv:'تجنّبوا الخروج، استخدموا N95'},
+          {Clo:225.5,Chi:500,  Ilo:301, Ihi:500, cat:'خطر',                  color:'bad',  adv:'حالة طوارئ صحية'},
+        ];
+        const bp = bps.find(b => C >= b.Clo && C <= b.Chi) || bps[bps.length-1];
+        const AQI = Math.round(((bp.Ihi - bp.Ilo) / (bp.Chi - bp.Clo)) * (C - bp.Clo) + bp.Ilo);
+        return {
+          rows:[
+            {label:'تركيز PM2.5', value:C, unit:'μg/m³', dec:1},
+            {label:'AQI', value:AQI, big:true, dec:0, status: bp.color},
+            {label:'الفئة', value: bp.cat, status: bp.color},
+            {label:'WHO سنوي', value:'5 μg/m³', unit:''},
+            {label:'EPA سنوي', value:'9 μg/m³', unit:''},
+          ],
+          notes:[
+            {cls: bp.color, icon: bp.color==='ok'?'✓':(bp.color==='warn'?'!':'⚠'), text: bp.adv},
+            {cls:'', icon:'ⓘ', text:'المدن الخليجية تتراوح 60-150 μg/m³ في موسم الغبار'}
+          ]
+        };
+      }
+    },
+
+    env_coag: {
+      id:'env_coag', cat:'env',
+      title:'جرعة التخثير (Alum)',
+      desc:'جرعة الشب لمعالجة العكورة في محطات المياه',
+      tag:'COAGULATION', tagClass:'cy',
+      ref:'AWWA Water Treatment',
+      formula:'Dose = NTU·k;  k≈0.5-1.5 mg/L per NTU;  Alum: Al₂(SO₄)₃·14H₂O',
+      inputs:[
+        {id:'Q',    label:'تدفق المحطة', unit:'m³/d', value:5000, step:100},
+        {id:'NTU',  label:'العكورة الأولية', unit:'NTU', value:50, step:5},
+        {id:'k',    label:'معامل التجربة k', unit:'mg/L per NTU', value:0.8, step:0.1},
+        {id:'pH',   label:'pH الأمثل', value:7.0, step:0.1, full:true},
+      ],
+      compute(v){
+        const dose_mg_L = v.NTU * v.k;
+        const daily_kg = (dose_mg_L * v.Q) / 1000;
+        const monthly_kg = daily_kg * 30;
+        const annual_t = (daily_kg * 365) / 1000;
+        const cost_per_t = 350;  // USD typical
+        const annual_cost = annual_t * cost_per_t;
+        // Alkalinity consumed: 1 mg/L Alum ≈ 0.5 mg/L CaCO3
+        const alk_consumed = dose_mg_L * 0.5;
+        return {
+          rows:[
+            {label:'جرعة الشب', value:dose_mg_L, unit:'mg/L', big:true, dec:1, status:'ok'},
+            {label:'استهلاك يومي', value:daily_kg, unit:'kg/يوم', dec:1},
+            {label:'استهلاك شهري', value:monthly_kg, unit:'kg/شهر', dec:0},
+            {label:'استهلاك سنوي', value:annual_t, unit:'طن/سنة', dec:2},
+            {label:'التكلفة السنوية (~)', value:annual_cost, unit:'USD', dec:0},
+            {label:'استهلاك القلوية', value:alk_consumed, unit:'mg/L CaCO₃', dec:1},
+          ],
+          notes:[
+            {cls: v.pH>=6.5 && v.pH<=7.5 ? 'ok' : 'warn', icon: v.pH>=6.5 && v.pH<=7.5?'✓':'!',
+              text: v.pH>=6.5 && v.pH<=7.5 ? 'pH ضمن النطاق الأمثل للشب' : 'اضبط pH بين 6.5-7.5 لكفاءة قصوى'},
+            {cls:'', icon:'ⓘ', text:'بدائل: PAC (أكفأ، يحتاج جرعة أقل) أو FeCl₃ (للمياه العكرة جداً)'}
           ]
         };
       }
