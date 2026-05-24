@@ -886,6 +886,76 @@ section{ padding: 120px 0; position: relative; }
 }
 .eq-render .katex{ font-size: 1.05em !important; }
 
+/* ===== Library v2 — Search toolbar + expandable cards ===== */
+.eq-toolbar{
+  display: flex; gap: 12px; align-items: center;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 16px;
+  margin-bottom: 14px; flex-wrap: wrap;
+}
+.eq-search-wrap{ flex: 1; min-width: 220px; position: relative; }
+.eq-search{
+  width: 100%; background: var(--input-bg);
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 14px 10px 38px; color: var(--ink);
+  font-size: 14px; font-family: var(--font-ar); outline: none;
+}
+.eq-search:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,107,53,0.12); }
+.eq-search-icon{
+  position: absolute; inset-inline-start: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--ink-4); pointer-events: none;
+}
+.eq-stats{ display: flex; gap: 16px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+.eq-stats b{ color: var(--accent); font-weight: 700; }
+
+.eq-card.hidden{ display: none; }
+.eq-card{ cursor: pointer; }
+.eq-card .eq-details{
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.35s ease, margin-top 0.35s ease;
+  margin-top: 0;
+}
+.eq-card.expanded .eq-details{
+  max-height: 600px; margin-top: 14px;
+}
+.eq-details-inner{
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px;
+  font-size: 12.5px; line-height: 1.7;
+}
+.eq-vars{ list-style: none; padding: 0; margin: 0 0 10px 0; }
+.eq-vars li{
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 12px; padding: 4px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.eq-vars li:last-child{ border-bottom: none; }
+.eq-vars .vs{
+  font-family: var(--font-mono); color: var(--accent);
+  font-weight: 700; font-size: 12px; min-width: 50px;
+}
+.eq-vars .vd{ color: var(--ink-2); font-size: 12px; }
+.eq-valid{
+  margin-top: 8px; padding: 8px 10px;
+  background: rgba(77,208,225,0.06);
+  border: 1px solid rgba(77,208,225,0.2);
+  border-radius: 6px; font-size: 11.5px; color: var(--ink-2);
+  display: flex; gap: 8px; align-items: flex-start;
+}
+.eq-valid::before{
+  content: "ⓘ"; color: var(--cyan); font-weight: 700; flex-shrink: 0;
+}
+.eq-empty{
+  text-align: center; padding: 60px 20px;
+  font-family: var(--font-ar); color: var(--ink-3);
+}
+.eq-toggle-hint{
+  font-family: var(--font-mono); font-size: 9.5px;
+  color: var(--ink-4); margin-top: 10px;
+  text-align: center; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 /* ===== Methodology / Pipeline (7 stages) ===== */
 .method-grid{
   display:grid;
@@ -6272,101 +6342,42 @@ EOF</span></div>
 <section id="library">
   <div class="container">
     <div class="section-head reveal">
-      <div class="section-eyebrow">ENGINEERING VAULT · 15,000+ EQUATIONS</div>
+      <div class="section-eyebrow">ENGINEERING VAULT · 60+ DOCUMENTED EQUATIONS</div>
       <h2 class="section-title">المكتبة الهندسية الذكية — <span class="accent">معرفة موثّقة</span> لا اقتباسات مبعثرة</h2>
-      <p class="section-desc">كل معادلة مرتبطة بمصدرها، نطاق صلاحيتها، والمعيار المرجعي. بحث دلالي يفهم السياق الهندسي، لا الكلمات فقط.</p>
+      <p class="section-desc">63 معادلة موثّقة عبر 10 تخصصات: المتغيرات بالاسم العربي، نطاق الصلاحية، المرجع المعياري. بحث فوري بالعربية والإنجليزية وبرموز LaTeX.</p>
     </div>
 
-    <div class="lib-grid">
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>STRUCTURAL · CONCRETE</span>
-          <span class="code">ACI 318-19 §22.4</span>
-        </div>
-        <div class="eq-name">القدرة الاسمية للعمود</div>
-        <div class="eq-desc">القدرة المحورية للعمود الخرساني المسلح المربوط بالكانات.</div>
-        <div class="eq-render" data-eq="P_n = 0.80 \left[ 0.85 f'_c (A_g - A_{st}) + f_y A_{st} \right]"></div>
+    <!-- Search bar + filter chips -->
+    <div class="eq-toolbar reveal">
+      <div class="eq-search-wrap">
+        <span class="eq-search-icon">⌕</span>
+        <input class="eq-search" id="eqSearch" placeholder="ابحث: عمود، Darcy، σ، fatigue، Pn..." />
       </div>
+      <div class="eq-stats">
+        <span>إجمالي: <b id="eq-total">63</b></span>
+        <span>المعروض: <b id="eq-shown">63</b></span>
+      </div>
+    </div>
 
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>STRUCTURAL · BEAMS</span>
-          <span class="code">EULER-BERNOULLI</span>
-        </div>
-        <div class="eq-name">الترخيم الأقصى — كمرة UDL</div>
-        <div class="eq-desc">ترخيم منتصف كمرة بسيطة الإسناد تحت حمل موزع منتظم.</div>
-        <div class="eq-render" data-eq="\delta_{max} = \frac{5 w L^4}{384 E I}"></div>
-      </div>
+    <div class="cl-filters reveal" id="eqFilters">
+      <button class="cl-chip active" data-eq-filter="all">الكل <span class="cnt" id="eq-cnt-all">63</span></button>
+      <button class="cl-chip" data-eq-filter="struct">إنشائي <span class="cnt" id="eq-cnt-struct">0</span></button>
+      <button class="cl-chip" data-eq-filter="mech">ميكانيكي <span class="cnt" id="eq-cnt-mech">0</span></button>
+      <button class="cl-chip" data-eq-filter="fluid">موائع <span class="cnt" id="eq-cnt-fluid">0</span></button>
+      <button class="cl-chip" data-eq-filter="heat">حرارة <span class="cnt" id="eq-cnt-heat">0</span></button>
+      <button class="cl-chip" data-eq-filter="elec">كهربائي <span class="cnt" id="eq-cnt-elec">0</span></button>
+      <button class="cl-chip" data-eq-filter="seismic">زلزالي <span class="cnt" id="eq-cnt-seismic">0</span></button>
+      <button class="cl-chip" data-eq-filter="geo">جيوتكنيك <span class="cnt" id="eq-cnt-geo">0</span></button>
+      <button class="cl-chip" data-eq-filter="chem">كيميائي <span class="cnt" id="eq-cnt-chem">0</span></button>
+      <button class="cl-chip" data-eq-filter="mat">مواد <span class="cnt" id="eq-cnt-mat">0</span></button>
+      <button class="cl-chip" data-eq-filter="hvac">تكييف <span class="cnt" id="eq-cnt-hvac">0</span></button>
+    </div>
 
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>FLUID MECHANICS</span>
-          <span class="code">DARCY-WEISBACH</span>
-        </div>
-        <div class="eq-name">فقد الضغط في الأنابيب</div>
-        <div class="eq-desc">الفقد بالاحتكاك في أنبوب مدوّر تحت تدفق متوسط.</div>
-        <div class="eq-render" data-eq="h_f = f \cdot \frac{L}{D} \cdot \frac{V^2}{2g}"></div>
-      </div>
-
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>HEAT TRANSFER</span>
-          <span class="code">FOURIER</span>
-        </div>
-        <div class="eq-name">معادلة التوصيل الحراري</div>
-        <div class="eq-desc">معدّل انتقال الحرارة بالتوصيل خلال جدار.</div>
-        <div class="eq-render" data-eq="q = -k A \frac{dT}{dx}"></div>
-      </div>
-
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>ELECTRICAL</span>
-          <span class="code">IEC 60364</span>
-        </div>
-        <div class="eq-name">سقوط الجهد — ثلاثي الأطوار</div>
-        <div class="eq-desc">سقوط الجهد في كابل ثلاثي الأطوار متوازن.</div>
-        <div class="eq-render" data-eq="\Delta V = \sqrt{3} \cdot I \cdot L \cdot (R\cos\varphi + X\sin\varphi)"></div>
-      </div>
-
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>MECHANICAL · FATIGUE</span>
-          <span class="code">BASQUIN</span>
-        </div>
-        <div class="eq-name">منحنى الكلال S-N</div>
-        <div class="eq-desc">العلاقة بين الإجهاد المتناوب وعدد الدورات حتى الفشل.</div>
-        <div class="eq-render" data-eq="\sigma_a = \sigma'_f (2N_f)^b"></div>
-      </div>
-
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>SEISMIC</span>
-          <span class="code">ASCE 7-22</span>
-        </div>
-        <div class="eq-name">القص القاعدي الزلزالي</div>
-        <div class="eq-desc">الحمل الجانبي المكافئ لتصميم المباني المقاومة للزلازل.</div>
-        <div class="eq-render" data-eq="V = C_s \cdot W, \quad C_s = \frac{S_{DS}}{R / I_e}"></div>
-      </div>
-
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>FLUID DYNAMICS</span>
-          <span class="code">REYNOLDS</span>
-        </div>
-        <div class="eq-name">رقم رينولدز</div>
-        <div class="eq-desc">المعيار الفاصل بين التدفق الصفائحي والاضطرابي.</div>
-        <div class="eq-render" data-eq="Re = \frac{\rho V D}{\mu} = \frac{V D}{\nu}"></div>
-      </div>
-
-      <div class="eq-card reveal">
-        <div class="eq-meta">
-          <span>CHEMICAL · KINETICS</span>
-          <span class="code">ARRHENIUS</span>
-        </div>
-        <div class="eq-name">معادلة أرّينيوس</div>
-        <div class="eq-desc">اعتماد ثابت معدل التفاعل على درجة الحرارة.</div>
-        <div class="eq-render" data-eq="k = A \, e^{-E_a / RT}"></div>
-      </div>
+    <div class="lib-grid" id="eqGrid"></div>
+    <div id="eqEmpty" class="eq-empty" style="display:none;">
+      <div style="font-size:36px; opacity:0.4; margin-bottom:10px;">🔍</div>
+      <div>لا توجد معادلات مطابقة</div>
+      <div style="font-size:12px; color:var(--ink-4); margin-top:6px;">جرّب بحثاً بكلمة مختلفة أو غيّر الفئة</div>
     </div>
   </div>
 </section>
@@ -11782,6 +11793,607 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
     initDatabases();
   }
 
+})();
+</script>
+
+<!-- ============================================================
+     SESSION 2 (NEW): EQUATIONS LIBRARY — 63 documented equations
+     with search, category filter, and expandable details.
+     ============================================================ -->
+<script>
+(function(){
+  'use strict';
+
+  // ════════════════════════════════════════════════
+  // EQUATIONS DATABASE — 63 equations across 10 fields
+  // Each: id, cat, name (AR), en (search hint), latex,
+  //       desc, ref, vars: [[symbol, meaning]], valid
+  // ════════════════════════════════════════════════
+  const EQUATIONS = [
+
+    /* ─── STRUCTURAL (12) ─── */
+    {id:'st1', cat:'struct', name:'القدرة الاسمية للعمود الخرساني', en:'concrete column nominal capacity Pn axial',
+      latex:"P_n = 0.80\\left[0.85f'_c(A_g-A_{st})+f_yA_{st}\\right]",
+      desc:'القدرة المحورية لعمود خرساني مربوط بكانات تحت حمل مركزي.',
+      ref:'ACI 318-19 §22.4.2.2',
+      vars:[['Pₙ','القدرة الاسمية (N)'],["f'c",'مقاومة الخرسانة (MPa)'],['Aₘ','مساحة المقطع (mm²)'],['Aₛₜ','مساحة الحديد (mm²)'],['fy','إجهاد الخضوع (MPa)']],
+      valid:'أعمدة مربوطة فقط (φ=0.65)؛ الحد الأدنى ρ=1%، الأقصى 8%'},
+
+    {id:'st2', cat:'struct', name:'الترخيم الأقصى لكمرة UDL', en:'beam deflection UDL simply supported',
+      latex:'\\delta_{max} = \\frac{5wL^4}{384EI}',
+      desc:'ترخيم منتصف كمرة بسيطة الإسناد تحت حمل موزع منتظم.',
+      ref:'Euler-Bernoulli beam theory',
+      vars:[['δₘₐₓ','الترخيم الأقصى (mm)'],['w','الحمل الموزع (N/mm)'],['L','الطول (mm)'],['E','معامل المرونة (MPa)'],['I','عزم القصور الذاتي (mm⁴)']],
+      valid:'كمرة موشورية مرنة؛ ترخيمات صغيرة (< L/250)'},
+
+    {id:'st3', cat:'struct', name:'سعة العزم للكمرة الخرسانية', en:'beam flexural moment capacity Mn',
+      latex:'M_n = A_s f_y \\left(d - \\frac{a}{2}\\right),\\;\\; a=\\frac{A_s f_y}{0.85 f\'_c b}',
+      desc:'العزم الاسمي لمقطع مستطيل خرساني مسلح بسيط.',
+      ref:'ACI 318-19 §22.2',
+      vars:[['Mₙ','العزم الاسمي (N·mm)'],['Aₛ','مساحة شد الحديد (mm²)'],['d','العمق الفعّال (mm)'],['a','عمق كتلة الانضغاط (mm)'],['b','عرض المقطع (mm)']],
+      valid:'مقاطع شد محكوم (εt ≥ 0.005)؛ خرسانة عادية fc ≤ 55 MPa'},
+
+    {id:'st4', cat:'struct', name:'سعة القص الخرساني', en:'concrete shear capacity Vc',
+      latex:'V_c = 0.17\\lambda\\sqrt{f\'_c}\\,b_w d',
+      desc:'مساهمة الخرسانة في مقاومة القص الأحادي.',
+      ref:'ACI 318-19 §22.5',
+      vars:[['Vc','قص الخرسانة (N)'],['λ','معامل الكثافة (1 للعادية)'],['bw','عرض الجسم (mm)'],['d','العمق الفعّال (mm)']],
+      valid:'كمرات بدون قوة محورية؛ √fc ≤ 8.3 MPa'},
+
+    {id:'st5', cat:'struct', name:'حمل التحديب الحرج (Euler)', en:'Euler buckling critical load Pcr columns',
+      latex:'P_{cr} = \\frac{\\pi^2 EI}{(KL)^2}',
+      desc:'الحمل الحرج لانبعاج عمود نحيف مرن.',
+      ref:'Euler (1757)',
+      vars:[['Pcr','الحمل الحرج (N)'],['E','معامل المرونة (MPa)'],['I','أقل عزم قصور ذاتي (mm⁴)'],['K','معامل الطول الفعّال'],['L','الطول (mm)']],
+      valid:'نحافة KL/r > 100؛ الإجهاد < إجهاد الخضوع'},
+
+    {id:'st6', cat:'struct', name:'سعة الانحناء الفولاذية LRFD', en:'AISC steel flexure design moment Mr Zx',
+      latex:'\\phi M_n = \\phi F_y Z_x,\\;\\; \\phi=0.90',
+      desc:'العزم التصميمي لمقطع فولاذي مدمج تحت LRFD.',
+      ref:'AISC 360-22 Chapter F',
+      vars:[['φMₙ','العزم التصميمي (N·mm)'],['Fy','إجهاد الخضوع (MPa)'],['Zx','معامل المقطع البلاستيكي (mm³)']],
+      valid:'مقاطع مدمجة فقط (compact)؛ تجنب التحديب الموضعي واللي الجانبي'},
+
+    {id:'st7', cat:'struct', name:'طول التطوير للحديد', en:'rebar development length ld',
+      latex:'\\ell_d = \\frac{f_y \\psi_t \\psi_e}{1.1\\lambda\\sqrt{f\'_c}} \\cdot d_b',
+      desc:'الطول اللازم لتطوير قوة الشد في سيخ مستقيم.',
+      ref:'ACI 318-19 §25.4.2',
+      vars:[['ℓd','طول التطوير (mm)'],['ψt','معامل الموقع (1.0/1.3)'],['ψe','معامل الطلاء (1.0/1.5)'],['db','قطر السيخ (mm)']],
+      valid:'الحد الأدنى 300 mm؛ غطاء ≥ db'},
+
+    {id:'st8', cat:'struct', name:'العزم البلاستيكي', en:'plastic moment Mp steel',
+      latex:'M_p = F_y \\cdot Z = \\sigma_y \\cdot \\frac{bh^2}{4}',
+      desc:'العزم اللازم لتشكيل مفصل بلاستيكي كامل في المقطع.',
+      ref:'Plasticity theory · AISC',
+      vars:[['Mp','العزم البلاستيكي (N·mm)'],['Z','معامل المقطع البلاستيكي (mm³)'],['Fy','إجهاد الخضوع (MPa)']],
+      valid:'مواد مرنة-بلاستيكية مثالية؛ مقاطع مدمجة'},
+
+    {id:'st9', cat:'struct', name:'القص الثاقب (Punching)', en:'punching shear two-way slab footing',
+      latex:'V_c = 0.33\\lambda\\sqrt{f\'_c}\\, b_o d',
+      desc:'سعة القص للبلاطات والقواعد حول الأعمدة (محيط حرج d/2).',
+      ref:'ACI 318-19 §22.6',
+      vars:[['Vc','سعة القص الثاقب (N)'],['bo','المحيط الحرج (mm)'],['d','العمق الفعّال (mm)']],
+      valid:'أعمدة داخلية مربعة/مستطيلة؛ β ≤ 2'},
+
+    {id:'st10', cat:'struct', name:'الحد الأدنى لتسليح الانحناء', en:'minimum reinforcement ratio rho_min',
+      latex:'\\rho_{min} = \\frac{0.25\\sqrt{f\'_c}}{f_y} \\geq \\frac{1.4}{f_y}',
+      desc:'أدنى نسبة تسليح للحماية من الانهيار الهش بعد التشقق.',
+      ref:'ACI 318-19 §9.6.1',
+      vars:[['ρmin','أدنى نسبة تسليح'],["f'c",'مقاومة الخرسانة (MPa)'],['fy','إجهاد الخضوع (MPa)']],
+      valid:'كمرات الانحناء؛ غير مطلوب للبلاطات المعزولة'},
+
+    {id:'st11', cat:'struct', name:'دائرة Mohr — الإجهادات الرئيسية', en:'Mohr circle principal stress sigma 1 2',
+      latex:'\\sigma_{1,2} = \\frac{\\sigma_x+\\sigma_y}{2} \\pm \\sqrt{\\left(\\frac{\\sigma_x-\\sigma_y}{2}\\right)^2 + \\tau_{xy}^2}',
+      desc:'الإجهادات الرئيسية من حالة إجهاد مستوية.',
+      ref:'Mohr (1882)',
+      vars:[['σ₁,σ₂','الإجهادات الرئيسية (MPa)'],['σx,σy','الإجهادات المتعامدة (MPa)'],['τxy','إجهاد القص (MPa)']],
+      valid:'حالة إجهاد مستوية ثنائية الأبعاد'},
+
+    {id:'st12', cat:'struct', name:'إجهاد von Mises', en:'von Mises equivalent stress yield criterion',
+      latex:'\\sigma_v = \\sqrt{\\sigma_1^2 - \\sigma_1\\sigma_2 + \\sigma_2^2}',
+      desc:'الإجهاد المكافئ للمقارنة مع إجهاد الخضوع (للمواد المطيلة).',
+      ref:'von Mises yield criterion',
+      vars:[['σv','إجهاد von Mises (MPa)'],['σ₁,σ₂','الإجهادات الرئيسية (MPa)']],
+      valid:'مواد مطيلة (Steel, Al)؛ ثنائية الأبعاد فقط'},
+
+    /* ─── MECHANICAL (10) ─── */
+    {id:'me1', cat:'mech', name:'منحنى الكلال S-N (Basquin)', en:'fatigue Basquin curve cycles to failure',
+      latex:"\\sigma_a = \\sigma'_f (2N_f)^b",
+      desc:'العلاقة بين الإجهاد المتناوب وعدد الدورات حتى الفشل.',
+      ref:'Basquin (1910)',
+      vars:[['σa','إجهاد التذبذب (MPa)'],["σ'f",'معامل قوة الكلال (MPa)'],['Nf','عدد الدورات حتى الفشل'],['b','أس Basquin']],
+      valid:'كلال عالي الدورة (N > 10⁴)؛ خالٍ من التركيزات الموضعية'},
+
+    {id:'me2', cat:'mech', name:'عزم ربط البرغي', en:'bolt tightening torque preload',
+      latex:'T = K \\cdot F \\cdot d',
+      desc:'العزم المطلوب لشدّ برغي لقوة شد مسبقة محددة.',
+      ref:'Motosh / Shigley',
+      vars:[['T','العزم (N·m)'],['K','معامل احتكاك (0.15 متوسط)'],['F','قوة الشد المسبقة (N)'],['d','قطر البرغي الاسمي (m)']],
+      valid:'دقة ±25%؛ للحرج استخدم قياس الإطالة'},
+
+    {id:'me3', cat:'mech', name:'القدرة-العزم-السرعة', en:'power torque angular speed',
+      latex:'P = T \\cdot \\omega = \\frac{2\\pi N T}{60}',
+      desc:'علاقة القدرة الميكانيكية بالعزم والسرعة الدورانية.',
+      ref:'Newtonian mechanics',
+      vars:[['P','القدرة (W)'],['T','العزم (N·m)'],['ω','السرعة الزاوية (rad/s)'],['N','السرعة (rpm)']],
+      valid:'حركة دورانية مستقرة؛ متطلبات قصور ذاتي منفصلة'},
+
+    {id:'me4', cat:'mech', name:'إجهاد التماس Hertz', en:'Hertz contact stress sphere cylinder',
+      latex:'\\sigma_{max} = 0.388 \\sqrt[3]{\\frac{F E^{*2}}{R^2}}',
+      desc:'أقصى إجهاد عند تماس كرتين أو أسطوانتين.',
+      ref:'Hertz (1882) · Contact Mechanics',
+      vars:[['σmax','أقصى إجهاد (MPa)'],['F','قوة التماس (N)'],['E*','معامل المرونة المكافئ (MPa)'],['R','نصف القطر المكافئ (mm)']],
+      valid:'سطوح مرنة ناعمة؛ بدون احتكاك سطحي'},
+
+    {id:'me5', cat:'mech', name:'كفاءة Carnot', en:'Carnot cycle thermodynamic efficiency',
+      latex:'\\eta_{Carnot} = 1 - \\frac{T_c}{T_h}',
+      desc:'الحد الأقصى النظري لكفاءة محرك حراري.',
+      ref:'Carnot (1824)',
+      vars:[['η','الكفاءة (نسبة)'],['Tc','حرارة المصدر البارد (K)'],['Th','حرارة المصدر الساخن (K)']],
+      valid:'دورة عكوسة افتراضية؛ لا يمكن تجاوزها عملياً'},
+
+    {id:'me6', cat:'mech', name:'القدرة المائية للمضخة', en:'pump hydraulic power flow head',
+      latex:'P_{hyd} = \\rho g Q H',
+      desc:'القدرة المنقولة للسائل (قبل خسائر المضخة).',
+      ref:'Hydraulic engineering',
+      vars:[['Phyd','القدرة المائية (W)'],['ρ','الكثافة (kg/m³)'],['g','9.81 m/s²'],['Q','التدفق (m³/s)'],['H','الرفع الكلي (m)']],
+      valid:'سائل غير ضاغط (نيوتوني)؛ يقسم على كفاءة المضخة'},
+
+    {id:'me7', cat:'mech', name:'التمدد الحراري', en:'thermal expansion strain dL',
+      latex:'\\Delta L = \\alpha L_0 \\Delta T',
+      desc:'تغيّر الطول بسبب تغيّر درجة الحرارة.',
+      ref:'Linear thermal expansion',
+      vars:[['ΔL','تغيّر الطول (mm)'],['α','معامل التمدد (/°C)'],['L₀','الطول الأصلي (mm)'],['ΔT','تغيّر الحرارة (°C)']],
+      valid:'تمدد خطي؛ المعامل ثابت في النطاق الحراري'},
+
+    {id:'me8', cat:'mech', name:'عمر المحمل (L10)', en:'bearing fatigue life L10 ball roller',
+      latex:'L_{10} = \\left(\\frac{C}{P}\\right)^a',
+      desc:'العمر الذي يصمد فيه 90% من المحامل (مليون دورة).',
+      ref:'ISO 281',
+      vars:[['L10','العمر (مليون دورة)'],['C','السعة الديناميكية (N)'],['P','الحمل الفعلي (N)'],['a','3 كروي، 10/3 أسطواني']],
+      valid:'تشحيم كافٍ؛ تركيب صحيح؛ حرارة عادية'},
+
+    {id:'me9', cat:'mech', name:'سرعة الصوت في الغاز', en:'speed of sound gas Mach',
+      latex:'c = \\sqrt{\\gamma R T}',
+      desc:'سرعة انتشار موجة ضغط في غاز مثالي.',
+      ref:'Gas dynamics',
+      vars:[['c','سرعة الصوت (m/s)'],['γ','نسبة السعات الحرارية (1.4 هواء)'],['R','ثابت الغاز (J/kg·K)'],['T','الحرارة المطلقة (K)']],
+      valid:'غاز مثالي؛ تدفق متجمد (frozen flow)'},
+
+    {id:'me10', cat:'mech', name:'إجهاد الالتواء', en:'torsional shear stress shaft',
+      latex:'\\tau = \\frac{T r}{J},\\;\\; J = \\frac{\\pi d^4}{32}',
+      desc:'إجهاد القص في عمود دائري تحت عزم الالتواء.',
+      ref:'Torsion theory',
+      vars:[['τ','إجهاد القص (MPa)'],['T','عزم الالتواء (N·mm)'],['r','نصف القطر (mm)'],['J','ثابت الالتواء القطبي (mm⁴)']],
+      valid:'عمود دائري مصمت أو مجوف؛ نطاق مرن'},
+
+    /* ─── FLUID MECHANICS (8) ─── */
+    {id:'fl1', cat:'fluid', name:'فقد الضغط Darcy-Weisbach', en:'pipe pressure drop friction Darcy',
+      latex:'h_f = f \\cdot \\frac{L}{D} \\cdot \\frac{V^2}{2g}',
+      desc:'فقد الرأس بالاحتكاك في أنبوب دائري.',
+      ref:'Darcy-Weisbach equation',
+      vars:[['hf','فقد الرأس (m)'],['f','معامل الاحتكاك Moody'],['L','الطول (m)'],['D','القطر (m)'],['V','السرعة (m/s)']],
+      valid:'تدفق ساكن متطور كامل؛ سائل متجانس'},
+
+    {id:'fl2', cat:'fluid', name:'رقم Reynolds', en:'Reynolds number laminar turbulent flow',
+      latex:'Re = \\frac{\\rho V D}{\\mu} = \\frac{V D}{\\nu}',
+      desc:'النسبة بين قوى القصور الذاتي واللزوجة.',
+      ref:'Reynolds (1883)',
+      vars:[['Re','رقم رينولدز (بلا وحدات)'],['ρ','الكثافة (kg/m³)'],['V','السرعة (m/s)'],['D','الطول المميز (m)'],['μ','اللزوجة الديناميكية (Pa·s)']],
+      valid:'< 2300 صفائحي؛ > 4000 مضطرب (للأنابيب)'},
+
+    {id:'fl3', cat:'fluid', name:'تدفق من فتحة (Torricelli)', en:'orifice flow discharge Torricelli',
+      latex:'Q = C_d A \\sqrt{2gh}',
+      desc:'معدل التدفق الحجمي من فتحة تحت رأس h.',
+      ref:'Torricelli (1643) + Cd empirical',
+      vars:[['Q','التدفق (m³/s)'],['Cd','معامل التصريف (0.62-0.97)'],['A','مساحة الفتحة (m²)'],['h','الرأس فوق الفتحة (m)']],
+      valid:'تدفق ساكن؛ سطح حر؛ Re > 10⁵'},
+
+    {id:'fl4', cat:'fluid', name:'معادلة Bernoulli', en:'Bernoulli energy conservation flow',
+      latex:'\\frac{P_1}{\\rho g} + \\frac{V_1^2}{2g} + z_1 = \\frac{P_2}{\\rho g} + \\frac{V_2^2}{2g} + z_2 + h_L',
+      desc:'حفظ الطاقة بين نقطتين في خط تيار.',
+      ref:'Bernoulli (1738)',
+      vars:[['P','الضغط (Pa)'],['V','السرعة (m/s)'],['z','الارتفاع (m)'],['hL','فقد الرأس (m)']],
+      valid:'سائل غير ضاغط (Ma<0.3)؛ تدفق ساكن'},
+
+    {id:'fl5', cat:'fluid', name:'معادلة Manning', en:'Manning open channel flow uniform',
+      latex:'V = \\frac{1}{n} R^{2/3} S^{1/2}',
+      desc:'سرعة التدفق في قنوات مفتوحة تحت السريان المنتظم.',
+      ref:'Manning (1889)',
+      vars:[['V','السرعة (m/s)'],['n','معامل الخشونة'],['R','نصف القطر الهيدروليكي (m)'],['S','ميل القاع']],
+      valid:'تدفق منتظم وهادئ (Subcritical)؛ مقاطع منتظمة'},
+
+    {id:'fl6', cat:'fluid', name:'Hazen-Williams', en:'Hazen Williams water pipe head loss',
+      latex:'h_L = \\frac{10.67 L Q^{1.852}}{C^{1.852} D^{4.87}}',
+      desc:'فقد الرأس في أنابيب الماء (وحدات SI).',
+      ref:'Hazen-Williams (1902)',
+      vars:[['hL','فقد الرأس (m)'],['L','الطول (m)'],['Q','التدفق (m³/s)'],['C','معامل الخشونة (100-150)'],['D','القطر (m)']],
+      valid:'ماء فقط في الحرارة العادية (5-25°C)؛ Re > 10⁵'},
+
+    {id:'fl7', cat:'fluid', name:'NPSH المتوفر', en:'net positive suction head NPSH pump cavitation',
+      latex:'NPSH_a = \\frac{P_{atm} - P_v}{\\rho g} - h_s - h_{f,s}',
+      desc:'الرأس الإيجابي الصافي لتجنب التكهف في المضخات.',
+      ref:'Hydraulic Institute',
+      vars:[['NPSHa','المتوفر (m)'],['Patm','الضغط الجوي (Pa)'],['Pv','ضغط البخار (Pa)'],['hs','رأس السحب (m)'],['hf,s','خسائر السحب (m)']],
+      valid:'يجب: NPSHa > NPSHr + 0.5 m لتجنب التكهف'},
+
+    {id:'fl8', cat:'fluid', name:'قوة السحب', en:'drag force coefficient body',
+      latex:'F_D = \\frac{1}{2} \\rho V^2 C_D A',
+      desc:'قوة السحب على جسم متحرك في مائع.',
+      ref:'Fluid dynamics',
+      vars:[['FD','قوة السحب (N)'],['ρ','كثافة المائع (kg/m³)'],['V','السرعة النسبية (m/s)'],['CD','معامل السحب'],['A','المساحة الأمامية (m²)']],
+      valid:'تدفق مضطرب؛ المعامل يعتمد على شكل الجسم و Re'},
+
+    /* ─── HEAT TRANSFER (6) ─── */
+    {id:'ht1', cat:'heat', name:'قانون Fourier للتوصيل', en:'Fourier heat conduction law',
+      latex:'q = -kA\\frac{dT}{dx}',
+      desc:'معدل انتقال الحرارة بالتوصيل خلال مادة.',
+      ref:'Fourier (1822)',
+      vars:[['q','معدل الحرارة (W)'],['k','الموصلية الحرارية (W/m·K)'],['A','المساحة (m²)'],['dT/dx','تدرّج الحرارة (K/m)']],
+      valid:'حالة مستقرة؛ مادة متجانسة؛ موصلية ثابتة'},
+
+    {id:'ht2', cat:'heat', name:'قانون Newton للحمل', en:"Newton's law of cooling convection",
+      latex:'q = hA(T_s - T_\\infty)',
+      desc:'معدل انتقال الحرارة بالحمل بين سطح ومائع.',
+      ref:"Newton's law of cooling",
+      vars:[['q','معدل الحرارة (W)'],['h','معامل الحمل (W/m²·K)'],['Ts','حرارة السطح (K)'],['T∞','حرارة المائع (K)']],
+      valid:'h يحدد من Nu = hD/k؛ يعتمد على نمط التدفق'},
+
+    {id:'ht3', cat:'heat', name:'إشعاع Stefan-Boltzmann', en:'Stefan Boltzmann radiation black body',
+      latex:'q = \\varepsilon \\sigma A (T_1^4 - T_2^4)',
+      desc:'انتقال الحرارة بالإشعاع بين سطحين.',
+      ref:'Stefan (1879), Boltzmann (1884)',
+      vars:[['q','الإشعاع (W)'],['ε','الانبعاثية (0-1)'],['σ','5.67×10⁻⁸ W/m²·K⁴'],['T','الحرارة المطلقة (K)']],
+      valid:'سطوح رمادية متوازية؛ T بالكلفن دائماً'},
+
+    {id:'ht4', cat:'heat', name:'LMTD للمبادل الحراري', en:'log mean temperature difference heat exchanger',
+      latex:'LMTD = \\frac{\\Delta T_1 - \\Delta T_2}{\\ln(\\Delta T_1/\\Delta T_2)}',
+      desc:'الفرق الحراري المتوسط اللوغاريتمي لتصميم المبادلات.',
+      ref:'Heat exchanger design',
+      vars:[['LMTD','فرق الحرارة (K)'],['ΔT₁','الفرق الطرفي 1'],['ΔT₂','الفرق الطرفي 2']],
+      valid:'تدفق متعاكس أو متوازي؛ خصائص ثابتة'},
+
+    {id:'ht5', cat:'heat', name:'رقم Biot', en:'Biot number lumped capacitance',
+      latex:'Bi = \\frac{hL_c}{k}',
+      desc:'النسبة بين مقاومة التوصيل الداخلي ومقاومة الحمل السطحي.',
+      ref:'Convection heat transfer',
+      vars:[['Bi','رقم Biot (بلا وحدات)'],['h','معامل الحمل (W/m²·K)'],['Lc','الطول المميز (m)'],['k','الموصلية (W/m·K)']],
+      valid:'Bi < 0.1 → سعة مركزة (Lumped) صالحة'},
+
+    {id:'ht6', cat:'heat', name:'Nusselt للأنبوب', en:'Nusselt number Dittus Boelter pipe',
+      latex:'Nu = 0.023 Re^{0.8} Pr^n',
+      desc:'العلاقة التجريبية لانتقال الحرارة في أنبوب تحت التدفق المضطرب.',
+      ref:'Dittus-Boelter (1930)',
+      vars:[['Nu','رقم Nusselt'],['Re','رقم Reynolds'],['Pr','رقم Prandtl'],['n','0.4 تسخين، 0.3 تبريد']],
+      valid:'Re > 10⁴؛ 0.7 ≤ Pr ≤ 160؛ L/D > 10'},
+
+    /* ─── ELECTRICAL (8) ─── */
+    {id:'el1', cat:'elec', name:'سقوط الجهد ثلاثي الأطوار', en:'three phase voltage drop cable',
+      latex:'\\Delta V = \\sqrt{3} \\cdot I \\cdot L \\cdot (R\\cos\\varphi + X\\sin\\varphi)',
+      desc:'سقوط الجهد في كابل ثلاثي الأطوار متوازن.',
+      ref:'IEC 60364',
+      vars:[['ΔV','سقوط الجهد (V)'],['I','التيار (A)'],['L','الطول (km)'],['R,X','مقاومة ومفاعلة (Ω/km)'],['φ','زاوية معامل القدرة']],
+      valid:'حمل متوازن؛ تيار جيبي نقي؛ الحد الأقصى عادة 5%'},
+
+    {id:'el2', cat:'elec', name:'القدرة الفعّالة أحادية الطور', en:'single phase real power',
+      latex:'P = V \\cdot I \\cdot \\cos\\varphi',
+      desc:'القدرة الحقيقية التي تنتج عملاً مفيداً.',
+      ref:'AC power theory',
+      vars:[['P','القدرة الفعّالة (W)'],['V','الجهد (V)'],['I','التيار (A)'],['cosφ','معامل القدرة']],
+      valid:'تيار وجهد جيبيان نقيان؛ بدون توافقيات'},
+
+    {id:'el3', cat:'elec', name:'القدرة ثلاثية الأطوار', en:'three phase power line to line',
+      latex:'P = \\sqrt{3} V_{LL} I_L \\cos\\varphi',
+      desc:'القدرة الكلية لنظام ثلاثي الأطوار متوازن.',
+      ref:'Power systems',
+      vars:[['P','القدرة الكلية (W)'],['VLL','جهد خط-خط (V)'],['IL','تيار الخط (A)']],
+      valid:'نظام متوازن (Star/Delta)؛ جيبي نقي'},
+
+    {id:'el4', cat:'elec', name:'قانون Ohm — المقاومة', en:'Ohm law resistance resistivity',
+      latex:'R = \\rho \\frac{L}{A}',
+      desc:'مقاومة موصل من خواصه الفيزيائية وأبعاده.',
+      ref:"Ohm's law",
+      vars:[['R','المقاومة (Ω)'],['ρ','المقاومية (Ω·m)'],['L','الطول (m)'],['A','المقطع (m²)']],
+      valid:'موصل متجانس؛ حرارة ثابتة (المقاومية تعتمد على T)'},
+
+    {id:'el5', cat:'elec', name:'المفاعلة الحثية', en:'inductive reactance XL frequency',
+      latex:'X_L = 2\\pi f L = \\omega L',
+      desc:'المعارضة التي يقدمها الملف للتيار المتردد.',
+      ref:'AC circuit theory',
+      vars:[['XL','المفاعلة (Ω)'],['f','التردد (Hz)'],['L','الحث (H)']],
+      valid:'إشارة جيبية نقية؛ مقاومة العزل عالية'},
+
+    {id:'el6', cat:'elec', name:'المفاعلة السعوية', en:'capacitive reactance XC',
+      latex:'X_C = \\frac{1}{2\\pi f C} = \\frac{1}{\\omega C}',
+      desc:'المعارضة التي يقدمها المكثف للتيار المتردد.',
+      ref:'AC circuit theory',
+      vars:[['XC','المفاعلة (Ω)'],['f','التردد (Hz)'],['C','السعة (F)']],
+      valid:'إشارة جيبية؛ ESR منخفضة'},
+
+    {id:'el7', cat:'elec', name:'تيار القصر — متماثل', en:'symmetrical short circuit current three phase',
+      latex:'I_{sc} = \\frac{V}{\\sqrt{3} Z_{total}}',
+      desc:'تيار القصر الثلاثي الطور (RMS).',
+      ref:'IEC 60909',
+      vars:[['Isc','تيار القصر (A)'],['V','الجهد بين الأطوار (V)'],['Z','المعاوقة الإجمالية (Ω)']],
+      valid:'قصر متماثل في 3 أطوار؛ مصدر لا نهائي'},
+
+    {id:'el8', cat:'elec', name:'تصحيح معامل القدرة', en:'power factor correction capacitor kVAR',
+      latex:'Q_c = P(\\tan\\varphi_1 - \\tan\\varphi_2)',
+      desc:'سعة المكثفات المطلوبة لرفع معامل القدرة.',
+      ref:'IEEE 1531',
+      vars:[['Qc','سعة المكثفات (VAR)'],['P','القدرة الفعّالة (W)'],['φ₁','الزاوية قبل'],['φ₂','الزاوية بعد']],
+      valid:'حمل تحريضي خطي؛ بدون توافقيات مهيمنة'},
+
+    /* ─── SEISMIC (2) ─── */
+    {id:'sm1', cat:'seismic', name:'القص القاعدي الزلزالي', en:'seismic base shear ASCE 7 ELF',
+      latex:'V = C_s W,\\;\\; C_s = \\frac{S_{DS}}{R/I_e}',
+      desc:'القوة الزلزالية الجانبية المكافئة (طريقة القوة الجانبية المعادلة).',
+      ref:'ASCE 7-22 §12.8',
+      vars:[['V','القص القاعدي (N)'],['Cs','معامل الاستجابة'],['W','الوزن الفعلي (N)'],['SDS','تسارع التصميم 0.2s (g)'],['R','معامل التعديل'],['Ie','معامل الأهمية']],
+      valid:'مباني منتظمة؛ ارتفاع < 50 m؛ خارج المناطق D-F للمباني الحرجة'},
+
+    {id:'sm2', cat:'seismic', name:'الدور الأساسي للمبنى', en:'fundamental period building approximate',
+      latex:'T_a = C_t \\cdot h_n^x',
+      desc:'تقدير تجريبي لدور المبنى الأساسي للتصميم الزلزالي.',
+      ref:'ASCE 7-22 §12.8.2.1',
+      vars:[['Ta','الدور الأساسي (s)'],['Ct','معامل النوع (0.0466 خرسانة)'],['hn','ارتفاع المبنى (m)'],['x','أس النوع (0.9)']],
+      valid:'مباني منتظمة؛ Ta التحليلي يجب أن يكون أكبر من Cu·Ta'},
+
+    /* ─── GEOTECHNICAL (5) ─── */
+    {id:'ge1', cat:'geo', name:'تحمل التربة (Terzaghi)', en:'Terzaghi bearing capacity ultimate qu',
+      latex:'q_u = cN_c + \\gamma D_f N_q + 0.5\\gamma B N_\\gamma',
+      desc:'القدرة التحملية القصوى لقاعدة شريطية على تربة.',
+      ref:'Terzaghi (1943)',
+      vars:[['qu','التحمل النهائي (kPa)'],['c','التماسك (kPa)'],['γ','وزن التربة (kN/m³)'],['Df','عمق التأسيس (m)'],['B','عرض القاعدة (m)'],['Nc,Nq,Nγ','عوامل التحمل']],
+      valid:'قاعدة شريطية ضحلة (Df ≤ B)؛ تربة متجانسة؛ FS عادة 3'},
+
+    {id:'ge2', cat:'geo', name:'ضغط Rankine النشط', en:'Rankine active earth pressure coefficient Ka',
+      latex:'K_a = \\tan^2\\left(45^\\circ - \\frac{\\varphi}{2}\\right)',
+      desc:'معامل الضغط الجانبي النشط للتربة الحبيبية.',
+      ref:'Rankine (1857)',
+      vars:[['Ka','معامل الضغط النشط'],['φ','زاوية الاحتكاك الداخلي (°)']],
+      valid:'تربة جافة حبيبية؛ جدار رأسي؛ سطح أفقي'},
+
+    {id:'ge3', cat:'geo', name:'الهبوط المرن', en:'elastic settlement foundation Bowles',
+      latex:'S_e = \\frac{qB(1-\\nu^2)I_s}{E_s}',
+      desc:'الهبوط الفوري لقاعدة على تربة مرنة.',
+      ref:'Bowles · Foundation Engineering',
+      vars:[['Se','الهبوط الفوري (m)'],['q','الضغط الصافي (kPa)'],['B','عرض القاعدة (m)'],['ν','نسبة Poisson'],['Is','معامل التأثير'],['Es','معامل التربة (kPa)']],
+      valid:'تربة حبيبية (رمل)؛ هبوط فوري؛ يضاف هبوط التماسك للطين'},
+
+    {id:'ge4', cat:'geo', name:'نفاذية Darcy', en:'Darcy permeability soil hydraulic conductivity',
+      latex:'q = -kiA = k \\frac{\\Delta h}{L} A',
+      desc:'تدفق الماء عبر تربة مشبعة.',
+      ref:'Darcy (1856)',
+      vars:[['q','التدفق (m³/s)'],['k','معامل النفاذية (m/s)'],['i','التدرج الهيدروليكي'],['A','المساحة (m²)']],
+      valid:'تربة مشبعة متجانسة؛ تدفق صفائحي (Re < 10)'},
+
+    {id:'ge5', cat:'geo', name:'علاقة SPT بزاوية φ', en:'SPT N value friction angle correlation sand',
+      latex:'\\varphi \\approx 27.1 + 0.3 N_{60} - 0.00054 N_{60}^2',
+      desc:'تقدير زاوية الاحتكاك من اختبار SPT للرمل.',
+      ref:'Peck-Hanson-Thornburn / Wolff',
+      vars:[['φ','زاوية الاحتكاك (°)'],['N₆₀','عدد ضربات SPT المصححة']],
+      valid:'رمل حبيبي؛ N60 = 5-50؛ دقة ±5°'},
+
+    /* ─── CHEMICAL (4) ─── */
+    {id:'ch1', cat:'chem', name:'معادلة Arrhenius', en:'Arrhenius reaction rate temperature activation',
+      latex:'k = A e^{-E_a/RT}',
+      desc:'اعتماد ثابت معدل التفاعل على درجة الحرارة.',
+      ref:'Arrhenius (1889)',
+      vars:[['k','ثابت المعدل'],['A','عامل التكرار'],['Ea','طاقة التنشيط (J/mol)'],['R','8.314 J/mol·K'],['T','الحرارة المطلقة (K)']],
+      valid:'تفاعلات أولية؛ نطاق حراري محدود'},
+
+    {id:'ch2', cat:'chem', name:'قانون الغاز المثالي', en:'ideal gas law PV nRT',
+      latex:'PV = nRT',
+      desc:'العلاقة بين الضغط والحجم والحرارة لغاز مثالي.',
+      ref:'Clapeyron (1834)',
+      vars:[['P','الضغط (Pa)'],['V','الحجم (m³)'],['n','عدد المولات'],['R','8.314 J/mol·K'],['T','الحرارة (K)']],
+      valid:'ضغوط منخفضة؛ حرارة فوق الحرجة بكثير؛ ليس بخار قريب من التكثيف'},
+
+    {id:'ch3', cat:'chem', name:'طاقة Gibbs الحرة', en:'Gibbs free energy spontaneity reaction',
+      latex:'\\Delta G = \\Delta H - T\\Delta S',
+      desc:'معيار تلقائية التفاعل عند ضغط وحرارة ثابتين.',
+      ref:'Gibbs (1873)',
+      vars:[['ΔG','تغيّر الطاقة الحرة (J/mol)'],['ΔH','تغيّر المحتوى الحراري (J/mol)'],['T','الحرارة (K)'],['ΔS','تغيّر الإنتروبي (J/mol·K)']],
+      valid:'ΔG < 0 تلقائي؛ > 0 غير تلقائي؛ = 0 توازن'},
+
+    {id:'ch4', cat:'chem', name:'معدل التفاعل', en:'reaction rate law order kinetics',
+      latex:'r = k[A]^m[B]^n',
+      desc:'معدل التفاعل كدالة في تراكيز المتفاعلات.',
+      ref:'Chemical kinetics',
+      vars:[['r','معدل التفاعل (mol/L·s)'],['k','ثابت المعدل'],['[A],[B]','التراكيز (mol/L)'],['m,n','رتب التفاعل']],
+      valid:'يحدد تجريبياً؛ الرتبة قد لا تطابق المعاملات الكيميائية'},
+
+    /* ─── MATERIALS (4) ─── */
+    {id:'ma1', cat:'mat', name:'قانون Hooke', en:'Hooke law stress strain elastic modulus',
+      latex:'\\sigma = E \\varepsilon',
+      desc:'العلاقة الخطية بين الإجهاد والانفعال في المنطقة المرنة.',
+      ref:'Hooke (1678)',
+      vars:[['σ','الإجهاد (MPa)'],['E','معامل المرونة (MPa)'],['ε','الانفعال (بلا وحدات)']],
+      valid:'منطقة مرنة فقط (دون حد التناسب)؛ تحميل أحادي المحور'},
+
+    {id:'ma2', cat:'mat', name:'معامل القص', en:'shear modulus Poisson ratio',
+      latex:'G = \\frac{E}{2(1+\\nu)}',
+      desc:'علاقة معامل القص بمعامل المرونة ونسبة Poisson.',
+      ref:'Elasticity theory',
+      vars:[['G','معامل القص (MPa)'],['E','معامل المرونة (MPa)'],['ν','نسبة Poisson (0-0.5)']],
+      valid:'مواد متجانسة متناحية الخواص (Isotropic)'},
+
+    {id:'ma3', cat:'mat', name:'معامل تركيز الإجهاد', en:'stress concentration factor Kt notch',
+      latex:'K_t = \\frac{\\sigma_{max}}{\\sigma_{nom}}',
+      desc:'النسبة بين الإجهاد الموضعي والإجهاد الاسمي عند تركيز.',
+      ref:'Peterson · Stress Concentration',
+      vars:[['Kt','معامل تركيز الإجهاد'],['σmax','الإجهاد الأقصى (MPa)'],['σnom','الإجهاد الاسمي (MPa)']],
+      valid:'مواد هشّة؛ تحميل ساكن مرن؛ يقل تأثيره في الكلال المتقدم'},
+
+    {id:'ma4', cat:'mat', name:'نسبة النحافة', en:'slenderness ratio buckling column',
+      latex:'\\lambda = \\frac{KL}{r}',
+      desc:'نسبة الطول الفعّال إلى نصف قطر الدوران للأعمدة.',
+      ref:'AISC / Eurocode 3',
+      vars:[['λ','نسبة النحافة'],['K','معامل الطول الفعّال'],['L','الطول (mm)'],['r','نصف قطر الدوران (mm)']],
+      valid:'λ < 200 للأعمدة الإنشائية؛ < 300 لعناصر الشد الثانوية'},
+
+    /* ─── HVAC (4) ─── */
+    {id:'hv1', cat:'hvac', name:'الحرارة المحسوسة', en:'sensible heat air mass cp',
+      latex:'Q_s = \\dot{m} c_p \\Delta T = 1.08 \\cdot CFM \\cdot \\Delta T',
+      desc:'الحرارة المحسوسة لتغيير حرارة هواء.',
+      ref:'ASHRAE Fundamentals',
+      vars:[['Qs','الحرارة (W أو BTU/h)'],['ṁ','معدل التدفق الكتلي (kg/s)'],['cp','السعة الحرارية (1.005 kJ/kg·K)'],['ΔT','فرق الحرارة (K)']],
+      valid:'هواء جاف؛ ضغط جوي عادي؛ النسخة الإمبراطورية للقطاع الأمريكي'},
+
+    {id:'hv2', cat:'hvac', name:'الحرارة الكامنة', en:'latent heat dehumidification cooling',
+      latex:'Q_L = \\dot{m} h_{fg} = 0.68 \\cdot CFM \\cdot \\Delta W_{gr}',
+      desc:'الحرارة اللازمة لتغيير محتوى الرطوبة.',
+      ref:'ASHRAE Psychrometrics',
+      vars:[['QL','الحرارة الكامنة (W)'],['hfg','حرارة التبخر الكامنة (2257 kJ/kg)'],['ΔW','فرق نسبة الرطوبة (grain/lb)']],
+      valid:'ضغط جوي؛ تحت حرارة الإشباع'},
+
+    {id:'hv3', cat:'hvac', name:'EER و COP', en:'energy efficiency ratio coefficient performance',
+      latex:'COP = \\frac{Q_{cool}}{W_{elec}},\\;\\; EER = COP \\times 3.412',
+      desc:'مؤشرات كفاءة معدات التبريد.',
+      ref:'AHRI 210/240',
+      vars:[['COP','معامل الأداء'],['EER','نسبة كفاءة الطاقة (BTU/W·h)'],['Qcool','حمل التبريد (W)'],['Welec','استهلاك كهربائي (W)']],
+      valid:'EER عند ظروف اختبار قياسية (35°C)؛ SEER للموسمي'},
+
+    {id:'hv4', cat:'hvac', name:'معدل التهوية ASHRAE 62.1', en:'ventilation rate outdoor air occupants',
+      latex:'V_{bz} = R_p \\cdot P_z + R_a \\cdot A_z',
+      desc:'الحد الأدنى للتهوية في منطقة تنفّس.',
+      ref:'ASHRAE 62.1-2022',
+      vars:[['Vbz','تهوية المنطقة (L/s)'],['Rp','معدل/شخص (2.5 L/s مكاتب)'],['Pz','عدد الأشخاص'],['Ra','معدل/مساحة (0.3 L/s·m²)'],['Az','المساحة (m²)']],
+      valid:'مباني غير سكنية؛ الكفاءة Ez منفصلة لحساب التهوية الكلية'},
+
+  ];
+
+  // ════════════════════════════════════════════════
+  // RENDER + FILTER + SEARCH
+  // ════════════════════════════════════════════════
+  const grid = document.getElementById('eqGrid');
+  const search = document.getElementById('eqSearch');
+  const empty = document.getElementById('eqEmpty');
+  const totalEl = document.getElementById('eq-total');
+  const shownEl = document.getElementById('eq-shown');
+  if(!grid) return;
+
+  let currentFilter = 'all';
+  let currentQuery = '';
+
+  function buildCard(eq){
+    const card = document.createElement('div');
+    card.className = 'eq-card';
+    card.dataset.cat = eq.cat;
+    card.dataset.id = eq.id;
+    const varsHtml = eq.vars.map(([s,d]) => `<li><span class="vs">${s}</span><span class="vd">${d}</span></li>`).join('');
+    card.innerHTML = `
+      <div class="eq-meta">
+        <span>${eq.id.toUpperCase()} · ${catLabel(eq.cat)}</span>
+        <span class="code">${eq.ref}</span>
+      </div>
+      <div class="eq-name">${eq.name}</div>
+      <div class="eq-desc">${eq.desc}</div>
+      <div class="eq-render" data-eq="${eq.latex.replace(/"/g,'&quot;')}"></div>
+      <div class="eq-details">
+        <div class="eq-details-inner">
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--accent); margin-bottom:8px; letter-spacing:1.2px;">// VARIABLES</div>
+          <ul class="eq-vars">${varsHtml}</ul>
+          <div class="eq-valid">${eq.valid}</div>
+        </div>
+      </div>
+      <div class="eq-toggle-hint">انقر للتفاصيل ↓</div>
+    `;
+    card.addEventListener('click', () => {
+      card.classList.toggle('expanded');
+      const hint = card.querySelector('.eq-toggle-hint');
+      hint.textContent = card.classList.contains('expanded') ? 'انقر للإخفاء ↑' : 'انقر للتفاصيل ↓';
+    });
+    return card;
+  }
+
+  function catLabel(c){
+    return {struct:'إنشائي', mech:'ميكانيكي', fluid:'موائع', heat:'حرارة',
+            elec:'كهربائي', seismic:'زلزالي', geo:'جيوتكنيك',
+            chem:'كيميائي', mat:'مواد', hvac:'تكييف'}[c] || c;
+  }
+
+  function renderKatexInCard(card){
+    if(!window.katex) return;
+    const el = card.querySelector('.eq-render');
+    if(!el || el.dataset.rendered) return;
+    try {
+      window.katex.render(el.getAttribute('data-eq'), el, { throwOnError:false, displayMode:true });
+      el.dataset.rendered = '1';
+    } catch(e){}
+  }
+
+  function applyFilters(){
+    const q = currentQuery.toLowerCase().trim();
+    let shown = 0;
+    grid.querySelectorAll('.eq-card').forEach(card => {
+      const id = card.dataset.id;
+      const eq = EQUATIONS.find(e => e.id === id);
+      if(!eq) return;
+      const matchCat = currentFilter === 'all' || eq.cat === currentFilter;
+      const haystack = (eq.name + ' ' + eq.en + ' ' + eq.desc + ' ' + eq.ref + ' ' + eq.latex + ' ' + eq.id).toLowerCase();
+      const matchQ = !q || haystack.includes(q);
+      const show = matchCat && matchQ;
+      card.classList.toggle('hidden', !show);
+      if(show) shown++;
+    });
+    if(shownEl) shownEl.textContent = shown;
+    if(empty) empty.style.display = shown === 0 ? 'block' : 'none';
+  }
+
+  function updateCounts(){
+    const counts = {all: EQUATIONS.length};
+    EQUATIONS.forEach(e => { counts[e.cat] = (counts[e.cat]||0) + 1; });
+    Object.keys(counts).forEach(c => {
+      const el = document.getElementById('eq-cnt-' + c);
+      if(el) el.textContent = counts[c];
+    });
+    if(totalEl) totalEl.textContent = EQUATIONS.length;
+  }
+
+  // Initial render
+  EQUATIONS.forEach(eq => {
+    const card = buildCard(eq);
+    grid.appendChild(card);
+  });
+  updateCounts();
+
+  // Render KaTeX (deferred to next tick + on each filter change for visible ones)
+  function renderAllKatex(){
+    grid.querySelectorAll('.eq-card:not(.hidden)').forEach(renderKatexInCard);
+  }
+  if(window.katex){
+    renderAllKatex();
+  } else {
+    window.addEventListener('load', () => setTimeout(renderAllKatex, 150));
+  }
+
+  // Wire up search
+  if(search){
+    let t;
+    search.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        currentQuery = search.value;
+        applyFilters();
+        setTimeout(renderAllKatex, 50);
+      }, 120);
+    });
+  }
+
+  // Wire up filter chips
+  document.querySelectorAll('[data-eq-filter]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('[data-eq-filter]').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentFilter = chip.dataset.eqFilter;
+      applyFilters();
+      setTimeout(renderAllKatex, 50);
+    });
+  });
+
+  applyFilters();
 })();
 </script>
 
