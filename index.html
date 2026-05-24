@@ -7206,155 +7206,643 @@ EOF</span></div>
 </section>
 
 <!-- ===================== COMMUNITY / GUILD ===================== -->
+<!-- ============================================================
+     SESSION 6: Q&A COMMUNITY FRONTEND (real localStorage backend)
+     Stack Overflow-style: questions, answers, votes, accepted,
+     reputation, badges — fully working, no server needed.
+     ============================================================ -->
+<style>
+.qa-toolbar{
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 18px; margin-bottom: 18px;
+  display: grid; grid-template-columns: 1fr auto auto; gap: 14px;
+  align-items: center;
+}
+@media (max-width: 760px){ .qa-toolbar{ grid-template-columns: 1fr; } }
+.qa-toolbar input{
+  background: var(--input-bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 14px; color: var(--ink);
+  font-family: var(--font-ar); font-size: 13px; outline: none; width: 100%;
+}
+.qa-toolbar input:focus{ border-color: var(--accent); }
+.qa-sort{
+  background: var(--input-bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 12px; color: var(--ink);
+  font-family: var(--font-display); font-size: 12.5px; font-weight: 600;
+  cursor: pointer;
+}
+.qa-ask-btn{
+  padding: 10px 18px; border-radius: 8px;
+  background: var(--accent); color: #fff; border: none;
+  font-family: var(--font-display); font-weight: 700; font-size: 13.5px;
+  cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.qa-ask-btn:hover{ background: var(--accent-2); }
+
+.qa-main-grid{
+  display: grid; grid-template-columns: 1fr 280px;
+  gap: 20px; align-items: start;
+}
+@media (max-width: 980px){ .qa-main-grid{ grid-template-columns: 1fr; } }
+
+.qa-list{
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; overflow: hidden;
+}
+.qa-item{
+  display: grid; grid-template-columns: 80px 1fr;
+  gap: 18px; padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer; transition: background .15s;
+}
+.qa-item:last-child{ border-bottom: none; }
+.qa-item:hover{ background: rgba(140,180,220,0.04); }
+.qa-stats{
+  display: flex; flex-direction: column; gap: 6px;
+  align-items: flex-end; flex-shrink: 0;
+}
+.qa-stat{
+  display: flex; flex-direction: column; align-items: center;
+  font-family: var(--font-mono);
+}
+.qa-stat .n{ font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1; }
+.qa-stat .l{ font-size: 9.5px; color: var(--ink-4); margin-top: 3px; letter-spacing: 0.06em; text-transform: uppercase; }
+.qa-stat.votes.has{ color: var(--accent); }
+.qa-stat.votes.has .n{ color: var(--accent); }
+.qa-stat.answers.solved{ color: var(--success); }
+.qa-stat.answers.solved .n{ color: var(--success); }
+.qa-stat.answers.solved::after{ content: "✓"; font-size: 10px; }
+
+.qa-q-title{
+  font-family: var(--font-display); font-weight: 700; font-size: 15px;
+  color: var(--accent); margin-bottom: 6px; line-height: 1.5;
+}
+.qa-q-body{
+  font-size: 12.5px; color: var(--ink-3); line-height: 1.65;
+  margin-bottom: 10px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.qa-q-meta{
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-4);
+}
+.qa-tags{ display: flex; gap: 5px; flex-wrap: wrap; }
+.qa-tag{
+  background: rgba(77,208,225,0.08); color: var(--cyan);
+  padding: 2px 8px; border-radius: 4px; font-size: 10.5px;
+  border: 1px solid rgba(77,208,225,0.2); cursor: pointer;
+}
+.qa-tag:hover{ background: rgba(77,208,225,0.15); }
+.qa-tag.active{ background: var(--cyan); color: #06101F; }
+.qa-author{ color: var(--ink-3); }
+.qa-author b{ color: var(--ink); font-family: var(--font-ar); }
+
+/* Question detail view */
+.qa-detail{
+  background: var(--panel); border: 1px solid var(--line-strong);
+  border-radius: 14px; padding: 24px; margin-top: 18px;
+  display: none;
+}
+.qa-detail.show{ display: block; animation: fadeUp .3s; }
+.qa-detail-close{
+  float: left; background: transparent; border: 1px solid var(--line);
+  color: var(--ink-3); padding: 5px 10px; border-radius: 6px;
+  font-family: var(--font-mono); font-size: 11px; cursor: pointer;
+}
+.qa-detail-close:hover{ color: var(--danger); border-color: var(--danger); }
+
+.qa-detail-title{
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+  color: var(--ink); margin-bottom: 12px; line-height: 1.4;
+}
+.qa-detail-body{
+  font-size: 14px; color: var(--ink-2); line-height: 1.8;
+  margin: 18px 0; padding: 14px 16px;
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 10px; white-space: pre-wrap;
+}
+.qa-vote-col{
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-weight: 700;
+}
+.qa-vote-btn{
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--line-strong); background: transparent;
+  color: var(--ink-3); cursor: pointer; font-size: 16px;
+  display: grid; place-items: center; transition: all .15s;
+}
+.qa-vote-btn:hover{ border-color: var(--accent); color: var(--accent); }
+.qa-vote-btn.voted{ background: var(--accent); color: #fff; border-color: var(--accent); }
+.qa-vote-count{ font-size: 18px; color: var(--ink); }
+.qa-vote-count.positive{ color: var(--success); }
+.qa-vote-count.negative{ color: var(--danger); }
+
+.qa-detail-grid{
+  display: grid; grid-template-columns: auto 1fr;
+  gap: 16px; align-items: start;
+}
+
+.qa-answers-head{
+  font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  margin: 24px 0 14px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.qa-answer{
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 10px; padding: 18px;
+  margin-bottom: 12px;
+}
+.qa-answer.accepted{
+  border-color: var(--success);
+  background: rgba(0,200,83,0.04);
+}
+.qa-answer-body{
+  font-size: 13.5px; color: var(--ink-2); line-height: 1.7;
+  white-space: pre-wrap;
+}
+.qa-answer-meta{
+  margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-4);
+  gap: 10px; flex-wrap: wrap;
+}
+.qa-accept-btn{
+  background: transparent; border: 1px solid var(--success);
+  color: var(--success); padding: 5px 12px; border-radius: 6px;
+  font-family: var(--font-display); font-weight: 600; font-size: 11.5px;
+  cursor: pointer;
+}
+.qa-accept-btn:hover{ background: rgba(0,200,83,0.1); }
+.qa-accept-badge{
+  background: var(--success); color: #06101F;
+  padding: 4px 10px; border-radius: 5px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.qa-form{
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px; margin-top: 14px;
+}
+.qa-form textarea, .qa-form input{
+  width: 100%; background: var(--input-bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; color: var(--ink);
+  font-family: var(--font-ar); font-size: 13px; outline: none;
+  margin-bottom: 8px;
+}
+.qa-form textarea{ min-height: 80px; resize: vertical; }
+.qa-form textarea:focus, .qa-form input:focus{ border-color: var(--accent); }
+
+/* Sidebar */
+.qa-sidebar{ display: flex; flex-direction: column; gap: 14px; }
+.qa-side-card{
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 16px;
+}
+.qa-side-title{
+  font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  color: var(--ink); margin-bottom: 12px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.qa-side-title .badge{
+  font-family: var(--font-mono); font-size: 10px; color: var(--accent);
+  background: rgba(255,107,53,0.1); padding: 2px 8px; border-radius: 4px;
+}
+.qa-user-name{
+  display: flex; gap: 10px; align-items: center;
+}
+.qa-user-name input{
+  flex: 1; background: var(--input-bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 10px; color: var(--ink);
+  font-family: var(--font-ar); font-size: 12.5px; outline: none;
+}
+.qa-rep{
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 28px; color: var(--accent); line-height: 1;
+}
+.qa-rep-label{ font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); letter-spacing: 0.06em; }
+
+.qa-badge-list{ display: flex; flex-wrap: wrap; gap: 6px; }
+.qa-badge{
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--bg-deep); border: 1px solid var(--line);
+  padding: 4px 10px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 10.5px;
+  color: var(--ink-2);
+}
+.qa-badge.bronze{ border-color: #CD7F32; color: #CD7F32; }
+.qa-badge.silver{ border-color: #C0C0C0; color: #B8B8B8; }
+.qa-badge.gold{ border-color: var(--gold); color: var(--gold); }
+
+.qa-tag-cloud .qa-tag{ margin-bottom: 4px; }
+.qa-tag-cloud{ display: flex; flex-wrap: wrap; gap: 4px; }
+
+.qa-empty{
+  padding: 40px; text-align: center; color: var(--ink-3);
+  font-family: var(--font-ar);
+}
+.qa-empty-ico{ font-size: 36px; opacity: 0.3; margin-bottom: 10px; }
+
+.qa-toast{
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--success); color: #fff; padding: 12px 22px;
+  border-radius: 8px; font-family: var(--font-ar); font-size: 13px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 9999;
+  opacity: 0; transition: opacity .3s; pointer-events: none;
+}
+.qa-toast.show{ opacity: 1; }
+</style>
+
 <section id="guild">
   <div class="container">
     <div class="section-head reveal">
-      <div class="section-eyebrow">ENGINEERING GUILD · LICENSED PROFESSIONALS</div>
-      <h2 class="section-title">مجتمع مهني <span class="accent">معتمَد</span> — لا منتدى عشوائي</h2>
-      <p class="section-desc">تحقّق من الهوية المهنية، مراجعة الأقران الإلزامية، شارات تخصصية مرتبطة بالنقابات الهندسية في 47 دولة.</p>
+      <div class="section-eyebrow">ENGINEERING GUILD · COMMUNITY Q&A</div>
+      <h2 class="section-title">مجتمع مهني <span class="accent">معتمَد</span> — اسأل، أجب، اكسب سمعة</h2>
+      <p class="section-desc">نظام Q&A كامل بأسلوب Stack Overflow: منشورات + تصويت + إجابات معتمدة + نقاط سمعة + شارات. كل البيانات تُحفظ محلياً في متصفحك.</p>
     </div>
 
-    <div class="guild-grid">
-      <div class="feed reveal">
-        <div class="feed-head">
-          <div style="font-family:var(--font-display); font-weight:700; font-size:14px;">آخر النشاطات في الـ Guild</div>
-          <div class="feed-tabs">
-            <button class="active">المشاهير</button>
-            <button>الجديد</button>
-            <button>الأكثر مساعدة</button>
-          </div>
-        </div>
+    <!-- Toolbar -->
+    <div class="qa-toolbar reveal">
+      <input type="text" id="qaSearch" placeholder="ابحث في الأسئلة..." />
+      <select class="qa-sort" id="qaSort">
+        <option value="newest">الأحدث</option>
+        <option value="votes">الأعلى تصويتاً</option>
+        <option value="unanswered">بدون إجابة</option>
+        <option value="answered">عليها إجابات</option>
+      </select>
+      <button class="qa-ask-btn" id="qaAskBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        اطرح سؤال
+      </button>
+    </div>
 
-        <div class="feed-item">
-          <div class="avatar">أ.ن</div>
-          <div>
-            <div class="feed-meta">
-              <span class="feed-author">أحمد ناصر</span>
-              <span class="feed-tag verified">PE معتمد</span>
-              <span class="feed-tag expert">خبير إنشائي</span>
-              <span class="feed-time lat">14m ago</span>
-            </div>
-            <div class="feed-q">حلّ مسألة تحقيق ATC-40 لإطار خرساني 7 طوابق في منطقة زلزالية Zone 2B — تحليل Pushover مقارَن بـ Capacity Spectrum.</div>
-            <div class="feed-stats">
-              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> 247</span>
-              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 38</span>
-              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> مُحقَّق × 3</span>
-            </div>
-          </div>
-        </div>
+    <!-- Tag filter -->
+    <div class="qa-tag-cloud reveal" id="qaTagCloud" style="margin-bottom:18px;"></div>
 
-        <div class="feed-item">
-          <div class="avatar b">س.م</div>
-          <div>
-            <div class="feed-meta">
-              <span class="feed-author">سارة المهنا</span>
-              <span class="feed-tag verified">FICE</span>
-              <span class="feed-tag">ميكانيكي</span>
-              <span class="feed-time lat">42m ago</span>
-            </div>
-            <div class="feed-q">تصميم مبادل حراري Shell &amp; Tube — تحليل LMTD مقابل ε-NTU، أيهما أدق لـ Two-Phase Flow؟</div>
-            <div class="feed-stats">
-              <span>184</span><span>27</span><span>مُحقَّق × 2</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="feed-item">
-          <div class="avatar c">ع.خ</div>
-          <div>
-            <div class="feed-meta">
-              <span class="feed-author">عمر خليل</span>
-              <span class="feed-tag verified">CISSP</span>
-              <span class="feed-tag">برمجيات</span>
-              <span class="feed-time lat">1h ago</span>
-            </div>
-            <div class="feed-q">معمارية SCADA لمحطة طاقة شمسية 250 ميجاوات — مراجعة IEC 62443 مع طبقات IT/OT المعزولة.</div>
-            <div class="feed-stats">
-              <span>312</span><span>54</span><span>دراسة حالة</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="feed-item">
-          <div class="avatar d">ل.ع</div>
-          <div>
-            <div class="feed-meta">
-              <span class="feed-author">ليلى عبد العزيز</span>
-              <span class="feed-tag verified">PMP</span>
-              <span class="feed-tag">صناعي</span>
-              <span class="feed-time lat">2h ago</span>
-            </div>
-            <div class="feed-q">تحسين خط إنتاج بـ Lean Six Sigma — Value Stream Mapping خفّض زمن الدورة 34٪.</div>
-            <div class="feed-stats">
-              <span>156</span><span>21</span><span>Case Study</span>
-            </div>
-          </div>
-        </div>
+    <!-- Main grid: list + sidebar -->
+    <div class="qa-main-grid">
+      <div>
+        <div class="qa-list" id="qaList"></div>
+        <div id="qaDetail" class="qa-detail"></div>
       </div>
 
-      <div class="leaderboard reveal">
-        <div class="leaderboard-head">
-          <span>قادة الـ Guild · الشهر</span>
-          <span class="badge">Top 1%</span>
-        </div>
-        <div class="lb-item">
-          <div class="lb-rank">1</div>
-          <div class="avatar" style="width:32px; height:32px; font-size:11px;">أ.ن</div>
-          <div class="lb-info">
-            <div class="lb-name">أحمد ناصر</div>
-            <div class="lb-spec lat">STRUCTURAL · PE</div>
+      <!-- Sidebar -->
+      <div class="qa-sidebar">
+        <div class="qa-side-card">
+          <div class="qa-side-title">ملفك الشخصي</div>
+          <div class="qa-user-name" style="margin-bottom:14px;">
+            <input type="text" id="qaUserName" />
           </div>
-          <div class="lb-pts tnum">14,827</div>
-        </div>
-        <div class="lb-item">
-          <div class="lb-rank">2</div>
-          <div class="avatar b" style="width:32px; height:32px; font-size:11px;">س.م</div>
-          <div class="lb-info">
-            <div class="lb-name">سارة المهنا</div>
-            <div class="lb-spec lat">MECHANICAL · FICE</div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:10px;">
+            <div>
+              <div class="qa-rep" id="qaUserRep">0</div>
+              <div class="qa-rep-label">نقاط السمعة</div>
+            </div>
+            <div style="text-align:left;">
+              <div style="font-family:var(--font-mono); font-size:18px; color:var(--ink); font-weight:700;" id="qaUserAnswered">0</div>
+              <div class="qa-rep-label">إجاباتك</div>
+            </div>
           </div>
-          <div class="lb-pts tnum">12,403</div>
+          <div id="qaUserBadges" class="qa-badge-list"></div>
         </div>
-        <div class="lb-item">
-          <div class="lb-rank">3</div>
-          <div class="avatar c" style="width:32px; height:32px; font-size:11px;">ع.خ</div>
-          <div class="lb-info">
-            <div class="lb-name">عمر خليل</div>
-            <div class="lb-spec lat">SOFTWARE · CISSP</div>
+
+        <div class="qa-side-card">
+          <div class="qa-side-title">إحصائيات المجتمع <span class="badge" id="qaTotalCount">0</span></div>
+          <div style="font-family:var(--font-mono); font-size:12px; color:var(--ink-3); line-height:1.9;">
+            <div style="display:flex; justify-content:space-between;"><span>الأسئلة</span> <b id="qaStatQ" style="color:var(--ink);">0</b></div>
+            <div style="display:flex; justify-content:space-between;"><span>الإجابات</span> <b id="qaStatA" style="color:var(--ink);">0</b></div>
+            <div style="display:flex; justify-content:space-between;"><span>المُعتمدة</span> <b id="qaStatAcc" style="color:var(--success);">0</b></div>
+            <div style="display:flex; justify-content:space-between;"><span>غير محلولة</span> <b id="qaStatUns" style="color:var(--warning);">0</b></div>
           </div>
-          <div class="lb-pts tnum">11,891</div>
         </div>
-        <div class="lb-item">
-          <div class="lb-rank">4</div>
-          <div class="avatar d" style="width:32px; height:32px; font-size:11px;">ل.ع</div>
-          <div class="lb-info">
-            <div class="lb-name">ليلى عبد العزيز</div>
-            <div class="lb-spec lat">INDUSTRIAL · PMP</div>
+
+        <div class="qa-side-card">
+          <div class="qa-side-title">كيف تكسب نقاط؟</div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-3); line-height:1.9;">
+            <div>+5 طرح سؤال</div>
+            <div>+10 تصويت موجب على سؤالك</div>
+            <div>+15 تصويت موجب على إجابتك</div>
+            <div>+25 إجابتك مُعتمدة ✓</div>
+            <div>−2 تصويت سالب</div>
           </div>
-          <div class="lb-pts tnum">10,247</div>
-        </div>
-        <div class="lb-item">
-          <div class="lb-rank">5</div>
-          <div class="avatar" style="width:32px; height:32px; font-size:11px; background:linear-gradient(135deg,#9C27B0,#5E1080);">خ.ز</div>
-          <div class="lb-info">
-            <div class="lb-name">خالد الزهراني</div>
-            <div class="lb-spec lat">PETROLEUM · SPE</div>
-          </div>
-          <div class="lb-pts tnum">9,418</div>
-        </div>
-        <div class="lb-item">
-          <div class="lb-rank">6</div>
-          <div class="avatar b" style="width:32px; height:32px; font-size:11px;">ف.ر</div>
-          <div class="lb-info">
-            <div class="lb-name">فاطمة الراشد</div>
-            <div class="lb-spec lat">ELECTRICAL · IEEE</div>
-          </div>
-          <div class="lb-pts tnum">8,902</div>
         </div>
       </div>
     </div>
   </div>
 </section>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   SESSION 6 — Q&A COMMUNITY (real localStorage backend)
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  const STORE = 'enghub_qa_v1';
+
+  const SEED_QUESTIONS = [
+    { id:'q_seed1', userId:'u_ahmed', author:'م. أحمد ناصر', title:'حساب القص الثاقب لقاعدة منعزلة 3×3 متر',
+      body:'أصمم قاعدة منعزلة 3×3m بسماكة 50cm تحت عمود 50×50cm.\nالحمل المؤثر Pu = 2000 kN، fc = 30 MPa.\nكيف أحسب القص الثاقب وأتأكد من السماكة الكافية؟', tags:['concrete','aci','footing'],
+      votes:8, voters:{}, views:42, answers:[
+        { id:'a_seed1', userId:'u_sara', author:'م. سارة المهنا', body:'استخدم ACI 318-19 §22.6.\nالمحيط الحرج bo عند d/2 من وجه العمود: bo = 4(c+d) = 4(500+440) = 3760mm.\nVc = 0.33·√fc·bo·d = 0.33·√30·3760·440/1000 = 2,989 kN > Vu ✓\nالسماكة 50cm كافية بهامش أمان جيد.', votes:12, voters:{}, accepted:true, createdAt:Date.now()-86400000*5 }
+      ], acceptedAnswerId:'a_seed1', createdAt:Date.now()-86400000*7 },
+    { id:'q_seed2', userId:'u_omar', author:'م. عمر خليل', title:'تصميم كابل تغذية 50 kW على بعد 80 متر',
+      body:'محرك 50 kW، جهد 400V ثلاثي الطور، معامل قدرة 0.85.\nالمسافة 80m من اللوحة.\nالأنسب 25mm² أو 35mm² نحاس؟ ما حد سقوط الجهد المسموح؟', tags:['electrical','iec','cable'],
+      votes:5, voters:{}, views:28, answers:[
+        { id:'a_seed2', userId:'u_fatima', author:'م. فاطمة الراشد', body:'I = P/(√3·V·cosφ·η) ≈ 50000/(1.732·400·0.85·0.9) ≈ 94A.\nلـ 25mm² نحاس: R = 0.727·80 = 58 mΩ → ΔV = √3·94·0.058·0.85 ≈ 8V (2%) ✓\nلـ 35mm² نحاس: ΔV ≈ 5.8V (1.4%) — أكثر هامشاً.\nاختر 35mm² للأمان (IEC 60364: حد 5%، لكن 3% للفروع موصى به).', votes:7, voters:{}, accepted:false, createdAt:Date.now()-86400000*3 }
+      ], acceptedAnswerId:null, createdAt:Date.now()-86400000*4 },
+    { id:'q_seed3', userId:'u_layla', author:'م. ليلى عبد العزيز', title:'متى يكون استخدام الخرسانة عالية الأداء (HPC) ضرورياً؟',
+      body:'في برج 30 طابق هل يستحق التحوّل من C40 إلى HPC C70؟\nالتكلفة أعلى لكن المقاطع أصغر. ما العوامل الحاسمة؟', tags:['concrete','design','hpc'],
+      votes:3, voters:{}, views:15, answers:[], acceptedAnswerId:null, createdAt:Date.now()-86400000*1 },
+    { id:'q_seed4', userId:'u_khalid', author:'م. خالد الزهراني', title:'كيف أقرأ منحنى الكلال S-N لفولاذ المضخات؟',
+      body:'عندي فولاذ AISI 4340 (σ_uts=1100 MPa)، إجهاد متناوب 350 MPa.\nأريد عمر التشغيل قبل الاستبدال الوقائي. أي صيغة أستخدم؟', tags:['fatigue','mechanical','steel'],
+      votes:6, voters:{}, views:31, answers:[], acceptedAnswerId:null, createdAt:Date.now()-3600000*8 },
+  ];
+  const ARABIC_NICK = ['مهندس مجهول','نمر هندسي','عقل بنّاء','صقر التصميم','بحر المعرفة','بصيرة هندسية','رواية الموقع','عابر الكوابل','محسن السقوف'];
+
+  function load(){
+    try { const raw = localStorage.getItem(STORE); if(raw) return JSON.parse(raw); } catch(e){}
+    const id = 'u_' + Math.random().toString(36).slice(2,9);
+    const initial = {
+      user: { id, name: ARABIC_NICK[Math.floor(Math.random()*ARABIC_NICK.length)], reputation: 0, badges: [] },
+      questions: SEED_QUESTIONS.slice(), seenAt: Date.now()
+    };
+    try { localStorage.setItem(STORE, JSON.stringify(initial)); } catch(e){}
+    return initial;
+  }
+  function save(state){ try { localStorage.setItem(STORE, JSON.stringify(state)); } catch(e){} }
+
+  let state = load();
+  let currentSort='newest', currentSearch='', currentTag=null, openedId=null;
+
+  function awardRep(amount){ state.user.reputation = Math.max(0, state.user.reputation + amount); checkBadges(); }
+  function checkBadges(){
+    const b = new Set(state.user.badges);
+    const myQs = state.questions.filter(q => q.userId === state.user.id);
+    const myAs = state.questions.flatMap(q => q.answers.filter(a => a.userId === state.user.id));
+    const myAccepted = myAs.filter(a => a.accepted);
+    if(myQs.length >= 1) b.add('first-question');
+    if(myAs.length >= 1) b.add('first-answer');
+    if(myAs.length >= 5) b.add('helpful');
+    if(myAccepted.length >= 1) b.add('teacher');
+    if(myAccepted.length >= 3) b.add('mentor');
+    if(state.user.reputation >= 50) b.add('rising');
+    if(state.user.reputation >= 200) b.add('veteran');
+    if(state.user.reputation >= 1000) b.add('legend');
+    state.user.badges = Array.from(b);
+  }
+  const BADGE_META = {
+    'first-question':{name:'سؤالك الأول',icon:'❓',tier:'bronze'},
+    'first-answer':{name:'أول إجابة',icon:'💬',tier:'bronze'},
+    'helpful':{name:'مفيد',icon:'🤝',tier:'silver'},
+    'teacher':{name:'مُعلّم',icon:'🎓',tier:'silver'},
+    'mentor':{name:'مرشد',icon:'⭐',tier:'gold'},
+    'rising':{name:'صاعد',icon:'📈',tier:'bronze'},
+    'veteran':{name:'مخضرم',icon:'🏆',tier:'silver'},
+    'legend':{name:'أسطورة',icon:'👑',tier:'gold'},
+  };
+
+  function vote(qId, aId, delta){
+    const q = state.questions.find(x => x.id === qId); if(!q) return;
+    const target = aId ? q.answers.find(a => a.id === aId) : q; if(!target) return;
+    if(target.userId === state.user.id){ toast('لا يمكنك التصويت على منشورك'); return; }
+    const cur = target.voters[state.user.id] || 0;
+    if(cur === delta){ target.votes -= delta; delete target.voters[state.user.id]; }
+    else { target.votes += (delta - cur); target.voters[state.user.id] = delta; }
+    save(state); render();
+  }
+  function acceptAnswer(qId, aId){
+    const q = state.questions.find(x => x.id === qId); if(!q) return;
+    if(q.userId !== state.user.id){ toast('فقط صاحب السؤال يقبل الإجابة'); return; }
+    q.answers.forEach(a => a.accepted = (a.id === aId));
+    q.acceptedAnswerId = aId;
+    const a = q.answers.find(x => x.id === aId);
+    if(a && a.userId === state.user.id) awardRep(25);
+    save(state); render();
+  }
+  function askQuestion(title, body, tags){
+    if(!title.trim()){ toast('العنوان مطلوب'); return false; }
+    if(!body.trim()){ toast('نص السؤال مطلوب'); return false; }
+    const q = {
+      id: 'q_' + Date.now().toString(36), userId: state.user.id, author: state.user.name,
+      title: title.trim(), body: body.trim(),
+      tags: tags.split(/[,،\s]+/).filter(Boolean).slice(0,5),
+      votes:0, voters:{}, views:0, answers:[], acceptedAnswerId:null, createdAt:Date.now()
+    };
+    state.questions.unshift(q); awardRep(5); save(state); openedId = q.id; render(); return true;
+  }
+  function postAnswer(qId, body){
+    if(!body.trim()){ toast('نص الإجابة مطلوب'); return; }
+    const q = state.questions.find(x => x.id === qId); if(!q) return;
+    q.answers.push({
+      id:'a_'+Date.now().toString(36), userId:state.user.id, author:state.user.name,
+      body:body.trim(), votes:0, voters:{}, accepted:false, createdAt:Date.now()
+    });
+    awardRep(2); save(state); render();
+  }
+
+  function filteredQuestions(){
+    let list = state.questions.slice();
+    if(currentSearch){
+      const q = currentSearch.toLowerCase().trim();
+      list = list.filter(x => x.title.toLowerCase().includes(q) || x.body.toLowerCase().includes(q)
+        || x.tags.some(t => t.toLowerCase().includes(q)) || x.author.toLowerCase().includes(q));
+    }
+    if(currentTag) list = list.filter(x => x.tags.includes(currentTag));
+    if(currentSort === 'votes') list.sort((a,b) => b.votes - a.votes);
+    else if(currentSort === 'unanswered') list = list.filter(x => x.answers.length === 0).sort((a,b)=>b.createdAt-a.createdAt);
+    else if(currentSort === 'answered') list = list.filter(x => x.answers.length > 0).sort((a,b)=>b.createdAt-a.createdAt);
+    else list.sort((a,b) => b.createdAt - a.createdAt);
+    return list;
+  }
+  function allTags(){
+    const m = {};
+    state.questions.forEach(q => q.tags.forEach(t => { m[t] = (m[t]||0)+1; }));
+    return Object.entries(m).sort((a,b) => b[1]-a[1]);
+  }
+  function timeAgo(ts){
+    const s = (Date.now()-ts)/1000;
+    if(s<60) return 'منذ ثوانٍ';
+    if(s<3600) return `منذ ${Math.floor(s/60)} د`;
+    if(s<86400) return `منذ ${Math.floor(s/3600)} س`;
+    if(s<604800) return `منذ ${Math.floor(s/86400)} يوم`;
+    return new Date(ts).toLocaleDateString('ar-EG');
+  }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function toast(msg){
+    let t = document.getElementById('qaToast');
+    if(!t){ t = document.createElement('div'); t.id='qaToast'; t.className='qa-toast'; document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function render(){ renderUser(); renderStats(); renderTagCloud(); renderList(); renderDetail(); }
+
+  function renderUser(){
+    document.getElementById('qaUserName').value = state.user.name;
+    document.getElementById('qaUserRep').textContent = state.user.reputation;
+    const myAs = state.questions.flatMap(q => q.answers.filter(a => a.userId === state.user.id));
+    document.getElementById('qaUserAnswered').textContent = myAs.length;
+    const wrap = document.getElementById('qaUserBadges');
+    if(state.user.badges.length === 0){
+      wrap.innerHTML = '<div style="font-family:var(--font-mono); font-size:11px; color:var(--ink-4);">لا شارات بعد — اطرح سؤالاً!</div>';
+    } else {
+      wrap.innerHTML = state.user.badges.map(id => {
+        const b = BADGE_META[id]; return b ? `<span class="qa-badge ${b.tier}">${b.icon} ${b.name}</span>` : '';
+      }).join('');
+    }
+  }
+  function renderStats(){
+    const qs = state.questions, allA = qs.flatMap(q => q.answers);
+    document.getElementById('qaTotalCount').textContent = qs.length;
+    document.getElementById('qaStatQ').textContent = qs.length;
+    document.getElementById('qaStatA').textContent = allA.length;
+    document.getElementById('qaStatAcc').textContent = allA.filter(a => a.accepted).length;
+    document.getElementById('qaStatUns').textContent = qs.filter(q => !q.acceptedAnswerId).length;
+  }
+  function renderTagCloud(){
+    const cloud = document.getElementById('qaTagCloud');
+    cloud.innerHTML = `<span class="qa-tag ${currentTag===null?'active':''}" data-tag="">الكل</span>`
+      + allTags().map(([t,n]) => `<span class="qa-tag ${currentTag===t?'active':''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)} (${n})</span>`).join('');
+    cloud.querySelectorAll('.qa-tag').forEach(el => {
+      el.addEventListener('click', () => { currentTag = el.dataset.tag || null; render(); });
+    });
+  }
+  function renderList(){
+    const list = filteredQuestions(), el = document.getElementById('qaList');
+    if(list.length === 0){
+      el.innerHTML = `<div class="qa-empty"><div class="qa-empty-ico">🔍</div>لا توجد أسئلة مطابقة</div>`;
+      return;
+    }
+    el.innerHTML = list.map(q => {
+      const solved = !!q.acceptedAnswerId, hasVotes = q.votes > 0;
+      return `<div class="qa-item" data-qid="${q.id}">
+        <div class="qa-stats">
+          <div class="qa-stat votes ${hasVotes?'has':''}"><span class="n">${q.votes}</span><span class="l">صوت</span></div>
+          <div class="qa-stat answers ${solved?'solved':''}"><span class="n">${q.answers.length}</span><span class="l">إجابة</span></div>
+          <div class="qa-stat"><span class="n" style="font-size:13px;">${q.views}</span><span class="l">مشاهدة</span></div>
+        </div>
+        <div>
+          <div class="qa-q-title">${escapeHtml(q.title)}</div>
+          <div class="qa-q-body">${escapeHtml(q.body)}</div>
+          <div class="qa-q-meta">
+            <div class="qa-tags">${q.tags.map(t => `<span class="qa-tag">${escapeHtml(t)}</span>`).join('')}</div>
+            <span class="qa-author">طُرح <span style="color:var(--accent);">${timeAgo(q.createdAt)}</span> بواسطة <b>${escapeHtml(q.author)}</b></span>
+          </div>
+        </div></div>`;
+    }).join('');
+    el.querySelectorAll('.qa-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if(e.target.closest('.qa-tag')) return;
+        const qid = item.dataset.qid;
+        openedId = openedId === qid ? null : qid;
+        if(openedId){ const q = state.questions.find(x => x.id === openedId); if(q){ q.views = (q.views||0)+1; save(state); } }
+        render();
+        if(openedId) setTimeout(() => document.getElementById('qaDetail').scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+      });
+    });
+  }
+  function voteButtons(qOrA, isAnswer, qId){
+    const cur = qOrA.voters[state.user.id] || 0;
+    const vc = qOrA.votes > 0 ? 'positive' : qOrA.votes < 0 ? 'negative' : '';
+    return `<div class="qa-vote-col">
+      <button class="qa-vote-btn ${cur===1?'voted':''}" data-vote="1" data-q="${qId}" data-a="${isAnswer ? qOrA.id : ''}">▲</button>
+      <span class="qa-vote-count ${vc}">${qOrA.votes}</span>
+      <button class="qa-vote-btn ${cur===-1?'voted':''}" data-vote="-1" data-q="${qId}" data-a="${isAnswer ? qOrA.id : ''}">▼</button>
+    </div>`;
+  }
+  function renderDetail(){
+    const el = document.getElementById('qaDetail');
+    if(!openedId){ el.classList.remove('show'); el.innerHTML=''; return; }
+    const q = state.questions.find(x => x.id === openedId);
+    if(!q){ el.classList.remove('show'); el.innerHTML=''; return; }
+    el.classList.add('show');
+    const sortedAnswers = q.answers.slice().sort((a,b) => {
+      if(a.accepted) return -1; if(b.accepted) return 1; return b.votes - a.votes;
+    });
+    el.innerHTML = `
+      <button class="qa-detail-close" data-close="1">× إغلاق</button>
+      <div class="qa-detail-title">${escapeHtml(q.title)}</div>
+      <div class="qa-q-meta" style="margin-bottom:12px;">
+        <span class="qa-author">طُرح ${timeAgo(q.createdAt)} بواسطة <b>${escapeHtml(q.author)}</b></span>
+        · <span>${q.views} مشاهدة</span>
+        · <div class="qa-tags">${q.tags.map(t => `<span class="qa-tag">${escapeHtml(t)}</span>`).join('')}</div>
+      </div>
+      <div class="qa-detail-grid">${voteButtons(q, false, q.id)}<div class="qa-detail-body">${escapeHtml(q.body)}</div></div>
+      <div class="qa-answers-head">${q.answers.length} إجابة${q.answers.length===0?' — كن أول من يجيب':''}</div>
+      ${sortedAnswers.map(a => `
+        <div class="qa-answer ${a.accepted?'accepted':''}">
+          <div class="qa-detail-grid">${voteButtons(a, true, q.id)}
+            <div>
+              <div class="qa-answer-body">${escapeHtml(a.body)}</div>
+              <div class="qa-answer-meta">
+                <span>أجاب ${timeAgo(a.createdAt)} <b style="color:var(--ink);">${escapeHtml(a.author)}</b></span>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  ${a.accepted ? '<span class="qa-accept-badge">✓ إجابة مُعتمدة</span>' : ''}
+                  ${q.userId === state.user.id && !a.accepted ? `<button class="qa-accept-btn" data-accept="${a.id}">قبول كإجابة معتمدة</button>` : ''}
+                </div>
+              </div>
+            </div>
+          </div></div>`).join('')}
+      <div class="qa-answers-head">إجابتك</div>
+      <div class="qa-form">
+        <textarea id="qaAnswerBox" placeholder="اكتب إجابتك هنا... كن واضحاً، اذكر الكود/المعيار إن أمكن"></textarea>
+        <button class="qa-ask-btn" data-post-answer="${q.id}" style="width:100%; justify-content:center;">نشر الإجابة</button>
+      </div>`;
+    el.querySelectorAll('.qa-vote-btn').forEach(b => b.addEventListener('click', () => vote(b.dataset.q, b.dataset.a || null, parseInt(b.dataset.vote))));
+    el.querySelectorAll('[data-accept]').forEach(b => b.addEventListener('click', () => acceptAnswer(openedId, b.dataset.accept)));
+    el.querySelector('[data-post-answer]').addEventListener('click', () => {
+      const box = document.getElementById('qaAnswerBox'); postAnswer(openedId, box.value); box.value = '';
+    });
+    el.querySelector('[data-close]').addEventListener('click', () => { openedId = null; render(); });
+  }
+
+  document.getElementById('qaSearch').addEventListener('input', (e) => { currentSearch = e.target.value; renderList(); });
+  document.getElementById('qaSort').addEventListener('change', (e) => { currentSort = e.target.value; renderList(); });
+  document.getElementById('qaUserName').addEventListener('change', (e) => {
+    const n = e.target.value.trim() || ARABIC_NICK[0];
+    state.user.name = n;
+    state.questions.forEach(q => {
+      if(q.userId === state.user.id) q.author = n;
+      q.answers.forEach(a => { if(a.userId === state.user.id) a.author = n; });
+    });
+    save(state); render();
+  });
+  document.getElementById('qaAskBtn').addEventListener('click', () => {
+    const wrap = document.getElementById('qaDetail');
+    openedId = null;
+    wrap.classList.add('show');
+    wrap.innerHTML = `
+      <button class="qa-detail-close" data-close="1">× إلغاء</button>
+      <div class="qa-detail-title">طرح سؤال جديد</div>
+      <div class="qa-form">
+        <input type="text" id="newQTitle" placeholder="عنوان السؤال (واضح ومحدد)..." maxlength="120" />
+        <textarea id="newQBody" placeholder="اشرح سؤالك بالتفصيل: المعطيات، ما جربت، السؤال المحدد..."></textarea>
+        <input type="text" id="newQTags" placeholder="الوسوم (مفصولة بفواصل): concrete, aci, footing" />
+        <button class="qa-ask-btn" id="newQSubmit" style="width:100%; justify-content:center;">نشر السؤال</button>
+      </div>`;
+    wrap.querySelector('[data-close]').addEventListener('click', () => { openedId = null; render(); });
+    document.getElementById('newQSubmit').addEventListener('click', () => {
+      const ok = askQuestion(
+        document.getElementById('newQTitle').value,
+        document.getElementById('newQBody').value,
+        document.getElementById('newQTags').value
+      );
+      if(ok) toast('تم نشر سؤالك ✓ (+5 نقاط)');
+    });
+    wrap.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
+
+  window.EngHubQA = {
+    get state(){ return state; }, render, askQuestion, postAnswer, vote, acceptAnswer,
+    reset(){ localStorage.removeItem(STORE); state = load(); render(); }
+  };
+  render();
+})();
+</script>
 
 <!-- ===================== STACK / TECH ===================== -->
 <section id="stack" class="stack-section">
