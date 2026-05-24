@@ -5287,14 +5287,14 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
 <section id="calc-library" class="cl-section">
   <div class="container">
     <div class="section-head reveal">
-      <div class="section-eyebrow">CALCULATOR LIBRARY · 48 ENGINEERING TOOLS</div>
+      <div class="section-eyebrow">CALCULATOR LIBRARY · 56 ENGINEERING TOOLS</div>
       <h2 class="section-title">مكتبة الحاسبات <span class="accent">الاحترافية</span></h2>
-      <p class="section-desc">48 حاسبة هندسية معتمدة عالمياً (ACI, AISC, IEC, ASHRAE, ASME, API) — مصنّفة عبر 8 تخصصات. كل حاسبة بمعادلة مرجعية + معامل أمان + تحقق ذاتي + مرجع كود.</p>
+      <p class="section-desc">56 حاسبة هندسية معتمدة عالمياً (ACI, AISC, IEC, ASHRAE, ASME, API) + إقليمية (SBC, ECP, UAE, ZATCA) — 9 تخصصات. كل حاسبة بمعادلة مرجعية + معامل أمان + تحقق ذاتي + مرجع كود.</p>
     </div>
 
     <!-- Filter chips -->
     <div class="cl-filters reveal" id="clFilters">
-      <button class="cl-chip active" data-filter="all">الكل <span class="cnt">48</span></button>
+      <button class="cl-chip active" data-filter="all">الكل <span class="cnt">56</span></button>
       <button class="cl-chip" data-filter="struct">إنشائي <span class="cnt">12</span></button>
       <button class="cl-chip" data-filter="mech">ميكانيكي <span class="cnt">11</span></button>
       <button class="cl-chip" data-filter="elec">كهربائي <span class="cnt">9</span></button>
@@ -5303,6 +5303,7 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
       <button class="cl-chip" data-filter="geo">جيوتكنيك <span class="cnt">3</span></button>
       <button class="cl-chip" data-filter="petro">بترولي <span class="cnt">2</span></button>
       <button class="cl-chip" data-filter="env">بيئي <span class="cnt">3</span></button>
+      <button class="cl-chip" data-filter="regional">🇸🇦 إقليمي <span class="cnt">8</span></button>
     </div>
 
     <div class="cl-grid reveal" id="clGrid"></div>
@@ -5325,7 +5326,7 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
       <button class="db-tab" data-db="pipes">🚿 أنابيب <span class="cnt">24</span></button>
       <button class="db-tab" data-db="cables">⚡ كابلات كهربائية <span class="cnt">15</span></button>
       <button class="db-tab" data-db="materials">🧪 خواص المواد <span class="cnt">33</span></button>
-      <button class="db-tab" data-db="codes">📋 الأكواد المرجعية <span class="cnt">29</span></button>
+      <button class="db-tab" data-db="codes">📋 الأكواد المرجعية <span class="cnt">52</span></button>
     </div>
 
     <!-- Steel Sections Panel -->
@@ -5469,8 +5470,8 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
           <input class="db-search" data-search="codes" placeholder="ابحث: ACI, AISC, IEC, ASHRAE..." />
         </div>
         <div class="db-stats">
-          <span>إجمالي: <b id="db-count-codes">29</b></span>
-          <span>المعروض: <b id="db-shown-codes">29</b></span>
+          <span>إجمالي: <b id="db-count-codes">52</b></span>
+          <span>المعروض: <b id="db-shown-codes">52</b></span>
         </div>
       </div>
       <div class="db-table-wrap">
@@ -11259,6 +11260,431 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
       }
     },
 
+    /* ============================================================
+       SESSION 3 — 8 REGIONAL CALCULATORS (Saudi/Egypt/Gulf)
+       Builds on SBC, ECP, UAE Fire, GCC, ZATCA standards.
+       ============================================================ */
+
+    /* ── SAUDI / SBC ── */
+
+    r_sbcCover: {
+      id:'r_sbcCover', cat:'regional',
+      title:'غطاء الخرسانة — SBC 304',
+      desc:'الحد الأدنى لغطاء الحديد حسب البيئة السعودية',
+      tag:'SBC 304', tagClass:'cy',
+      ref:'SBC 304-18 §20.6.1 (مطابق ACI 318)',
+      formula:'الغطاء = max(القيمة المعيارية، 1.5×قطر السيخ، أكبر حصمة + 5mm)',
+      inputs:[
+        {id:'env', label:'البيئة', type:'select', value:'coastal',
+          options:[
+            {value:'interior',   label:'داخلي محمي (الرياض الداخل)'},
+            {value:'exterior',   label:'خارجي معتدل'},
+            {value:'coastal',    label:'ساحلي (جدة/الدمام) — كلوريد'},
+            {value:'sulfate',    label:'تربة كبريتية (الأحساء)'},
+            {value:'water',      label:'ملامس للماء/أرضي'}
+          ], full:true},
+        {id:'db', label:'قطر السيخ', unit:'mm', value:20, step:1},
+        {id:'agg',label:'أقصى حصمة', unit:'mm', value:20, step:5},
+      ],
+      compute(v){
+        const base = {interior:20, exterior:40, coastal:50, sulfate:65, water:75}[v.env];
+        const bar  = 1.5 * v.db;
+        const aggC = v.agg + 5;
+        const cover = Math.max(base, bar, aggC);
+        const limits = {interior:20, exterior:40, coastal:50, sulfate:65, water:75};
+        return {
+          rows:[
+            {label:'القيمة المعيارية (بيئة)', value:base, unit:'mm', dec:0},
+            {label:'1.5× قطر السيخ', value:bar, unit:'mm', dec:0},
+            {label:'حصمة + 5mm', value:aggC, unit:'mm', dec:0},
+            {label:'الغطاء المعتمد', value:cover, unit:'mm', big:true, dec:0, status:'ok'},
+            {label:'نوع البيئة', value: {interior:'داخلي', exterior:'خارجي', coastal:'ساحلي', sulfate:'كبريتي', water:'ماء'}[v.env]},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'SBC يتبع ACI 318 لكن يشدد على البيئة الساحلية والكبريتية الخليجية'},
+            {cls: v.env==='sulfate' ? 'warn' : 'ok', icon: v.env==='sulfate'?'!':'✓',
+              text: v.env==='sulfate' ? 'استخدم خرسانة Type V (مقاومة كبريتات) إضافة للغطاء' : 'الغطاء كافٍ مع الخرسانة العادية'}
+          ]
+        };
+      }
+    },
+
+    r_sbcWind: {
+      id:'r_sbcWind', cat:'regional',
+      title:'حمل الرياح — SBC 301',
+      desc:'ضغط الرياح التصميمي للمدن السعودية',
+      tag:'SBC 301', tagClass:'gd',
+      ref:'SBC 301-18 §27 (مطابق ASCE 7)',
+      formula:'qz = 0.613·Kz·Kzt·Kd·V²·I;  p = qz·G·Cp',
+      inputs:[
+        {id:'city', label:'المدينة', type:'select', value:'jeddah',
+          options:[
+            {value:'riyadh',  label:'الرياض (V=42 m/s)'},
+            {value:'jeddah',  label:'جدة (V=45 m/s)'},
+            {value:'dammam',  label:'الدمام (V=45 m/s)'},
+            {value:'mecca',   label:'مكة (V=40 m/s)'},
+            {value:'tabuk',   label:'تبوك (V=38 m/s)'},
+            {value:'abha',    label:'أبها (V=37 m/s — جبلي)'}
+          ], full:true},
+        {id:'h', label:'ارتفاع المبنى', unit:'m', value:30, step:1},
+        {id:'category', label:'فئة التضاريس', type:'select', value:'B',
+          options:[
+            {value:'B', label:'B - حضري كثيف (Kz≈1.0 عند 30m)'},
+            {value:'C', label:'C - مفتوح/ضاحية (Kz≈1.16)'},
+            {value:'D', label:'D - بحري/صحراء مفتوحة (Kz≈1.27)'}
+          ], full:true},
+        {id:'I', label:'معامل الأهمية I', value:1.0, step:0.05, full:true},
+      ],
+      compute(v){
+        const V = {riyadh:42, jeddah:45, dammam:45, mecca:40, tabuk:38, abha:37}[v.city];
+        // Kz simplified ASCE 7 for height h (m), exposure
+        const alpha = {B:7.0, C:9.5, D:11.5}[v.category];
+        const zg = {B:365.76, C:274.32, D:213.36}[v.category];
+        const Kz = 2.01 * Math.pow(Math.max(v.h, 4.6) / zg, 2/alpha);
+        const Kzt = 1.0;  // flat terrain
+        const Kd = 0.85;  // buildings
+        const qz = 0.613 * Kz * Kzt * Kd * V * V * v.I;  // N/m²
+        const G = 0.85;   // gust factor
+        const p_windward = qz * G * 0.8;
+        const p_leeward  = qz * G * (-0.5);
+        const p_net = p_windward - p_leeward;
+        return {
+          rows:[
+            {label:'سرعة الرياح V', value:V, unit:'m/s', dec:0},
+            {label:'معامل الارتفاع Kz', value:Kz, dec:2},
+            {label:'الضغط الديناميكي qz', value:qz/1000, unit:'kPa', dec:2},
+            {label:'الضغط المواجه', value:p_windward/1000, unit:'kPa', big:true, dec:2},
+            {label:'الضغط الخلفي (شفط)', value:p_leeward/1000, unit:'kPa', dec:2},
+            {label:'الضغط الصافي', value:p_net/1000, unit:'kPa', dec:2, status:'ok'},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'سرع الرياح المرجعية من خريطة SBC 301-18 (V في 3-ثانية، 50 سنة عمر)'},
+            {cls: v.city==='abha' ? 'warn' : '', icon: v.city==='abha'?'!':'',
+              text: v.city==='abha' ? 'منطقة جبلية — قد تحتاج Kzt > 1.0 للتلال' : ''}
+          ]
+        };
+      }
+    },
+
+    r_sbcSeismic: {
+      id:'r_sbcSeismic', cat:'regional',
+      title:'الزلازل — SBC 301',
+      desc:'تسارع التصميم Ss و S1 لمدن السعودية',
+      tag:'SBC SEISMIC', tagClass:'mg',
+      ref:'SBC 301-18 §11 (مطابق ASCE 7)',
+      formula:'SDS = (2/3)·Fa·Ss;  SD1 = (2/3)·Fv·S1',
+      inputs:[
+        {id:'city', label:'المدينة', type:'select', value:'jizan',
+          options:[
+            {value:'riyadh',   label:'الرياض (Ss=0.05, S1=0.02 — منخفض جداً)'},
+            {value:'jeddah',   label:'جدة (Ss=0.10, S1=0.04)'},
+            {value:'mecca',    label:'مكة (Ss=0.15, S1=0.05)'},
+            {value:'dammam',   label:'الدمام (Ss=0.08, S1=0.03)'},
+            {value:'tabuk',    label:'تبوك (Ss=0.22, S1=0.08)'},
+            {value:'jizan',    label:'جازان (Ss=0.55, S1=0.20 — الأعلى)'},
+            {value:'neom',     label:'نيوم (Ss=0.40, S1=0.15)'}
+          ], full:true},
+        {id:'soil', label:'نوع التربة', type:'select', value:'D',
+          options:[
+            {value:'A', label:'A - صخر صلب'},
+            {value:'B', label:'B - صخر'},
+            {value:'C', label:'C - تربة كثيفة'},
+            {value:'D', label:'D - تربة عادية (افتراضي)'},
+            {value:'E', label:'E - تربة طرية'}
+          ], full:true},
+      ],
+      compute(v){
+        const data = {
+          riyadh:[0.05,0.02], jeddah:[0.10,0.04], mecca:[0.15,0.05],
+          dammam:[0.08,0.03], tabuk:[0.22,0.08], jizan:[0.55,0.20], neom:[0.40,0.15]
+        };
+        const [Ss, S1] = data[v.city];
+        // Site coefficients Fa, Fv (simplified ASCE 7-22 tables)
+        const Fa_tbl = {A:0.8, B:0.9, C:1.2, D:1.6, E:2.5};
+        const Fv_tbl = {A:0.8, B:0.8, C:1.5, D:2.4, E:3.5};
+        const Fa = Fa_tbl[v.soil];
+        const Fv = Fv_tbl[v.soil];
+        const SMS = Fa * Ss;
+        const SM1 = Fv * S1;
+        const SDS = (2/3) * SMS;
+        const SD1 = (2/3) * SM1;
+        // SDC determination (simplified)
+        let SDC;
+        if(SDS < 0.167) SDC = 'A — لا متطلبات زلزالية';
+        else if(SDS < 0.33) SDC = 'B — تفاصيل مبسطة';
+        else if(SDS < 0.50) SDC = 'C — تفاصيل متوسطة';
+        else if(SDS < 0.75) SDC = 'D — تفاصيل خاصة';
+        else SDC = 'E/F — حرج جداً';
+        return {
+          rows:[
+            {label:'Ss (0.2s)', value:Ss, unit:'g', dec:3},
+            {label:'S1 (1.0s)', value:S1, unit:'g', dec:3},
+            {label:'Fa, Fv', value:`${Fa}, ${Fv}`, unit:''},
+            {label:'SDS', value:SDS, unit:'g', big:true, dec:3},
+            {label:'SD1', value:SD1, unit:'g', dec:3},
+            {label:'فئة التصميم SDC', value:SDC, status: SDS<0.33?'ok':(SDS<0.5?'warn':'bad')},
+          ],
+          notes:[
+            {cls: v.city==='jizan' ? 'bad' : (v.city==='neom'?'warn':'ok'),
+              icon: v.city==='jizan'?'⚠':(v.city==='neom'?'!':'✓'),
+              text: v.city==='jizan' ? 'منطقة الأخدود الأفريقي — أعلى نشاط زلزالي في السعودية'
+                  : v.city==='neom' ? 'نيوم قرب فالق العقبة — تصميم زلزالي حرج'
+                  : 'منطقة منخفضة النشاط الزلزالي'}
+          ]
+        };
+      }
+    },
+
+    /* ── EGYPT / ECP ── */
+
+    r_ecpColumn: {
+      id:'r_ecpColumn', cat:'regional',
+      title:'عمود خرساني — ECP 203',
+      desc:'تصميم عمود مربوط بطريقة الحالات الحدية المصرية',
+      tag:'ECP 203', tagClass:'cy',
+      ref:'ECP 203-2020 §6-3 (الكود المصري)',
+      formula:'Pu = 0.35·fcu·Ac + 0.67·fy·Asc  (ECP — بمعاملات أمان مدمجة)',
+      inputs:[
+        {id:'b',   label:'عرض المقطع', unit:'mm', value:300, step:10},
+        {id:'h',   label:'عمق المقطع', unit:'mm', value:600, step:10},
+        {id:'fcu', label:'مقاومة المكعب fcu', unit:'kg/cm²', value:300, step:25},
+        {id:'fy',  label:'إجهاد الخضوع fy', unit:'kg/cm²', value:4200, step:100},
+        {id:'n',   label:'عدد الأسياخ', value:8, step:1},
+        {id:'db',  label:'قطر السيخ', unit:'mm', value:18, step:1},
+        {id:'Pu',  label:'الحمل المؤثر Pu', unit:'ton', value:120, step:5},
+      ],
+      compute(v){
+        const Ac = v.b * v.h;
+        const Asc = v.n * Math.PI * v.db * v.db / 4;
+        const rho = Asc / Ac;
+        // ECP uses kg/cm² so convert: P in kg
+        const fcu_kg_mm2 = v.fcu / 100;   // kg/mm² (since 1 cm²=100 mm²)
+        const fy_kg_mm2  = v.fy  / 100;
+        const Pu_capacity = 0.35 * fcu_kg_mm2 * (Ac - Asc) + 0.67 * fy_kg_mm2 * Asc;  // kg
+        const Pu_ton = Pu_capacity / 1000;
+        const util = v.Pu / Pu_ton;
+        let status='ok', msg='آمن ✓';
+        if(rho < 0.008) { status='warn'; msg='ρ أقل من 0.8% (ECP 203 الحد الأدنى)'; }
+        else if(rho > 0.06) { status='warn'; msg='ρ أعلى من 6% (الحد الأقصى ECP)'; }
+        else if(util > 1) { status='bad'; msg='تجاوز السعة ✗'; }
+        return {
+          rows:[
+            {label:'Ac', value:Ac, unit:'mm²', dec:0},
+            {label:'Asc', value:Asc, unit:'mm²', dec:0},
+            {label:'نسبة التسليح ρ', value:rho*100, unit:'%', dec:2},
+            {label:'السعة Pu', value:Pu_ton, unit:'ton', big:true, dec:1},
+            {label:'نسبة الاستغلال', value:util*100, unit:'%', dec:1, status},
+          ],
+          notes:[
+            {cls: status, icon: status==='ok'?'✓':(status==='warn'?'!':'⚠'), text: msg},
+            {cls:'', icon:'ⓘ', text:'ECP 203 يستخدم fcu (مكعب 15cm) — لتحويل لـ ACI: fc\' ≈ 0.80·fcu'},
+            {cls:'', icon:'ⓘ', text:'الحد الأدنى للكانات: ⌀8 لكل 200mm أو 12·db'}
+          ]
+        };
+      }
+    },
+
+    /* ── GULF / UAE / Sustainability ── */
+
+    r_uaeFire: {
+      id:'r_uaeFire', cat:'regional',
+      title:'مساحة الحريق — UAE Fire Code',
+      desc:'أقصى مساحة لمنطقة حريق وعدد المخارج',
+      tag:'UAE FIRE', tagClass:'mg',
+      ref:'UAE Fire & Life Safety Code 2018',
+      formula:'مساحة المخرج = العدد ÷ (سرعة العبور 50/د)·الزمن المسموح',
+      inputs:[
+        {id:'occupancy', label:'الاستخدام', type:'select', value:'office',
+          options:[
+            {value:'office',   label:'مكاتب (1 شخص/9.3 m²)'},
+            {value:'retail',   label:'تجاري (1/2.8 m²)'},
+            {value:'school',   label:'تعليمي (1/1.9 m²)'},
+            {value:'assembly', label:'تجمع (1/0.65 m²)'},
+            {value:'hotel',    label:'فندقي (1/18.6 m²)'},
+            {value:'industrial', label:'صناعي (1/9.3 m²)'}
+          ], full:true},
+        {id:'area', label:'مساحة الطابق', unit:'m²', value:500, step:10},
+        {id:'sprink', label:'رشاشات', type:'select', value:'yes',
+          options:[{value:'yes', label:'نعم (رشاشات تلقائية)'}, {value:'no', label:'لا'}], full:true},
+      ],
+      compute(v){
+        const load_factor = {office:9.3, retail:2.8, school:1.9, assembly:0.65, hotel:18.6, industrial:9.3}[v.occupancy];
+        const occupants = Math.ceil(v.area / load_factor);
+        // Max travel distance UAE Fire (with sprinklers)
+        const max_travel = v.sprink === 'yes' ? 60 : 45;  // meters
+        // Exit width: 5mm per person
+        const exit_width_mm = occupants * 5;
+        const exit_width_m = exit_width_mm / 1000;
+        // Number of exits
+        let min_exits = 2;
+        if(occupants > 500) min_exits = 3;
+        if(occupants > 1000) min_exits = 4;
+        return {
+          rows:[
+            {label:'الحمولة البشرية', value:occupants, unit:'شخص', big:true, dec:0},
+            {label:'الحد الأقصى لمسافة الخروج', value:max_travel, unit:'m', dec:0},
+            {label:'عرض المخارج المطلوب', value:exit_width_m, unit:'m', dec:2},
+            {label:'عدد المخارج الإلزامي', value:min_exits, unit:'مخرج', dec:0, status:'ok'},
+            {label:'عرض كل مخرج (~)', value:(exit_width_m/min_exits)*1000, unit:'mm', dec:0},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'UAE Fire 2018 يتطلب رشاشات لكل المباني > 23m أو > 600m² تجاري'},
+            {cls: v.sprink === 'no' ? 'warn' : 'ok', icon: v.sprink==='no'?'!':'✓',
+              text: v.sprink === 'no' ? 'بدون رشاشات → مسافة الخروج تنخفض 25% + متطلبات إضافية' : 'مع رشاشات → مسافات أطول مسموحة'}
+          ]
+        };
+      }
+    },
+
+    r_mostadam: {
+      id:'r_mostadam', cat:'regional',
+      title:'تقييم مستدام (KSA)',
+      desc:'حساب نقاط الاستدامة للمباني السعودية',
+      tag:'MOSTADAM', tagClass:'sc',
+      ref:'Mostadam Building v2.0 (KSA)',
+      formula:'النقاط الكلية تحدد الفئة: Bronze 40, Silver 50, Gold 60, Platinum 80, Pearl 90',
+      inputs:[
+        {id:'energy',   label:'الطاقة (max 30)', value:18, step:1},
+        {id:'water',    label:'المياه (max 20)', value:14, step:1},
+        {id:'materials',label:'المواد (max 15)', value:9, step:1},
+        {id:'iaq',      label:'جودة الهواء (max 15)', value:11, step:1},
+        {id:'site',     label:'الموقع والنقل (max 10)', value:6, step:1},
+        {id:'innov',    label:'الابتكار (max 10)', value:4, step:1},
+      ],
+      compute(v){
+        const total = v.energy + v.water + v.materials + v.iaq + v.site + v.innov;
+        let rating, color;
+        if(total >= 90)      { rating='Pearl 🏆 (التميز)'; color='ok'; }
+        else if(total >= 80) { rating='Platinum';         color='ok'; }
+        else if(total >= 60) { rating='Gold';             color='ok'; }
+        else if(total >= 50) { rating='Silver';           color='warn'; }
+        else if(total >= 40) { rating='Bronze (الحد الأدنى)'; color='warn'; }
+        else                 { rating='غير معتمد ✗';      color='bad'; }
+        return {
+          rows:[
+            {label:'الطاقة',          value:v.energy, unit:'/30'},
+            {label:'المياه',          value:v.water, unit:'/20'},
+            {label:'المواد',          value:v.materials, unit:'/15'},
+            {label:'جودة الهواء',     value:v.iaq, unit:'/15'},
+            {label:'الموقع والنقل',  value:v.site, unit:'/10'},
+            {label:'الابتكار',        value:v.innov, unit:'/10'},
+            {label:'النقاط الكلية', value:total, unit:'/100', big:true, dec:0, status: color},
+            {label:'التقييم', value:rating, status: color},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'Mostadam إلزامي لمشاريع رؤية 2030 الحكومية والمشاريع >10,000 m²'},
+            {cls: color, icon: color==='ok'?'✓':(color==='warn'?'!':'⚠'),
+              text: total>=60 ? 'تقييم ممتاز — مؤهل لحوافز حكومية' : (total>=40 ? 'تقييم مقبول — يحتاج تحسينات للذهبي' : 'دون الحد — راجع الطاقة والمياه')}
+          ]
+        };
+      }
+    },
+
+    /* ── COST & TAX (Regional) ── */
+
+    r_zakatVat: {
+      id:'r_zakatVat', cat:'regional',
+      title:'حاسبة VAT/الزكاة (KSA)',
+      desc:'ضريبة القيمة المضافة 15% والزكاة 2.5%',
+      tag:'ZATCA', tagClass:'gd',
+      ref:'ZATCA · هيئة الزكاة والضريبة والجمارك',
+      formula:'VAT = القيمة × 15%;  الزكاة = الوعاء × 2.5%',
+      inputs:[
+        {id:'amount', label:'القيمة قبل الضريبة', unit:'SAR', value:10000, step:100},
+        {id:'type',   label:'النوع', type:'select', value:'vat',
+          options:[
+            {value:'vat',   label:'VAT — مضاف على المبلغ'},
+            {value:'inc',   label:'VAT — مشمول في المبلغ'},
+            {value:'zakat', label:'الزكاة (2.5% على الوعاء)'}
+          ], full:true},
+      ],
+      compute(v){
+        const VAT_RATE = 0.15;
+        const ZAKAT_RATE = 0.025;
+        let net, tax, gross, rate, label;
+        if(v.type === 'vat'){
+          net = v.amount; tax = v.amount * VAT_RATE; gross = net + tax;
+          rate = VAT_RATE; label = 'VAT 15% (مضاف)';
+        } else if(v.type === 'inc'){
+          gross = v.amount; tax = gross * VAT_RATE / (1 + VAT_RATE); net = gross - tax;
+          rate = VAT_RATE; label = 'VAT 15% (مشمول)';
+        } else {
+          net = v.amount; tax = v.amount * ZAKAT_RATE; gross = net;
+          rate = ZAKAT_RATE; label = 'الزكاة 2.5%';
+        }
+        return {
+          rows:[
+            {label:'النوع', value:label},
+            {label:'المبلغ قبل الضريبة', value:net, unit:'SAR', dec:2},
+            {label:'الضريبة/الزكاة', value:tax, unit:'SAR', big:true, dec:2, status:'ok'},
+            {label:'الإجمالي', value:gross, unit:'SAR', dec:2},
+            {label:'النسبة', value:rate*100, unit:'%', dec:2},
+          ],
+          notes:[
+            {cls:'', icon:'ⓘ', text:'الفوترة الإلكترونية ZATCA إلزامية على كل المنشآت منذ 2024'},
+            {cls:'', icon:'ⓘ', text:'الزكاة على المسلمين فقط بعد بلوغ النصاب (~85 جرام ذهب)'}
+          ]
+        };
+      }
+    },
+
+    /* ── KSA-specific HVAC ── */
+
+    r_ksaCooling: {
+      id:'r_ksaCooling', cat:'regional',
+      title:'حمل التبريد للمناخ السعودي',
+      desc:'تقدير سريع لحمل التبريد بمعاملات SBC 601',
+      tag:'SBC 601', tagClass:'in',
+      ref:'SBC 601 + ASHRAE Climate Zone 0/1',
+      formula:'Q = A × معامل المنطقة + (أشخاص × 400) + (إضاءة × 3.4) — BTU/h',
+      inputs:[
+        {id:'region', label:'المنطقة', type:'select', value:'central',
+          options:[
+            {value:'central',  label:'الوسطى (الرياض) — 220 BTU/h·ft²'},
+            {value:'eastern',  label:'الشرقية (الدمام) — 240 (رطوبة)'},
+            {value:'western',  label:'الغربية (جدة) — 250 (ساحلي)'},
+            {value:'southern', label:'الجنوبية (أبها) — 160 (جبلي بارد)'},
+            {value:'northern', label:'الشمالية (تبوك) — 200'}
+          ], full:true},
+        {id:'L', label:'الطول', unit:'m', value:8, step:0.5},
+        {id:'W', label:'العرض', unit:'m', value:6, step:0.5},
+        {id:'people', label:'عدد الأشخاص', value:8, step:1},
+        {id:'lights', label:'إضاءة', unit:'W', value:500, step:50},
+        {id:'glazing', label:'مساحة زجاج', unit:'m²', value:12, step:1, full:true},
+      ],
+      compute(v){
+        const factor = {central:220, eastern:240, western:250, southern:160, northern:200}[v.region];
+        const A_m2 = v.L * v.W;
+        const A_ft2 = A_m2 * 10.764;
+        const Q_envelope = A_ft2 * factor;
+        const Q_people = v.people * 400;
+        const Q_lights = v.lights * 3.4;
+        const Q_glass = v.glazing * 10.764 * 100;  // 100 BTU/h·ft² for glazing
+        const Q_total = (Q_envelope + Q_people + Q_lights + Q_glass) * 1.15;  // 15% SF
+        const tons = Q_total / 12000;
+        const kW = Q_total * 0.000293;
+        const tons_per_m2 = tons / A_m2;
+        return {
+          rows:[
+            {label:'مساحة الغرفة', value:A_m2, unit:'m²', dec:1},
+            {label:'Q الغلاف', value:Q_envelope, unit:'BTU/h', dec:0},
+            {label:'Q الأشخاص', value:Q_people, unit:'BTU/h', dec:0},
+            {label:'Q الإضاءة', value:Q_lights, unit:'BTU/h', dec:0},
+            {label:'Q الزجاج', value:Q_glass, unit:'BTU/h', dec:0},
+            {label:'الإجمالي (+15% SF)', value:Q_total, unit:'BTU/h', dec:0},
+            {label:'بالأطنان', value:tons, unit:'TR', big:true, dec:2, status:'ok'},
+            {label:'بالكيلوواط', value:kW, unit:'kW', dec:2},
+            {label:'TR لكل m²', value:tons_per_m2, unit:'TR/m²', dec:3},
+          ],
+          notes:[
+            {cls: tons_per_m2 > 0.06 ? 'warn' : 'ok', icon: tons_per_m2>0.06?'!':'✓',
+              text: tons_per_m2 > 0.06 ? 'حمل مرتفع — راجع العزل (SBC 601 يلزم U≤0.5 جدران)' : 'الحمل في النطاق المعقول'},
+            {cls:'', icon:'ⓘ', text:'تصميم دقيق يحتاج Manual J / Carrier HAP — هذا تقدير سريع'}
+          ]
+        };
+      }
+    },
+
   };
 
   /* =====================================
@@ -11548,6 +11974,37 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
     {code:'ISO 9001',    organization:'ISO',               discipline:'جودة',    title:'Quality Management Systems',            year:2015, region:'دولي', scope:'نظم إدارة الجودة'},
     {code:'OSHA 1926',   organization:'OSHA (USA)',        discipline:'سلامة',   title:'Construction Safety Standards',         year:2024, region:'أمريكي', scope:'سلامة مواقع البناء'},
     {code:'NEBOSH IGC',  organization:'NEBOSH (UK)',       discipline:'سلامة',   title:'International General Certificate',     year:2024, region:'دولي', scope:'الصحة والسلامة المهنية'},
+
+    // ========== REGIONAL CODES — Saudi Arabia (SBC suite) ==========
+    {code:'SBC 201',     organization:'SBCNC (KSA)',       discipline:'مبانٍ',    title:'الكود السعودي العام للبناء',           year:2018, region:'السعودية', scope:'متطلبات البناء الأساسية والإلزامية'},
+    {code:'SBC 301',     organization:'SBCNC (KSA)',       discipline:'إنشائي',  title:'كود الأحمال السعودي (Loads)',          year:2018, region:'السعودية', scope:'الأحمال الحية والميتة والرياح والزلازل'},
+    {code:'SBC 302',     organization:'SBCNC (KSA)',       discipline:'إنشائي',  title:'كود الأساسات السعودي (Foundations)',   year:2018, region:'السعودية', scope:'تصميم الأساسات السطحية والعميقة'},
+    {code:'SBC 401',     organization:'SBCNC (KSA)',       discipline:'كهربائي', title:'الكود السعودي الكهربائي',              year:2018, region:'السعودية', scope:'التركيبات الكهربائية في المباني'},
+    {code:'SBC 501',     organization:'SBCNC (KSA)',       discipline:'HVAC',    title:'الكود السعودي الميكانيكي',             year:2018, region:'السعودية', scope:'التكييف، التهوية، السباكة'},
+    {code:'SBC 601',     organization:'SBCNC (KSA)',       discipline:'طاقة',    title:'كود ترشيد الطاقة السعودي',             year:2018, region:'السعودية', scope:'كفاءة الطاقة في المباني (إلزامي)'},
+    {code:'SBC 701',     organization:'SBCNC (KSA)',       discipline:'سلامة',   title:'كود الحريق السعودي',                   year:2018, region:'السعودية', scope:'الوقاية من الحريق والإنذار والإطفاء'},
+    {code:'SBC 801',     organization:'SBCNC (KSA)',       discipline:'صحي',     title:'الكود السعودي للسباكة',                year:2018, region:'السعودية', scope:'شبكات المياه والصرف الصحي'},
+    {code:'SBC 901',     organization:'SBCNC (KSA)',       discipline:'وجود الإنسان', title:'كود وجود الإنسان السعودي',         year:2018, region:'السعودية', scope:'متطلبات الوصول للمعاقين والسلامة الشخصية'},
+
+    // ========== REGIONAL — Egypt (ECP suite) ==========
+    {code:'ECP 201',     organization:'HBRC (Egypt)',      discipline:'إنشائي',  title:'الكود المصري لحساب الأحمال',           year:2012, region:'مصر',     scope:'الأحمال على المنشآت في مصر'},
+    {code:'ECP 203',     organization:'HBRC (Egypt)',      discipline:'إنشائي',  title:'الكود المصري للخرسانة المسلحة',        year:2020, region:'مصر',     scope:'تصميم وتنفيذ المنشآت الخرسانية'},
+    {code:'ECP 204',     organization:'HBRC (Egypt)',      discipline:'جيوتكنيك',title:'الكود المصري لميكانيكا التربة',         year:2001, region:'مصر',     scope:'الأساسات وميكانيكا التربة'},
+    {code:'ECP 205',     organization:'HBRC (Egypt)',      discipline:'إنشائي',  title:'الكود المصري للمنشآت الفولاذية',       year:2008, region:'مصر',     scope:'تصميم الفولاذ في مصر'},
+
+    // ========== REGIONAL — Gulf / UAE / Qatar / Kuwait ==========
+    {code:'UAE Fire 2018', organization:'Civil Defence (UAE)', discipline:'سلامة',title:'UAE Fire & Life Safety Code',        year:2018, region:'الإمارات', scope:'الحريق والسلامة في الإمارات (إلزامي)'},
+    {code:'ADIBC',       organization:'Abu Dhabi (UAE)',   discipline:'مبانٍ',    title:'Abu Dhabi International Building Code', year:2013, region:'الإمارات', scope:'مبنى على IBC مع تعديلات أبوظبي'},
+    {code:'Dubai DCD',   organization:'Dubai Civil Defense',discipline:'سلامة',  title:'Dubai Fire Code',                       year:2017, region:'الإمارات', scope:'متطلبات الحريق في دبي'},
+    {code:'Estidama',    organization:'UPC (Abu Dhabi)',   discipline:'استدامة', title:'Pearl Rating System',                   year:2010, region:'الإمارات', scope:'تقييم استدامة المباني (1-5 لؤلؤة)'},
+    {code:'QCS 2014',    organization:'Ashghal (Qatar)',   discipline:'بنية تحتية',title:'Qatar Construction Specifications',  year:2014, region:'قطر',      scope:'مواصفات البناء القطرية الإلزامية'},
+    {code:'GSO 2055-2',  organization:'GSO (GCC)',         discipline:'سلامة',   title:'Gulf Building Materials Standards',      year:2020, region:'دول الخليج', scope:'مواصفات مواد البناء الخليجية'},
+    {code:'KSCC 2010',   organization:'MPW (Kuwait)',      discipline:'مبانٍ',    title:'Kuwait Construction Code',              year:2010, region:'الكويت',  scope:'كود البناء الكويتي'},
+
+    // ========== REGIONAL — Sustainability & Specialized ==========
+    {code:'Mostadam',    organization:'MOMRA (KSA)',       discipline:'استدامة', title:'نظام التقييم السعودي للاستدامة',        year:2019, region:'السعودية', scope:'بديل LEED محلي — 5 مستويات (Bronze→Pearl)'},
+    {code:'LEED v4.1',   organization:'USGBC',             discipline:'استدامة', title:'Leadership in Energy & Environmental Design', year:2019, region:'دولي', scope:'تقييم استدامة المباني عالمياً'},
+    {code:'ZATCA E-Inv', organization:'ZATCA (KSA)',       discipline:'مالي',    title:'متطلبات الفوترة الإلكترونية',          year:2024, region:'السعودية', scope:'المرحلة 2: فوترة فورية مع ZATCA'},
   ];
 
   /* =====================================
