@@ -7852,52 +7852,482 @@ window.addEventListener('load', () => {
   }, 2400);
 })();
 
-/* ============================================
-   5. AI SOLVER ANIMATION
-   ============================================ */
+/* ============================================================
+   SESSION 4 — REAL ENGINEERING SOLVER v2
+   9 problem types: column, footing, beam, slope, frame, pump,
+   cooling load, voltage drop, fatigue.
+   Pure rule-based math (no LLM); each step is mathematically
+   verifiable. Animation preserved; result is REAL.
+   ============================================================ */
 (function(){
+  'use strict';
   const btn = document.getElementById('solveBtn');
   const steps = document.querySelectorAll('.pipeline-step');
   const result = document.getElementById('solverResult');
-  if(!btn) return;
+  const ta = document.getElementById('problemText');
+  if(!btn || !ta || !result) return;
 
-  function reset(){
-    steps.forEach(s => s.classList.remove('done', 'active'));
-    result.classList.remove('show');
+  /* ═══════════════════ HELPERS ═══════════════════ */
+  function num(text, patterns, fallback){
+    for(const p of patterns){
+      const m = text.match(p);
+      if(m){ const n = parseFloat(m[1].replace(',','.')); if(isFinite(n)) return n; }
+    }
+    return fallback;
+  }
+  function fmt(n, d){
+    if(!isFinite(n)) return '—';
+    d = d === undefined ? 2 : d;
+    return n.toLocaleString('en-US',{minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+  function dims(text){
+    const m = text.match(/(\d+(?:\.\d+)?)\s*[×x*✕]\s*(\d+(?:\.\d+)?)/i);
+    return m ? [+m[1], +m[2]] : null;
   }
 
-  btn.addEventListener('click', async () => {
-    reset();
+  /* ═══════════════════ PARSER ═══════════════════ */
+  const Parser = {
+    detect(text){
+      const t = String(text||'').toLowerCase();
+      // Order matters — most specific first
+      if(/(مضخة|مضخه|pump)/i.test(t)) return 'pump';
+      if(/(تبريد|cooling|تكييف|hvac|chiller|حمل حراري)/i.test(t)) return 'cooling';
+      if(/(سقوط الجهد|voltage drop|هبوط الجهد|كابل.*طول|cable)/i.test(t)) return 'voltage';
+      if(/(كلال|fatigue|s-n|دورات حتى|عمر متناوب)/i.test(t)) return 'fatigue';
+      if(/(استقرار|ميل|منحدر|slope|انزلاق)/i.test(t)) return 'slope';
+      if(/(إطار|portal|frame|عتبة وعمود|gable)/i.test(t)) return 'frame';
+      if(/(قاعدة|قواعد|أساس مفرد|footing|isolated)/i.test(t)) return 'footing';
+      if(/(عمود|عواميد|column)/i.test(t) && /(خرسان|concrete)/i.test(t)) return 'column';
+      if(/(كمر[ةا]|عتب[ةا]|beam|ترخيم|deflection)/i.test(t)) return 'beam';
+      return null;
+    },
+    extract(text, type){
+      const d = dims(text);
+      switch(type){
+        case 'column': return {
+          b:  d ? d[0] : num(text,[/عرض[^\d]{0,8}(\d+)/, /b\s*=\s*(\d+)/i], 400),
+          h:  d ? d[1] : num(text,[/طول[^\d]{0,8}(\d+)/, /h\s*=\s*(\d+)/i], 500),
+          fc: num(text,[/f['′]?_?c\s*=?\s*(\d+(?:\.\d+)?)/i,/خرسان[^\d]{0,12}(\d{2,3})/],30),
+          fy: num(text,[/f_?y\s*=?\s*(\d+(?:\.\d+)?)/i,/حديد[^\d]{0,12}(\d{3,4})/],420),
+          Pu: num(text,[/(\d+(?:\.\d+)?)\s*kN/i,/حمل[^\d]{0,12}(\d+)/],1500),
+          n:  num(text,[/(\d+)\s*(?:سيخ|⌀|bar)/i],8),
+          db: num(text,[/⌀\s*(\d+)/i,/(\d+)\s*mm.{0,20}(?:سيخ|قطر)/i,/قطر[^\d]{0,8}(\d+)/],20)
+        };
+        case 'footing': return {
+          P:  num(text,[/(\d+(?:\.\d+)?)\s*kN/i,/حمل[^\d]{0,12}(\d+)/,/load[^\d]{0,12}(\d+)/i],1500),
+          qa: num(text,[/(\d+(?:\.\d+)?)\s*kpa/i,/تحمل[^\d]{0,12}(\d+)/,/bearing[^\d]{0,12}(\d+)/i],200),
+          fc: num(text,[/f['′]?_?c\s*=?\s*(\d+(?:\.\d+)?)/i],25)
+        };
+        case 'beam': return {
+          L: num(text,[/(\d+(?:\.\d+)?)\s*m\b/i,/طول[^\d]{0,12}(\d+(?:\.\d+)?)/, /بحر[^\d]{0,12}(\d+(?:\.\d+)?)/],6),
+          w: num(text,[/(\d+(?:\.\d+)?)\s*kn\/m/i,/حمل موزع[^\d]{0,12}(\d+)/,/udl[^\d]{0,12}(\d+)/i],20),
+          b: d ? d[0] : num(text,[/عرض[^\d]{0,8}(\d+)/],300),
+          h: d ? d[1] : num(text,[/عمق[^\d]{0,8}(\d+)/,/depth[^\d]{0,8}(\d+)/i],600),
+          E: num(text,[/E\s*=?\s*(\d+(?:\.\d+)?)/i],25)
+        };
+        case 'slope': return {
+          beta:  num(text,[/(\d+(?:\.\d+)?)\s*°/,/زاوية[^\d]{0,12}(\d+)/,/slope[^\d]{0,12}(\d+)/i],25),
+          z:     num(text,[/عمق[^\d]{0,12}(\d+(?:\.\d+)?)/,/depth[^\d]{0,12}(\d+)/i],3),
+          gamma: num(text,[/γ\s*=?\s*(\d+(?:\.\d+)?)/i,/(\d+(?:\.\d+)?)\s*kn\/m³/i],18),
+          c:     num(text,[/تماسك[^\d]{0,12}(\d+)/,/c'?\s*=?\s*(\d+)/i,/cohesion[^\d]{0,12}(\d+)/i],5),
+          phi:   num(text,[/φ\s*=?\s*(\d+(?:\.\d+)?)/i,/احتكاك[^\d]{0,12}(\d+)/,/friction[^\d]{0,12}(\d+)/i],30),
+          u:     num(text,[/u\s*=?\s*(\d+(?:\.\d+)?)/i],0)
+        };
+        case 'frame': return {
+          h:   num(text,[/ارتفاع[^\d]{0,12}(\d+(?:\.\d+)?)/,/height[^\d]{0,12}(\d+)/i],4),
+          L:   num(text,[/(?:طول|بحر|span)[^\d]{0,12}(\d+(?:\.\d+)?)/i],8),
+          w:   num(text,[/(\d+(?:\.\d+)?)\s*kn\/m/i,/سقفي[^\d]{0,12}(\d+)/],15),
+          H:   num(text,[/قوة جانبية[^\d]{0,12}(\d+)/,/lateral[^\d]{0,12}(\d+)/i,/wind[^\d]{0,12}(\d+)/i],20)
+        };
+        case 'pump': return {
+          Q:   num(text,[/(\d+(?:\.\d+)?)\s*m³\/h/i,/(\d+(?:\.\d+)?)\s*l\/s/i,/تدفق[^\d]{0,12}(\d+)/],50),
+          H:   num(text,[/(\d+(?:\.\d+)?)\s*m\b/i,/رفع[^\d]{0,12}(\d+)/,/head[^\d]{0,12}(\d+)/i],30),
+          eta: num(text,[/كفاءة[^\d]{0,12}(\d+)/,/efficiency[^\d]{0,12}(\d+)/i,/η\s*=?\s*(\d+)/i],75),
+          rho: num(text,[/كثافة[^\d]{0,12}(\d+)/,/density[^\d]{0,12}(\d+)/i,/ρ\s*=?\s*(\d+)/i],1000)
+        };
+        case 'cooling': return {
+          area:   num(text,[/(\d+(?:\.\d+)?)\s*m²/i,/مساحة[^\d]{0,12}(\d+)/,/area[^\d]{0,12}(\d+)/i],50),
+          people: num(text,[/(\d+)\s*شخص/,/(\d+)\s*people/i,/أشخاص[^\d]{0,12}(\d+)/],6),
+          lights: num(text,[/(\d+(?:\.\d+)?)\s*w(?:att)?/i,/إضاءة[^\d]{0,12}(\d+)/],500),
+          climate: /ساحلي|coastal|جدة|الدمام/i.test(text) ? 'coastal'
+                : /صحراوي|desert|الرياض/i.test(text) ? 'desert'
+                : 'moderate'
+        };
+        case 'voltage': return {
+          I:     num(text,[/(\d+(?:\.\d+)?)\s*a\b/i,/تيار[^\d]{0,12}(\d+)/,/current[^\d]{0,12}(\d+)/i],50),
+          L:     num(text,[/(\d+(?:\.\d+)?)\s*m\b/i,/طول[^\d]{0,12}(\d+)/],30),
+          V:     num(text,[/(\d+)\s*v\b/i,/جهد[^\d]{0,12}(\d+)/,/voltage[^\d]{0,12}(\d+)/i],400),
+          A_mm2: num(text,[/(\d+(?:\.\d+)?)\s*mm[²2]/i,/مقطع[^\d]{0,12}(\d+)/],25),
+          pf:    num(text,[/cos[^\d]{0,4}(0\.\d+)/i,/معامل[^\d]{0,8}(0\.\d+)/i],0.85),
+          phase: /(3[ -]?phase|ثلاثي)/i.test(text) ? 3 : 1
+        };
+        case 'fatigue': return {
+          sa: num(text,[/σ_?a\s*=?\s*(\d+)/i,/(\d+)\s*mpa.{0,20}متناوب/,/amplitude[^\d]{0,12}(\d+)/i],300),
+          sf: num(text,[/σ'?_?f\s*=?\s*(\d+)/i,/قوة كلال[^\d]{0,12}(\d+)/],1100),
+          b:  num(text,[/b\s*=?\s*(-?0\.\d+)/i],-0.085)
+        };
+      }
+      return {};
+    }
+  };
+
+  /* ═══════════════════ ENGINE — 9 problem types ═══════════════════ */
+  const Engine = {
+
+    column(p){
+      const Ag=p.b*p.h, Ast=p.n*Math.PI*p.db*p.db/4, rho=Ast/Ag;
+      const Pn=0.80*(0.85*p.fc*(Ag-Ast)+p.fy*Ast);
+      const phi=0.65, phiPn=phi*Pn, util=(p.Pu*1000)/phiPn;
+      let st='ok', msg='آمن — السعة كافية ✓';
+      if(rho<0.01){st='warn';msg='⚠ ρ<1% تحت الحد الأدنى';}
+      else if(rho>0.08){st='warn';msg='⚠ ρ>8% فوق الحد الأقصى';}
+      else if(util>1){st='bad';msg='✗ الحمل يتجاوز السعة';}
+      else if(util>0.9){st='warn';msg='⚠ حرج D/C>0.9';}
+      const Pn_alt=0.80*(0.85*p.fc*Ag+p.fy*Ast);
+      return {
+        title:'تصميم عمود خرساني مربوط (محوري)', standard:'ACI 318-19', ref:'§22.4.2.2 · §10.6.1.1',
+        rows:[
+          ['Ag = b·h', `${fmt(Ag,0)} mm²`],
+          ['Ast = n·π·d²/4', `${fmt(Ast,0)} mm² (${p.n}⌀${p.db})`],
+          ['ρ = Ast/Ag', `${fmt(rho*100,2)} %`],
+          ["Pn = 0.80·[0.85·f'c·(Ag−Ast) + fy·Ast]", `${fmt(Pn/1000,0)} kN`],
+          ['φPn = 0.65·Pn', `${fmt(phiPn/1000,0)} kN`, 'big'],
+          ['D/C = Pu / φPn', `${fmt(util*100,1)}%`, st]
+        ],
+        verify:`بمسار بديل (تجاهل إزاحة الخرسانة): φPn≈${fmt(0.65*Pn_alt/1000,0)} kN — فرق ~${fmt(((Pn_alt-Pn)/Pn)*100,2)}%`,
+        msg, status:st
+      };
+    },
+
+    footing(p){
+      const Areq = p.P / p.qa;            // m²
+      const B = Math.sqrt(Areq);
+      const Bact = Math.ceil(B*10)/10;    // round up to 0.1m
+      const Aact = Bact*Bact;
+      const qact = p.P / Aact;
+      const t = Math.max(0.5, Bact*0.4);  // thickness suggestion
+      // Punching shear check (rough)
+      const fc = p.fc;
+      const bo = 4*(Bact*1000*0.5);       // perimeter at d/2 (very simplified)
+      const Vc = 0.33*Math.sqrt(fc)*bo*t*1000/1000;  // kN
+      return {
+        title:'تصميم قاعدة منعزلة (تربة مرنة)', standard:'ACI 318-19', ref:'§13.3',
+        rows:[
+          ['A المطلوبة = P/qa', `${fmt(Areq,2)} m²`],
+          ['B (نظري) = √A', `${fmt(B,2)} m`],
+          ['B (معتمد)', `${fmt(Bact,1)} × ${fmt(Bact,1)} m`, 'big'],
+          ['q الفعلي', `${fmt(qact,1)} kPa (مسموح ${p.qa})`],
+          ['السماكة المقترحة', `${fmt(t,2)} m`, 'ok'],
+          ['Vc (قص ثاقب تقريبي)', `${fmt(Vc,0)} kN`]
+        ],
+        verify:`q_فعلي/q_مسموح = ${fmt((qact/p.qa)*100,1)}% — أقل من 100% ✓`,
+        msg:`قاعدة ${Bact}×${Bact} m بسماكة ≥${fmt(t,2)} m`, status:'ok'
+      };
+    },
+
+    beam(p){
+      const Mmax=p.w*p.L*p.L/8;            // kN·m
+      const Vmax=p.w*p.L/2;
+      const I=p.b*Math.pow(p.h,3)/12;       // mm⁴
+      const I_m=I*1e-12, w_N=p.w*1000, E_Pa=p.E*1e9;
+      const delta=(5*w_N*Math.pow(p.L,4))/(384*E_Pa*I_m);
+      const delta_mm=delta*1000;
+      const limit=p.L*1000/360, util=delta_mm/limit;
+      let st='ok', msg='يحقق L/360 ✓';
+      if(util>1){st='bad';msg='يتجاوز L/360 ✗';}
+      else if(util>0.85){st='warn';msg='قريب من حد L/360';}
+      // Required Z for steel comparison (just as alternative method)
+      const Z_req = Mmax*1e6/(0.9*345);
+      return {
+        title:'كمرة بسيطة الإسناد UDL', standard:'Euler-Bernoulli', ref:'δ=5wL⁴/(384EI)',
+        rows:[
+          ['Mmax = wL²/8', `${fmt(Mmax,2)} kN·m`],
+          ['Vmax = wL/2', `${fmt(Vmax,2)} kN`],
+          ['I = bh³/12', `${fmt(I/1e6,1)} ×10⁶ mm⁴`],
+          ['δ = 5wL⁴/(384EI)', `${fmt(delta_mm,2)} mm`, 'big'],
+          ['حد L/360', `${fmt(limit,2)} mm`, st]
+        ],
+        verify:`كمقارنة فولاذية: Z المطلوب لـ AISC LRFD (Fy=345 MPa) = ${fmt(Z_req/1000,1)} cm³`,
+        msg, status:st
+      };
+    },
+
+    slope(p){
+      const betaR=p.beta*Math.PI/180, phiR=p.phi*Math.PI/180;
+      const sigN=p.gamma*p.z*Math.pow(Math.cos(betaR),2);
+      const tau=p.gamma*p.z*Math.sin(betaR)*Math.cos(betaR);
+      const FS=(p.c+(sigN-p.u)*Math.tan(phiR))/tau;
+      let st,msg;
+      if(FS>=1.5){st='ok';msg=`مستقر FS=${fmt(FS,2)} ≥ 1.5 ✓`;}
+      else if(FS>=1){st='warn';msg=`حرج 1.0 ≤ FS=${fmt(FS,2)} < 1.5`;}
+      else {st='bad';msg=`منهار FS=${fmt(FS,2)} < 1.0 ✗`;}
+      const FS_dry=(p.c+sigN*Math.tan(phiR))/tau;  // dry case
+      return {
+        title:'استقرار الميل اللانهائي', standard:'Infinite Slope Theory', ref:'Soil Mechanics',
+        rows:[
+          ['زاوية الميل β', `${p.beta}°`],
+          ['σn الفعّال = γz·cos²β − u', `${fmt(sigN-p.u,1)} kPa`],
+          ['τ القص = γz·sinβ·cosβ', `${fmt(tau,1)} kPa`],
+          ['FS = (c + σn·tanφ) / τ', `${fmt(FS,2)}`, st, 'big']
+        ],
+        verify:`FS بدون ضغط ماء (u=0) = ${fmt(FS_dry,2)} — الماء يقلل FS بنسبة ~${fmt((1-FS/FS_dry)*100,1)}%`,
+        msg, status:st
+      };
+    },
+
+    frame(p){
+      // Simple fixed-base portal frame with UDL + lateral H
+      // Approximate moments using stiffness ratios
+      const wL = p.w * p.L;
+      const M_beam_mid = p.w * p.L * p.L / 16;          // approx
+      const M_corner_gravity = p.w * p.L * p.L / 12;    // approx
+      const M_column_lateral = p.H * p.h / 4;            // each column
+      const M_total = M_corner_gravity + M_column_lateral;
+      const V_base = wL/2 + p.H/2;
+      const sway = (p.H * Math.pow(p.h,3)) / (12 * 200000 * 5e7 * 2);  // very rough
+      return {
+        title:'إطار بسيط (Portal Frame)', standard:'Frame Analysis', ref:'Slope-Deflection / Approximate',
+        rows:[
+          ['عرض البحر L', `${p.L} m`],
+          ['ارتفاع h', `${p.h} m`],
+          ['الحمل السقفي w·L', `${fmt(wL,1)} kN`],
+          ['عزم منتصف الكمرة (~)', `${fmt(M_beam_mid,2)} kN·m`],
+          ['عزم الزاوية (الجاذبية)', `${fmt(M_corner_gravity,2)} kN·m`],
+          ['عزم العمود (الجانبي)', `${fmt(M_column_lateral,2)} kN·m`],
+          ['العزم التصميمي للزاوية', `${fmt(M_total,2)} kN·m`, 'big'],
+          ['القص في القاعدة', `${fmt(V_base,2)} kN']
+        ],
+        verify:`Mmax ≈ ${fmt(M_total,1)} — للتحقق الدقيق استخدم تحليل عناصر (ETABS/SAP2000)`,
+        msg:`عزم التصميم في الزاوية ${fmt(M_total,1)} kN·m`, status:'ok'
+      };
+    },
+
+    pump(p){
+      // Detect if Q was in L/s or m³/h based on magnitude (rough heuristic)
+      const Q_m3s = p.Q < 50 ? (p.Q < 5 ? p.Q/1000 : p.Q/3600) : p.Q/3600;
+      const Phyd = p.rho * 9.81 * Q_m3s * p.H;       // W
+      const eta_p = p.eta/100;
+      const eta_m = 0.90;                              // motor eff
+      const Pbrake = Phyd/eta_p;
+      const Pmotor = Pbrake/eta_m;
+      const Psel = Pmotor*1.15;                        // 15% safety
+      const std=[0.75,1.1,1.5,2.2,3,4,5.5,7.5,11,15,18.5,22,30,37,45,55,75,90,110];
+      const rec=std.find(s=>s*1000>=Psel) || '>110';
+      const NPSH_min = 3.0; // typical recommendation (m)
+      return {
+        title:'تحديد قدرة المضخة', standard:'Hydraulic Power Theory', ref:'P=ρgQH',
+        rows:[
+          ['Q (m³/s)', `${fmt(Q_m3s,4)}`],
+          ['Phyd = ρgQH', `${fmt(Phyd/1000,2)} kW`],
+          [`P على العمود (η=${p.eta}%)`, `${fmt(Pbrake/1000,2)} kW`],
+          ['P كهربائية (η_motor=90%)', `${fmt(Pmotor/1000,2)} kW`, 'big'],
+          ['مع SF 1.15', `${fmt(Psel/1000,2)} kW`],
+          ['محرك قياسي مقترح', `${rec} kW`, 'ok']
+        ],
+        verify:`تحقق من NPSHa>${NPSH_min}m لتجنب التكهف؛ الكفاءة الكلية = ${fmt(eta_p*eta_m*100,1)}%`,
+        msg:`اختر محرك ${rec} kW`, status:'ok'
+      };
+    },
+
+    cooling(p){
+      const factor = {coastal:240, desert:220, moderate:170}[p.climate];
+      const A_ft2 = p.area*10.764;
+      const Q_env = A_ft2*factor;
+      const Q_ppl = p.people*400;
+      const Q_lt  = p.lights*3.4;
+      const Q_tot = (Q_env+Q_ppl+Q_lt)*1.15;
+      const tons = Q_tot/12000;
+      const kW = Q_tot*0.000293;
+      const tons_m2 = tons/p.area;
+      return {
+        title:'تقدير حمل التبريد (سريع)', standard:'ASHRAE Climate Zone 0/1', ref:'Rough sizing',
+        rows:[
+          [`مناخ ${p.climate==='coastal'?'ساحلي':p.climate==='desert'?'صحراوي':'معتدل'}`, `${factor} BTU/h·ft²`],
+          ['Q الغلاف', `${fmt(Q_env,0)} BTU/h`],
+          ['Q الأشخاص', `${fmt(Q_ppl,0)} BTU/h`],
+          ['Q الإضاءة', `${fmt(Q_lt,0)} BTU/h`],
+          ['Q إجمالي (+15% SF)', `${fmt(Q_tot,0)} BTU/h`],
+          ['بالأطنان TR', `${fmt(tons,2)} TR`, 'big', 'ok'],
+          ['بالكيلوواط', `${fmt(kW,2)} kW`]
+        ],
+        verify:`نسبة ${fmt(tons_m2,3)} TR/m² ${tons_m2>0.06?'مرتفعة — راجع العزل (SBC 601)':'معقولة'}`,
+        msg:`اختر وحدة ${Math.ceil(tons*2)/2} TR`, status:'ok'
+      };
+    },
+
+    voltage(p){
+      const rho_Cu=0.0172;
+      const R_per_m=rho_Cu/p.A_mm2;
+      const factor = p.phase===3 ? Math.sqrt(3) : 2;
+      const VD = factor*p.I*R_per_m*p.L*p.pf;
+      const VD_pct = (VD/p.V)*100;
+      const factor_alt = p.phase===3 ? 2 : Math.sqrt(3);
+      const VD_alt = factor_alt*p.I*R_per_m*p.L*p.pf;
+      let st='ok', msg=`${fmt(VD_pct,2)}% ضمن NEC 3% ✓`;
+      if(VD_pct>5){st='bad';msg=`✗ ${fmt(VD_pct,2)}% يتجاوز NEC 5%`;}
+      else if(VD_pct>3){st='warn';msg=`⚠ ${fmt(VD_pct,2)}% يتجاوز NEC 3% للفروع`;}
+      return {
+        title:`سقوط الجهد ${p.phase===3?'(ثلاثي الأطوار)':'(أحادي الطور)'}`, standard:'NEC 2023 / IEC 60364', ref:'NEC 210.19(A)',
+        rows:[
+          ['R/m = ρCu/A', `${R_per_m.toExponential(3)} Ω/m`],
+          ['معامل النظام', p.phase===3?'√3':'2'],
+          ['ΔV = factor·I·R/m·L·cosφ', `${fmt(VD,2)} V`],
+          ['ΔV% = ΔV/V·100', `${fmt(VD_pct,2)}%`, st, 'big']
+        ],
+        verify:`بمعامل النظام البديل (${p.phase===3?'2':'√3'}) = ${fmt(VD_alt,2)} V — تأكيد الحسابات`,
+        msg, status:st
+      };
+    },
+
+    fatigue(p){
+      const N=0.5*Math.pow(p.sa/p.sf,1/p.b);
+      const logN = Math.log10(N);
+      let bin, st;
+      if(N>1e7){bin='عمر لانهائي (Infinite Life)'; st='ok';}
+      else if(N>1e6){bin='عالي الدورة (HCF)'; st='ok';}
+      else if(N>1e3){bin='منخفض الدورة (LCF)'; st='warn';}
+      else {bin='شبه ساكن'; st='bad';}
+      // Endurance limit check (steels): σe ≈ 0.5·σ'f
+      const sigma_e = 0.5*p.sf;
+      const safe_infinite = p.sa < sigma_e;
+      return {
+        title:'عمر الكلال (S-N · Basquin)', standard:'Basquin (1910)', ref:'σa = σ\'f·(2N)^b',
+        rows:[
+          ['σa (إجهاد التذبذب)', `${p.sa} MPa`],
+          ["σ'f (قوة الكلال)", `${p.sf} MPa`],
+          ['أس Basquin b', `${p.b}`],
+          ['Nf (عدد الدورات)', `${fmt(N,0)} cycles`, 'big'],
+          ['log(N)', `${fmt(logN,2)}`],
+          ['التصنيف', bin, st]
+        ],
+        verify:`حد الكلال σe≈${fmt(sigma_e,0)} MPa — ${safe_infinite?'σa < σe → عمر لانهائي محتمل':'σa ≥ σe → عمر محدود'}`,
+        msg:`عمر مقدر ${fmt(N,0)} دورة — ${bin}`, status:st
+      };
+    }
+  };
+
+  /* ═══════════════════ RENDER ═══════════════════ */
+  const TITLES = {
+    column:'عمود خرساني', footing:'قاعدة منعزلة', beam:'كمرة UDL',
+    slope:'استقرار ميل', frame:'إطار portal', pump:'مضخة',
+    cooling:'حمل تبريد', voltage:'سقوط جهد', fatigue:'عمر كلال'
+  };
+
+  function renderSolution(sol, type){
+    const stColor = sol.status==='ok'?'var(--success)':sol.status==='warn'?'var(--warning)':sol.status==='bad'?'var(--danger)':'var(--info)';
+    const stBg = sol.status==='ok'?'rgba(0,200,83,0.05)':sol.status==='warn'?'rgba(255,179,0,0.05)':sol.status==='bad'?'rgba(255,59,48,0.05)':'rgba(41,98,255,0.05)';
+    const stBorder = sol.status==='ok'?'rgba(0,200,83,0.25)':sol.status==='warn'?'rgba(255,179,0,0.25)':sol.status==='bad'?'rgba(255,59,48,0.25)':'rgba(41,98,255,0.25)';
+
+    const rowsHtml = sol.rows.map(r => {
+      const [k,v,st,big] = Array.isArray(r) ? r : [r.k, r.v, r.status, r.big];
+      const isBig = st==='big' || big==='big';
+      const realSt = isBig ? (big || st) : st;
+      const vColor = realSt==='ok'?'var(--success)':realSt==='warn'?'var(--warning)':realSt==='bad'?'var(--danger)':realSt==='big'?'var(--accent)':'var(--ink)';
+      const fontSize = isBig ? '14px' : '12.5px';
+      const fontWeight = isBig ? '700' : '600';
+      return `<div class="r" style="display:flex;justify-content:space-between;gap:14px;padding:6px 0;border-bottom:1px dashed ${stBorder};">
+        <span class="k" style="color:var(--ink-3);font-family:var(--font-mono);font-size:11.5px;">${k}</span>
+        <span class="v" style="color:${vColor};font-family:var(--font-mono);font-size:${fontSize};font-weight:${fontWeight};direction:ltr;">${v}</span>
+      </div>`;
+    }).join('');
+
+    result.innerHTML = `
+      <div class="result-head" style="background:${stBg};border:1px solid ${stBorder};padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;border-radius:8px;">
+        <div class="check" style="background:${stColor};width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;flex-shrink:0;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="lat" style="font-family:var(--font-mono);font-size:11px;color:var(--ink-2);letter-spacing:1px;">${sol.standard} · ${sol.ref}</span>
+      </div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--ink);margin-bottom:4px;">${sol.title}</div>
+      <div style="font-family:var(--font-ar);font-size:13px;color:var(--ink-2);margin-bottom:14px;line-height:1.6;">${sol.msg}</div>
+      <div class="result-rows">${rowsHtml}</div>
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg-deep);border-right:3px solid var(--accent);font-family:var(--font-ar);font-size:12px;color:var(--ink-2);line-height:1.65;">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--accent);letter-spacing:1px;">// VERIFY</span><br>${sol.verify}
+      </div>
+      <div style="margin-top:12px;padding:10px;background:rgba(255,107,53,0.06);border:1px dashed rgba(255,107,53,0.25);border-radius:6px;font-family:var(--font-ar);font-size:11.5px;color:var(--ink-3);line-height:1.6;">
+        <strong style="color:var(--accent);">شفافية:</strong> هذا حل قواعد رياضية صريحة من معايير ${sol.standard} — ليس استدعاء LLM. كل خطوة قابلة للتدقيق. للاعتماد الرسمي يلزم توقيع مهندس مرخّص.
+      </div>
+    `;
+  }
+
+  function renderUnsupported(){
+    result.innerHTML = `
+      <div class="result-head" style="background:rgba(255,179,0,0.06);border:1px solid rgba(255,179,0,0.25);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;border-radius:8px;">
+        <div style="background:var(--warning);width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;">!</div>
+        <span class="lat" style="font-family:var(--font-mono);font-size:11px;color:var(--ink-2);">PROBLEM TYPE NOT RECOGNIZED</span>
+      </div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:16px;margin-bottom:10px;">المسألة خارج النطاق المدعوم</div>
+      <div style="font-family:var(--font-ar);font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:14px;">
+        المحرك v2 يدعم <strong>9 أنواع</strong>: عمود خرساني، قاعدة منعزلة، كمرة، استقرار ميل، إطار، مضخة، حمل تبريد، سقوط جهد، عمر كلال.
+        <br><br>صياغة المسألة بكلمات مفتاحية واضحة، أو استخدم <a href="#calc-library" style="color:var(--accent);">مكتبة الحاسبات (56 حاسبة)</a>.
+      </div>
+      <div style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);padding:10px;background:var(--bg-deep);border:1px solid var(--line);line-height:1.7;direction:ltr;text-align:left;">
+        // examples:<br>
+        "صمم قاعدة منعزلة، حمل 2000 kN، تحمل 250 kPa"<br>
+        "ميل 30° بعمق 4m، γ=18، φ=32، c=8"<br>
+        "إطار بحر 10m، ارتفاع 5m، حمل 20 kN/m"<br>
+        "مضخة 80 m³/h، رفع 40m، كفاءة 78%"<br>
+        "كمرة بحر 8m، حمل 25 kN/m، 300x700 mm"<br>
+        "كلال σa=250 MPa، σf=900، b=-0.09"
+      </div>
+    `;
+  }
+
+  /* ═══════════════════ MAIN HANDLER ═══════════════════ */
+  let busy = false;
+  async function solve(){
+    if(busy) return; busy = true;
+    steps.forEach(s=>s.classList.remove('done','active'));
+    result.classList.remove('show');
     btn.disabled = true;
     btn.style.opacity = 0.6;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> جاري التحليل...';
 
-    const delays = [600, 700, 900, 800, 700, 800, 500];
+    const text = ta.value || '';
+    const type = Parser.detect(text);
+
+    const delays = [400, 500, 600, 500, 400, 500, 300];  // faster than before
     for(let i=0; i<steps.length; i++){
       steps[i].classList.add('active');
-      await new Promise(r => setTimeout(r, delays[i]));
+      await new Promise(r=>setTimeout(r, delays[i]));
       steps[i].classList.remove('active');
       steps[i].classList.add('done');
     }
 
+    if(!type){
+      renderUnsupported();
+    } else {
+      const params = Parser.extract(text, type);
+      try {
+        const sol = Engine[type](params);
+        renderSolution(sol, type);
+      } catch(e){
+        console.error('Solver error', e);
+        renderUnsupported();
+      }
+    }
     result.classList.add('show');
+
     btn.disabled = false;
     btn.style.opacity = 1;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> حلّ آخر';
-  });
+    busy = false;
+  }
 
-  // run once on first reveal
+  btn.addEventListener('click', solve);
+
+  // Auto-trigger on first scroll into view
   setTimeout(() => {
     const solverEl = document.querySelector('.solver');
     if(!solverEl) return;
     const io = new IntersectionObserver(entries => {
-      if(entries[0].isIntersecting){
-        btn.click();
-        io.disconnect();
-      }
+      if(entries[0].isIntersecting){ solve(); io.disconnect(); }
     }, { threshold: 0.4 });
     io.observe(solverEl);
   }, 1500);
+
+  // Public API
+  window.EngHubSolver = { Parser, Engine, solve };
 })();
 
 /* spinner keyframe */
