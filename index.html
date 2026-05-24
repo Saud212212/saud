@@ -5484,6 +5484,828 @@ h1, h2, h3, h4, p, li, span, a, div{ overflow-wrap: anywhere; word-wrap: break-w
 </section>
 
 
+<!-- ============================================================
+     SESSION 5: FIELD TOOLS — Real working utilities
+     UTM↔WGS84 converter, EXIF-GPS extractor, Daily Report PDF
+     ============================================================ -->
+<style>
+.ft-section{
+  background: var(--bg-deep);
+  border-top: 1px solid var(--line);
+  padding: 80px 0;
+}
+.ft-tabs{
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 28px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 10px;
+}
+.ft-tab{
+  padding: 11px 18px; border-radius: 8px;
+  background: transparent; border: 1px solid var(--line);
+  color: var(--ink-3); font-family: var(--font-display);
+  font-weight: 600; font-size: 13px;
+  cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; gap: 8px;
+  white-space: nowrap;
+}
+.ft-tab:hover{ color: var(--ink-2); border-color: var(--line-strong); }
+.ft-tab.active{ background: var(--accent); color: #fff; border-color: var(--accent); }
+.ft-panel{ display: none; animation: tabFadeIn .25s ease-out; }
+.ft-panel.active{ display: block; }
+
+.ft-card{
+  background: var(--panel); border: 1px solid var(--line-strong);
+  border-radius: 16px; padding: 28px; margin-bottom: 18px;
+}
+.ft-card-head{
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--line);
+}
+.ft-card-title{ font-family: var(--font-display); font-weight: 700; font-size: 18px; }
+.ft-card-sub{ font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); margin-top: 4px; letter-spacing: 0.06em; }
+
+.ft-grid2{
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 24px; align-items: start;
+}
+@media (max-width: 800px){ .ft-grid2{ grid-template-columns: 1fr; } }
+
+.ft-fld{ display: grid; gap: 6px; margin-bottom: 12px; }
+.ft-fld label{
+  font-size: 12px; color: var(--ink-3); font-weight: 600;
+  display: flex; justify-content: space-between;
+}
+.ft-fld label .hint{ font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); }
+.ft-fld input, .ft-fld select, .ft-fld textarea{
+  background: var(--input-bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px;
+  color: var(--ink); font-size: 13px;
+  font-family: var(--font-mono); outline: none;
+}
+.ft-fld textarea{ font-family: var(--font-ar); resize: vertical; min-height: 80px; }
+.ft-fld input:focus, .ft-fld select:focus, .ft-fld textarea:focus{
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
+}
+.ft-row2{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px){ .ft-row2{ grid-template-columns: 1fr; } }
+
+.ft-btn{
+  width: 100%; padding: 11px 16px; border-radius: 8px;
+  background: var(--accent); color: #fff; border: none;
+  font-family: var(--font-display); font-weight: 600; font-size: 13.5px;
+  cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.ft-btn:hover{ background: var(--accent-2); transform: translateY(-1px); }
+.ft-btn.ghost{ background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.ft-btn.ghost:hover{ background: rgba(255,107,53,0.08); }
+
+.ft-result{
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px; margin-top: 14px;
+  font-family: var(--font-mono); font-size: 12.5px;
+}
+.ft-result .rr{
+  display: flex; justify-content: space-between;
+  padding: 5px 0; border-bottom: 1px dashed var(--line);
+}
+.ft-result .rr:last-child{ border-bottom: none; }
+.ft-result .rk{ color: var(--ink-3); }
+.ft-result .rv{ color: var(--accent); font-weight: 700; direction: ltr; }
+
+.ft-drop{
+  border: 2px dashed var(--line-strong); border-radius: 14px;
+  padding: 36px 20px; text-align: center;
+  background: var(--bg-deep); cursor: pointer;
+  transition: all .2s;
+}
+.ft-drop:hover, .ft-drop.dragover{
+  border-color: var(--accent); background: rgba(255,107,53,0.04);
+}
+.ft-drop input[type=file]{ display: none; }
+.ft-drop-ico{ font-size: 36px; opacity: 0.5; margin-bottom: 10px; }
+.ft-drop-text{ font-family: var(--font-ar); font-size: 13px; color: var(--ink-2); }
+.ft-drop-hint{ font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-4); margin-top: 6px; }
+
+.ft-photo-item{
+  background: var(--bg-deep); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px;
+  margin-top: 10px;
+  display: grid; grid-template-columns: 64px 1fr auto;
+  gap: 14px; align-items: center;
+}
+.ft-photo-item img{
+  width: 64px; height: 64px; object-fit: cover;
+  border-radius: 8px; border: 1px solid var(--line);
+}
+.ft-photo-info{ min-width: 0; }
+.ft-photo-name{
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--ink); font-weight: 600; margin-bottom: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ft-photo-gps{
+  font-family: var(--font-mono); font-size: 11px; color: var(--ink-3);
+  direction: ltr; line-height: 1.5;
+}
+.ft-photo-gps.no-gps{ color: var(--warning); }
+.ft-photo-link{
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--accent); text-decoration: none;
+  padding: 6px 10px; border: 1px solid var(--accent);
+  border-radius: 6px; white-space: nowrap;
+}
+.ft-photo-link:hover{ background: rgba(255,107,53,0.1); }
+
+.ft-list{
+  max-height: 320px; overflow-y: auto; margin-top: 14px;
+  border: 1px solid var(--line); border-radius: 10px;
+}
+.ft-list:empty{ display: none; }
+
+.ft-note{
+  margin-top: 12px; padding: 10px 12px;
+  background: rgba(77,208,225,0.06); border: 1px solid rgba(77,208,225,0.2);
+  border-radius: 8px; font-family: var(--font-ar); font-size: 12px;
+  color: var(--ink-2); display: flex; gap: 8px; line-height: 1.65;
+}
+.ft-note::before{ content: "ⓘ"; color: var(--cyan); font-weight: 700; flex-shrink: 0; }
+
+.ft-map-embed{
+  width: 100%; height: 240px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--bg-deep);
+  margin-top: 14px;
+}
+</style>
+
+<section id="field-tools" class="ft-section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">FIELD TOOLS · REAL WORKING UTILITIES</div>
+      <h2 class="section-title">أدوات ميدانية <span class="accent">حقيقية</span> — تشتغل أوفلاين</h2>
+      <p class="section-desc">3 أدوات يومية للمهندس الميداني تعمل بالكامل في المتصفح بدون خادم: تحويل الإحداثيات، استخراج GPS من الصور، وتوليد التقرير اليومي PDF.</p>
+    </div>
+
+    <div class="ft-tabs reveal">
+      <button class="ft-tab active" data-ft-tab="utm">📍 UTM ↔ WGS84</button>
+      <button class="ft-tab" data-ft-tab="exif">📷 EXIF-GPS من الصور</button>
+      <button class="ft-tab" data-ft-tab="report">📄 التقرير اليومي PDF</button>
+    </div>
+
+    <!-- ─── TOOL 1: UTM ↔ WGS84 ─── -->
+    <div class="ft-panel active" data-ft-panel="utm">
+      <div class="ft-card reveal">
+        <div class="ft-card-head">
+          <div>
+            <div class="ft-card-title">محوّل الإحداثيات UTM ↔ WGS84</div>
+            <div class="ft-card-sub">Snyder formulas · WGS84 ellipsoid · zones 1-60</div>
+          </div>
+          <span class="ft-card-sub" style="color:var(--success);">دقة ±1m</span>
+        </div>
+
+        <div class="ft-grid2">
+          <!-- Geographic → UTM -->
+          <div>
+            <div style="font-family:var(--font-display); font-weight:700; font-size:14px; margin-bottom:14px; color:var(--accent);">📍 جغرافي → UTM</div>
+            <div class="ft-row2">
+              <div class="ft-fld">
+                <label>خط العرض (Lat) <span class="hint">±90°</span></label>
+                <input type="number" id="utmLat" value="24.7136" step="0.000001" />
+              </div>
+              <div class="ft-fld">
+                <label>خط الطول (Lng) <span class="hint">±180°</span></label>
+                <input type="number" id="utmLng" value="46.6753" step="0.000001" />
+              </div>
+            </div>
+            <button class="ft-btn" id="btnGeoToUtm">حوّل إلى UTM ←</button>
+            <div id="utmResult" class="ft-result" style="display:none;"></div>
+          </div>
+
+          <!-- UTM → Geographic -->
+          <div>
+            <div style="font-family:var(--font-display); font-weight:700; font-size:14px; margin-bottom:14px; color:var(--accent);">↻ UTM → جغرافي</div>
+            <div class="ft-row2">
+              <div class="ft-fld">
+                <label>المنطقة (Zone) <span class="hint">1-60</span></label>
+                <input type="number" id="utmZone" value="38" min="1" max="60" />
+              </div>
+              <div class="ft-fld">
+                <label>نصف الكرة</label>
+                <select id="utmHem">
+                  <option value="N">شمالي (N)</option>
+                  <option value="S">جنوبي (S)</option>
+                </select>
+              </div>
+            </div>
+            <div class="ft-row2">
+              <div class="ft-fld">
+                <label>Easting (m)</label>
+                <input type="number" id="utmE" value="568013" step="0.1" />
+              </div>
+              <div class="ft-fld">
+                <label>Northing (m)</label>
+                <input type="number" id="utmN" value="2734122" step="0.1" />
+              </div>
+            </div>
+            <button class="ft-btn ghost" id="btnUtmToGeo">↻ حوّل إلى جغرافي</button>
+            <div id="geoResult" class="ft-result" style="display:none;"></div>
+          </div>
+        </div>
+
+        <div class="ft-note">
+          <span>WGS84 هو المرجع المعتمد لـ GPS وGoogle Maps. UTM يستخدمه المساحون والـ AutoCAD. <strong>السعودية</strong> تقع في النطاقات <strong>36-39N</strong> · <strong>مصر</strong> في <strong>35-36N</strong> · <strong>الإمارات</strong> في <strong>39-40N</strong>.</span>
+        </div>
+
+        <div style="margin-top:14px;">
+          <button class="ft-btn ghost" id="btnOpenMap" style="width:auto; padding:9px 16px;">🗺 افتح في Google Maps</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TOOL 2: EXIF GPS Extractor ─── -->
+    <div class="ft-panel" data-ft-panel="exif">
+      <div class="ft-card reveal">
+        <div class="ft-card-head">
+          <div>
+            <div class="ft-card-title">استخراج GPS من صور الموقع</div>
+            <div class="ft-card-sub">EXIF parser · JPEG only · 100% client-side</div>
+          </div>
+          <span class="ft-card-sub" style="color:var(--success);">آمن — لا يُرفع شيء</span>
+        </div>
+
+        <label class="ft-drop" id="exifDrop">
+          <div class="ft-drop-ico">📷</div>
+          <div class="ft-drop-text">اسحب صور JPEG هنا، أو اضغط للاختيار</div>
+          <div class="ft-drop-hint">يقرأ GPS + التاريخ + الكاميرا من البيانات الوصفية</div>
+          <input type="file" id="exifInput" accept="image/jpeg,image/jpg" multiple />
+        </label>
+
+        <div class="ft-list" id="exifList"></div>
+
+        <div class="ft-note">
+          <span>الصور لا تُرفع لأي خادم — كل المعالجة في متصفحك. GPS يُحفظ تلقائياً في صور الموبايل عند تفعيل خدمة الموقع. لو لم تظهر إحداثيات: تأكد من تفعيل GPS أثناء التصوير وأن الصورة لم تتم معالجتها (WhatsApp/Telegram يحذفان EXIF).</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TOOL 3: Daily Report PDF ─── -->
+    <div class="ft-panel" data-ft-panel="report">
+      <div class="ft-card reveal">
+        <div class="ft-card-head">
+          <div>
+            <div class="ft-card-title">مولّد التقرير اليومي للموقع</div>
+            <div class="ft-card-sub">PDF via print · saves to localStorage · A4 ready</div>
+          </div>
+          <span class="ft-card-sub" style="color:var(--success);">يحفظ محلياً</span>
+        </div>
+
+        <div class="ft-grid2">
+          <div>
+            <div class="ft-row2">
+              <div class="ft-fld">
+                <label>اسم المشروع</label>
+                <input type="text" id="rpProject" placeholder="برج النخيل — جدة" />
+              </div>
+              <div class="ft-fld">
+                <label>رقم العقد</label>
+                <input type="text" id="rpContract" placeholder="2024-A12" />
+              </div>
+            </div>
+            <div class="ft-row2">
+              <div class="ft-fld">
+                <label>التاريخ</label>
+                <input type="date" id="rpDate" />
+              </div>
+              <div class="ft-fld">
+                <label>الطقس</label>
+                <select id="rpWeather">
+                  <option>صافٍ</option><option>غائم</option><option>أمطار</option>
+                  <option>عواصف رملية</option><option>حار شديد</option><option>بارد</option>
+                </select>
+              </div>
+            </div>
+            <div class="ft-row2">
+              <div class="ft-fld">
+                <label>عدد العمال</label>
+                <input type="number" id="rpLabor" value="0" min="0" />
+              </div>
+              <div class="ft-fld">
+                <label>عدد المعدات</label>
+                <input type="number" id="rpEquip" value="0" min="0" />
+              </div>
+            </div>
+            <div class="ft-fld">
+              <label>المسؤول</label>
+              <input type="text" id="rpResponsible" placeholder="م. أحمد العتيبي" />
+            </div>
+          </div>
+
+          <div>
+            <div class="ft-fld">
+              <label>الأنشطة المنفّذة اليوم</label>
+              <textarea id="rpActivities" placeholder="• صب أعمدة الطابق 3 (45 m³)&#10;• تركيب تسليح الكمرات&#10;• اختبار ضغط الخرسانة"></textarea>
+            </div>
+            <div class="ft-fld">
+              <label>المواد الواردة</label>
+              <textarea id="rpMaterials" placeholder="• حديد تسليح 12 طن&#10;• خرسانة جاهزة 60 m³"></textarea>
+            </div>
+            <div class="ft-fld">
+              <label>المشاكل / الملاحظات</label>
+              <textarea id="rpIssues" placeholder="• تأخير شحنة الحديد ساعتين&#10;• حادثة بسيطة بدون إصابات"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="ft-row2" style="margin-top:14px;">
+          <button class="ft-btn" id="btnGenReport">📄 توليد PDF</button>
+          <button class="ft-btn ghost" id="btnSaveReport">💾 حفظ محلياً</button>
+        </div>
+
+        <div id="reportHistory" style="margin-top:18px;"></div>
+
+        <div class="ft-note">
+          <span>التقرير يفتح في نافذة جديدة جاهزة للطباعة كـ PDF (Ctrl+P → حفظ كـ PDF). الحفظ المحلي يخزّن آخر 20 تقرير في متصفحك (localStorage).</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   SESSION 5 — FIELD TOOLS implementations
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+
+  /* ── Tab switching ── */
+  document.querySelectorAll('.ft-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.ftTab;
+      document.querySelectorAll('.ft-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.ft-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.ftPanel === target);
+      });
+    });
+  });
+
+  /* ════════════════════════════════════════════════════════════
+     TOOL 1 — UTM ↔ WGS84 (Snyder, WGS84 ellipsoid)
+     a=6378137, f=1/298.257223563
+     ════════════════════════════════════════════════════════════ */
+  const A=6378137, F=1/298.257223563;
+  const E2 = 2*F - F*F;
+  const EP2 = E2/(1-E2);
+  const K0 = 0.9996;
+
+  function geoToUtm(latDeg, lngDeg){
+    const lat = latDeg * Math.PI/180;
+    const lng = lngDeg * Math.PI/180;
+    const zone = Math.floor((lngDeg + 180) / 6) + 1;
+    const lng0 = ((zone - 1)*6 - 180 + 3) * Math.PI/180;
+    const N = A / Math.sqrt(1 - E2*Math.pow(Math.sin(lat),2));
+    const T = Math.pow(Math.tan(lat),2);
+    const C = EP2 * Math.pow(Math.cos(lat),2);
+    const Aval = (lng - lng0) * Math.cos(lat);
+    const M = A * ((1 - E2/4 - 3*E2*E2/64 - 5*E2*E2*E2/256)*lat
+              - (3*E2/8 + 3*E2*E2/32 + 45*E2*E2*E2/1024)*Math.sin(2*lat)
+              + (15*E2*E2/256 + 45*E2*E2*E2/1024)*Math.sin(4*lat)
+              - (35*E2*E2*E2/3072)*Math.sin(6*lat));
+    const easting = K0*N*(Aval + (1-T+C)*Math.pow(Aval,3)/6
+                  + (5-18*T+T*T+72*C-58*EP2)*Math.pow(Aval,5)/120) + 500000;
+    let northing = K0*(M + N*Math.tan(lat)*(Aval*Aval/2 + (5-T+9*C+4*C*C)*Math.pow(Aval,4)/24
+                  + (61-58*T+T*T+600*C-330*EP2)*Math.pow(Aval,6)/720));
+    if(latDeg < 0) northing += 10000000;
+    const band = utmBand(latDeg);
+    return { zone, hem: latDeg>=0?'N':'S', band, easting, northing };
+  }
+
+  function utmBand(lat){
+    if(lat < -80 || lat >= 84) return 'X';
+    const bands = 'CDEFGHJKLMNPQRSTUVWX';
+    return bands[Math.floor((lat + 80) / 8)];
+  }
+
+  function utmToGeo(easting, northing, zone, hem){
+    const x = easting - 500000;
+    const y = hem === 'S' ? northing - 10000000 : northing;
+    const lng0 = ((zone - 1)*6 - 180 + 3) * Math.PI/180;
+    const M = y/K0;
+    const mu = M / (A*(1 - E2/4 - 3*E2*E2/64 - 5*E2*E2*E2/256));
+    const e1 = (1 - Math.sqrt(1-E2)) / (1 + Math.sqrt(1-E2));
+    const phi1 = mu + (3*e1/2 - 27*e1*e1*e1/32)*Math.sin(2*mu)
+                + (21*e1*e1/16 - 55*e1*e1*e1*e1/32)*Math.sin(4*mu)
+                + (151*e1*e1*e1/96)*Math.sin(6*mu);
+    const N1 = A / Math.sqrt(1 - E2*Math.pow(Math.sin(phi1),2));
+    const T1 = Math.pow(Math.tan(phi1),2);
+    const C1 = EP2 * Math.pow(Math.cos(phi1),2);
+    const R1 = A*(1-E2) / Math.pow(1 - E2*Math.pow(Math.sin(phi1),2), 1.5);
+    const D = x / (N1*K0);
+    const lat = phi1 - (N1*Math.tan(phi1)/R1) * (D*D/2 - (5+3*T1+10*C1-4*C1*C1-9*EP2)*Math.pow(D,4)/24
+              + (61+90*T1+298*C1+45*T1*T1-252*EP2-3*C1*C1)*Math.pow(D,6)/720);
+    const lng = lng0 + (D - (1+2*T1+C1)*Math.pow(D,3)/6
+              + (5-2*C1+28*T1-3*C1*C1+8*EP2+24*T1*T1)*Math.pow(D,5)/120) / Math.cos(phi1);
+    return { lat: lat*180/Math.PI, lng: lng*180/Math.PI };
+  }
+
+  function fmtN(n, d){ return Number(n).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+
+  document.getElementById('btnGeoToUtm').addEventListener('click', () => {
+    const lat = parseFloat(document.getElementById('utmLat').value);
+    const lng = parseFloat(document.getElementById('utmLng').value);
+    if(!isFinite(lat) || Math.abs(lat) > 84){ alert('خط العرض يجب أن يكون بين -84 و +84'); return; }
+    if(!isFinite(lng) || Math.abs(lng) > 180){ alert('خط الطول يجب أن يكون بين -180 و +180'); return; }
+    const r = geoToUtm(lat, lng);
+    const out = document.getElementById('utmResult');
+    out.style.display = 'block';
+    out.innerHTML = `
+      <div class="rr"><span class="rk">المنطقة (Zone)</span><span class="rv">${r.zone}${r.band}</span></div>
+      <div class="rr"><span class="rk">نصف الكرة</span><span class="rv">${r.hem === 'N' ? 'شمالي N' : 'جنوبي S'}</span></div>
+      <div class="rr"><span class="rk">Easting</span><span class="rv">${fmtN(r.easting, 2)} m</span></div>
+      <div class="rr"><span class="rk">Northing</span><span class="rv">${fmtN(r.northing, 2)} m</span></div>
+      <div class="rr"><span class="rk">صيغة AutoCAD</span><span class="rv">${fmtN(r.easting,1)}, ${fmtN(r.northing,1)}</span></div>
+    `;
+    // Auto-populate reverse fields too
+    document.getElementById('utmZone').value = r.zone;
+    document.getElementById('utmHem').value = r.hem;
+    document.getElementById('utmE').value = r.easting.toFixed(2);
+    document.getElementById('utmN').value = r.northing.toFixed(2);
+  });
+
+  document.getElementById('btnUtmToGeo').addEventListener('click', () => {
+    const e = parseFloat(document.getElementById('utmE').value);
+    const n = parseFloat(document.getElementById('utmN').value);
+    const z = parseInt(document.getElementById('utmZone').value);
+    const h = document.getElementById('utmHem').value;
+    if(!isFinite(e) || !isFinite(n) || !z){ alert('أدخل القيم بشكل صحيح'); return; }
+    const r = utmToGeo(e, n, z, h);
+    const out = document.getElementById('geoResult');
+    out.style.display = 'block';
+    out.innerHTML = `
+      <div class="rr"><span class="rk">خط العرض (Lat)</span><span class="rv">${fmtN(r.lat, 6)}°</span></div>
+      <div class="rr"><span class="rk">خط الطول (Lng)</span><span class="rv">${fmtN(r.lng, 6)}°</span></div>
+      <div class="rr"><span class="rk">DMS Lat</span><span class="rv">${toDMS(r.lat, 'lat')}</span></div>
+      <div class="rr"><span class="rk">DMS Lng</span><span class="rv">${toDMS(r.lng, 'lng')}</span></div>
+      <div class="rr"><span class="rk">صيغة Google Maps</span><span class="rv">${fmtN(r.lat,6)}, ${fmtN(r.lng,6)}</span></div>
+    `;
+    document.getElementById('utmLat').value = r.lat.toFixed(6);
+    document.getElementById('utmLng').value = r.lng.toFixed(6);
+  });
+
+  function toDMS(deg, type){
+    const abs = Math.abs(deg);
+    const d = Math.floor(abs);
+    const minF = (abs - d) * 60;
+    const m = Math.floor(minF);
+    const s = (minF - m) * 60;
+    const dir = type==='lat' ? (deg>=0?'N':'S') : (deg>=0?'E':'W');
+    return `${d}° ${m}' ${s.toFixed(2)}" ${dir}`;
+  }
+
+  document.getElementById('btnOpenMap').addEventListener('click', () => {
+    const lat = document.getElementById('utmLat').value;
+    const lng = document.getElementById('utmLng').value;
+    if(!lat || !lng){ alert('أدخل الإحداثيات أولاً'); return; }
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+  });
+
+  /* ════════════════════════════════════════════════════════════
+     TOOL 2 — EXIF GPS Extractor
+     Pure JS JPEG EXIF parser; reads GPS IFD (tag 0x8825)
+     ════════════════════════════════════════════════════════════ */
+  function readExif(arrayBuffer){
+    const dv = new DataView(arrayBuffer);
+    if(dv.getUint16(0) !== 0xFFD8) return null;  // not JPEG
+    let offset = 2;
+    while(offset < dv.byteLength){
+      const marker = dv.getUint16(offset);
+      const size = dv.getUint16(offset + 2);
+      if(marker === 0xFFE1){  // APP1 (EXIF)
+        // Check "Exif\0\0"
+        if(dv.getUint32(offset+4) === 0x45786966 && dv.getUint16(offset+8) === 0x0000){
+          const tiffStart = offset + 10;
+          return parseTiff(dv, tiffStart);
+        }
+      }
+      if(marker === 0xFFDA) break;  // start of scan
+      offset += 2 + size;
+    }
+    return null;
+  }
+
+  function parseTiff(dv, tiffStart){
+    const bo = dv.getUint16(tiffStart);
+    const little = bo === 0x4949;
+    const getU16 = (o) => dv.getUint16(o, little);
+    const getU32 = (o) => dv.getUint32(o, little);
+    if(getU16(tiffStart+2) !== 0x002A) return null;
+    const ifd0Offset = tiffStart + getU32(tiffStart+4);
+    const tags = parseIfd(dv, tiffStart, ifd0Offset, little);
+    const out = { make: tags[0x010F], model: tags[0x0110], dateTime: tags[0x0132] };
+    if(tags[0x8825]){
+      const gpsIfd = parseIfd(dv, tiffStart, tiffStart + tags[0x8825], little);
+      const latRef = gpsIfd[0x0001];
+      const latArr = gpsIfd[0x0002];
+      const lngRef = gpsIfd[0x0003];
+      const lngArr = gpsIfd[0x0004];
+      if(latArr && lngArr){
+        out.lat = dmsToDeg(latArr) * (latRef === 'S' ? -1 : 1);
+        out.lng = dmsToDeg(lngArr) * (lngRef === 'W' ? -1 : 1);
+        if(gpsIfd[0x0006]) out.alt = gpsIfd[0x0006];
+        if(gpsIfd[0x001D]) out.gpsDate = gpsIfd[0x001D];
+      }
+    }
+    return out;
+  }
+
+  function parseIfd(dv, tiffStart, ifdOffset, little){
+    const getU16 = (o) => dv.getUint16(o, little);
+    const getU32 = (o) => dv.getUint32(o, little);
+    const count = getU16(ifdOffset);
+    const tags = {};
+    for(let i=0; i<count; i++){
+      const entryOffset = ifdOffset + 2 + i*12;
+      const tag = getU16(entryOffset);
+      const type = getU16(entryOffset+2);
+      const num = getU32(entryOffset+4);
+      const valueOffset = entryOffset + 8;
+      tags[tag] = readValue(dv, tiffStart, type, num, valueOffset, little);
+    }
+    return tags;
+  }
+
+  function readValue(dv, tiffStart, type, num, valueOffset, little){
+    const getU32 = (o) => dv.getUint32(o, little);
+    const sizeOfType = {1:1, 2:1, 3:2, 4:4, 5:8, 7:1, 9:4, 10:8};
+    const totalSize = (sizeOfType[type] || 1) * num;
+    const dataOffset = totalSize <= 4 ? valueOffset : (tiffStart + getU32(valueOffset));
+    if(type === 2){  // ASCII string
+      let s = '';
+      for(let i=0; i<num-1; i++) s += String.fromCharCode(dv.getUint8(dataOffset+i));
+      return s;
+    }
+    if(type === 5){  // RATIONAL u32/u32
+      const result = [];
+      for(let i=0; i<num; i++){
+        const n = dv.getUint32(dataOffset + i*8, little);
+        const d = dv.getUint32(dataOffset + i*8 + 4, little);
+        result.push(d === 0 ? 0 : n/d);
+      }
+      return num === 1 ? result[0] : result;
+    }
+    if(type === 3) return dv.getUint16(dataOffset, little);
+    if(type === 4) return dv.getUint32(dataOffset, little);
+    return null;
+  }
+
+  function dmsToDeg(arr){
+    if(!Array.isArray(arr) || arr.length < 3) return 0;
+    return arr[0] + arr[1]/60 + arr[2]/3600;
+  }
+
+  function renderExifResult(file, exif){
+    const item = document.createElement('div');
+    item.className = 'ft-photo-item';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = item.querySelector('img');
+      if(img) img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    const hasGps = exif && isFinite(exif.lat) && isFinite(exif.lng);
+    const gpsHtml = hasGps
+      ? `<div class="ft-photo-gps">📍 ${exif.lat.toFixed(6)}, ${exif.lng.toFixed(6)}${exif.alt ? ` · ↑${exif.alt.toFixed(0)}m` : ''}${exif.dateTime ? `<br>🕐 ${exif.dateTime}` : ''}${exif.make ? `<br>📷 ${exif.make} ${exif.model || ''}` : ''}</div>`
+      : `<div class="ft-photo-gps no-gps">⚠ لا يوجد GPS في البيانات الوصفية${exif && exif.dateTime ? `<br>🕐 ${exif.dateTime}` : ''}</div>`;
+    const linkHtml = hasGps
+      ? `<a class="ft-photo-link" href="https://www.google.com/maps?q=${exif.lat},${exif.lng}" target="_blank">🗺 خريطة</a>`
+      : '';
+    item.innerHTML = `
+      <img alt="${file.name}" />
+      <div class="ft-photo-info">
+        <div class="ft-photo-name">${file.name} <span style="color:var(--ink-4); font-weight:400;">· ${(file.size/1024).toFixed(0)} KB</span></div>
+        ${gpsHtml}
+      </div>
+      ${linkHtml}
+    `;
+    document.getElementById('exifList').appendChild(item);
+  }
+
+  function handleFiles(files){
+    Array.from(files).forEach(file => {
+      if(!file.type.match(/^image\/jpe?g$/i)){
+        const item = document.createElement('div');
+        item.className = 'ft-photo-item';
+        item.innerHTML = `
+          <div style="width:64px;height:64px;background:var(--bg-3);border-radius:8px;display:grid;place-items:center;color:var(--ink-4);font-size:24px;">⚠</div>
+          <div class="ft-photo-info">
+            <div class="ft-photo-name">${file.name}</div>
+            <div class="ft-photo-gps no-gps">يدعم JPEG فقط — PNG/HEIC لا تحتوي EXIF قياسي</div>
+          </div>`;
+        document.getElementById('exifList').appendChild(item);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const exif = readExif(e.target.result);
+          renderExifResult(file, exif || {});
+        } catch(err){
+          console.error('EXIF parse error:', err);
+          renderExifResult(file, {});
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  const exifInput = document.getElementById('exifInput');
+  const exifDrop = document.getElementById('exifDrop');
+  if(exifInput && exifDrop){
+    exifInput.addEventListener('change', (e) => handleFiles(e.target.files));
+    exifDrop.addEventListener('dragover', (e) => { e.preventDefault(); exifDrop.classList.add('dragover'); });
+    exifDrop.addEventListener('dragleave', () => exifDrop.classList.remove('dragover'));
+    exifDrop.addEventListener('drop', (e) => {
+      e.preventDefault(); exifDrop.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     TOOL 3 — Daily Report PDF
+     Print-to-PDF via styled new window + localStorage history
+     ════════════════════════════════════════════════════════════ */
+  // Set today's date
+  const dateInput = document.getElementById('rpDate');
+  if(dateInput){
+    dateInput.value = new Date().toISOString().slice(0,10);
+  }
+
+  function gatherReport(){
+    return {
+      project: document.getElementById('rpProject').value || '—',
+      contract: document.getElementById('rpContract').value || '—',
+      date: document.getElementById('rpDate').value || new Date().toISOString().slice(0,10),
+      weather: document.getElementById('rpWeather').value,
+      labor: document.getElementById('rpLabor').value || '0',
+      equip: document.getElementById('rpEquip').value || '0',
+      responsible: document.getElementById('rpResponsible').value || '—',
+      activities: document.getElementById('rpActivities').value || '—',
+      materials: document.getElementById('rpMaterials').value || '—',
+      issues: document.getElementById('rpIssues').value || '—',
+      ts: Date.now()
+    };
+  }
+
+  function generateReportHtml(r){
+    const reportId = 'DR-' + new Date(r.date).getTime().toString(36).toUpperCase();
+    const generatedAt = new Date().toLocaleString('ar-EG');
+    return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<title>تقرير يومي ${reportId}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+@page{ size:A4; margin:15mm; }
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{ font-family:"Cairo",sans-serif; color:#0A1628; line-height:1.65; background:#fff; }
+.no-print{ background:#0A2540; color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.no-print button{ background:#FF6B35; color:#fff; border:none; padding:10px 22px; font-family:inherit; font-size:14px; cursor:pointer; border-radius:4px; font-weight:600; }
+.report{ max-width:720px; margin:0 auto; padding:0 20px 60px; }
+.head{ border-bottom:3px solid #0A2540; padding-bottom:14px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-end; }
+.head h1{ font-size:24px; color:#0A2540; margin-bottom:4px; }
+.head .meta{ font-family:"Inter",monospace; font-size:11px; color:#666; text-align:left; direction:ltr; }
+.stamp{ display:inline-block; padding:5px 14px; background:#FF6B35; color:#fff; font-family:"Inter",monospace; font-size:11px; letter-spacing:2px; font-weight:600; margin-bottom:8px; }
+table{ width:100%; border-collapse:collapse; margin:12px 0 20px; font-size:13px; }
+table td{ padding:8px 12px; border:1px solid #ddd; }
+table td.l{ background:#f5f7fa; font-weight:700; color:#0A2540; width:30%; }
+h2{ font-size:15px; color:#0A2540; border-right:4px solid #FF6B35; padding-right:10px; margin:24px 0 10px; }
+.box{ background:#fafbfc; border:1px solid #e8eaed; padding:12px 14px; border-radius:6px; white-space:pre-wrap; font-size:13px; line-height:1.7; min-height:50px; }
+.sig-row{ margin-top:40px; display:grid; grid-template-columns:1fr 1fr; gap:30px; }
+.sig{ border-top:1px solid #999; padding-top:8px; font-size:11px; color:#666; text-align:center; }
+.footer{ margin-top:40px; padding-top:14px; border-top:1px solid #ddd; font-size:10px; color:#888; display:flex; justify-content:space-between; font-family:"Inter",monospace; }
+@media print{ .no-print{ display:none; } body{ background:#fff; } }
+</style></head><body>
+<div class="no-print">
+  <span>اضغط للطباعة أو الحفظ كـ PDF</span>
+  <button onclick="window.print()">طباعة / حفظ PDF</button>
+</div>
+<div class="report">
+  <div class="head">
+    <div>
+      <span class="stamp">DAILY REPORT</span>
+      <h1>تقرير يومي للموقع</h1>
+    </div>
+    <div class="meta">Report ID · <strong>${reportId}</strong><br>Generated · ${generatedAt}</div>
+  </div>
+  <table>
+    <tr><td class="l">المشروع</td><td>${escapeHtml(r.project)}</td></tr>
+    <tr><td class="l">رقم العقد</td><td>${escapeHtml(r.contract)}</td></tr>
+    <tr><td class="l">التاريخ</td><td>${r.date}</td></tr>
+    <tr><td class="l">الطقس</td><td>${escapeHtml(r.weather)}</td></tr>
+    <tr><td class="l">عدد العمال</td><td>${r.labor}</td></tr>
+    <tr><td class="l">عدد المعدات</td><td>${r.equip}</td></tr>
+    <tr><td class="l">المسؤول</td><td>${escapeHtml(r.responsible)}</td></tr>
+  </table>
+  <h2>الأنشطة المنفّذة</h2>
+  <div class="box">${escapeHtml(r.activities)}</div>
+  <h2>المواد الواردة</h2>
+  <div class="box">${escapeHtml(r.materials)}</div>
+  <h2>المشاكل / الملاحظات</h2>
+  <div class="box">${escapeHtml(r.issues)}</div>
+  <div class="sig-row">
+    <div class="sig">توقيع مهندس الموقع</div>
+    <div class="sig">توقيع الاستشاري</div>
+  </div>
+  <div class="footer">
+    <span>EngHub Pro · Field Report</span>
+    <span>صفحة 1 من 1</span>
+  </div>
+</div></body></html>`;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  document.getElementById('btnGenReport').addEventListener('click', () => {
+    const r = gatherReport();
+    const html = generateReportHtml(r);
+    const w = window.open('', '_blank');
+    if(!w){ alert('السماح بالنوافذ المنبثقة مطلوب لتوليد التقرير'); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  });
+
+  function loadHistory(){
+    try {
+      return JSON.parse(localStorage.getItem('enghub_field_reports') || '[]');
+    } catch(e){ return []; }
+  }
+
+  function saveToHistory(r){
+    try {
+      const list = loadHistory();
+      list.unshift(r);
+      localStorage.setItem('enghub_field_reports', JSON.stringify(list.slice(0, 20)));
+    } catch(e){ console.warn('Save failed:', e); }
+  }
+
+  function renderHistory(){
+    const list = loadHistory();
+    const wrap = document.getElementById('reportHistory');
+    if(!wrap) return;
+    if(!list.length){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = `
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--ink-4); letter-spacing:1.2px; text-transform:uppercase; margin-bottom:8px;">// آخر ${list.length} تقرير محفوظ محلياً</div>
+      ${list.map((r,i) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--bg-deep); border:1px solid var(--line); border-radius:8px; margin-bottom:6px;">
+          <div>
+            <div style="font-family:var(--font-display); font-weight:700; font-size:13px;">${escapeHtml(r.project)} — ${r.date}</div>
+            <div style="font-family:var(--font-mono); font-size:10.5px; color:var(--ink-4);">${r.labor} عامل · ${r.equip} معدة · ${escapeHtml(r.weather)}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button onclick="window.EngHubField.openReport(${i})" style="background:transparent; border:1px solid var(--accent); color:var(--accent); padding:5px 11px; border-radius:5px; cursor:pointer; font-size:11px; font-family:var(--font-mono);">PDF ↗</button>
+            <button onclick="window.EngHubField.deleteReport(${i})" style="background:transparent; border:1px solid var(--line); color:var(--ink-4); padding:5px 11px; border-radius:5px; cursor:pointer; font-size:11px;">×</button>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  document.getElementById('btnSaveReport').addEventListener('click', () => {
+    const r = gatherReport();
+    if(r.project === '—'){ alert('أدخل اسم المشروع على الأقل'); return; }
+    saveToHistory(r);
+    renderHistory();
+    const btn = document.getElementById('btnSaveReport');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✓ تم الحفظ';
+    setTimeout(() => { btn.innerHTML = orig; }, 1500);
+  });
+
+  window.EngHubField = {
+    openReport(idx){
+      const list = loadHistory();
+      if(!list[idx]) return;
+      const html = generateReportHtml(list[idx]);
+      const w = window.open('', '_blank');
+      if(!w){ alert('السماح بالنوافذ المنبثقة مطلوب'); return; }
+      w.document.open(); w.document.write(html); w.document.close();
+    },
+    deleteReport(idx){
+      if(!confirm('حذف هذا التقرير؟')) return;
+      const list = loadHistory();
+      list.splice(idx, 1);
+      try { localStorage.setItem('enghub_field_reports', JSON.stringify(list)); } catch(e){}
+      renderHistory();
+    },
+    geoToUtm, utmToGeo, readExif
+  };
+
+  renderHistory();
+})();
+</script>
+
 <!-- ===================== DEPLOYMENT / GO-LIVE ===================== -->
 <section id="deploy" class="deploy-section">
   <div class="container">
