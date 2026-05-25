@@ -16248,5 +16248,9 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
 })();
 </script>
 
+<!-- Commercial layer (auth + payments). Loads only if config.js exists with real keys. -->
+<script src="config.js" onerror="console.info('[Commerce] config.js absent — local-only mode')"></script>
+<script src="commerce.js" defer></script>
+
 </body>
 </html>

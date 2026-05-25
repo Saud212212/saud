@@ -1,0 +1,7 @@
+# Secrets — NEVER commit these
+.env
+.env.local
+*.secret
+supabase/.env
+node_modules/
+.DS_Store
