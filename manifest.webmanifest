@@ -1,0 +1,45 @@
+{
+  "name": "EngHub Pro · المرجع الهندسي",
+  "short_name": "EngHub Pro",
+  "description": "منصة هندسية متكاملة: 56 حاسبة معتمدة، 63 معادلة، 133 مادة، مستشار ذكي، وأدوات ميدانية. تعمل أوفلاين.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#06101F",
+  "theme_color": "#0A1628",
+  "categories": ["productivity", "education", "utilities"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "المستشار الذكي",
+      "short_name": "المستشار",
+      "url": "./index.html#solver"
+    },
+    {
+      "name": "مكتبة الحاسبات",
+      "short_name": "الحاسبات",
+      "url": "./index.html#calc-library"
+    },
+    {
+      "name": "الأدوات الميدانية",
+      "short_name": "الميدان",
+      "url": "./index.html#field-tools"
+    }
+  ]
+}

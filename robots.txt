@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://saud212212.github.io/saud/sitemap.xml

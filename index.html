@@ -7,8 +7,44 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="format-detection" content="telephone=no" />
-<title>EngHub Pro · The Engineering Oracle</title>
-<meta name="description" content="منصة هندسية متكاملة — 70 سنة من الخبرة الميدانية مدعومة بدقة الذكاء الاصطناعي" />
+<title>EngHub Pro · المرجع الهندسي الذكي — 56 حاسبة و63 معادلة</title>
+<meta name="description" content="منصة هندسية متكاملة: 56 حاسبة معتمدة (ACI · AISC · IEC · ASHRAE)، 63 معادلة موثّقة، 133 مادة، مستشار ذكي، أدوات ميدانية (UTM، GPS)، ومجتمع Q&A. تعمل أوفلاين وقابلة للتثبيت كتطبيق." />
+<meta name="keywords" content="هندسة, حاسبات هندسية, ACI 318, AISC, الكود السعودي, SBC, معادلات هندسية, تصميم إنشائي, مهندس مدني, EngHub" />
+<meta name="author" content="EngHub Pro" />
+<link rel="canonical" href="https://saud212212.github.io/saud/" />
+
+<!-- PWA manifest + icons -->
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/svg+xml" href="icon.svg" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<link rel="mask-icon" href="icon.svg" color="#FF6B35" />
+<meta name="apple-mobile-web-app-title" content="EngHub Pro" />
+<meta name="application-name" content="EngHub Pro" />
+
+<!-- Open Graph / social previews -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="EngHub Pro · المرجع الهندسي الذكي" />
+<meta property="og:description" content="56 حاسبة هندسية معتمدة + 63 معادلة موثّقة + مستشار ذكي + أدوات ميدانية. تطبيق ويب يعمل أوفلاين." />
+<meta property="og:locale" content="ar_AR" />
+<meta property="og:url" content="https://saud212212.github.io/saud/" />
+<meta property="og:image" content="icon.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="EngHub Pro · المرجع الهندسي الذكي" />
+<meta name="twitter:description" content="56 حاسبة + 63 معادلة + مستشار ذكي + أدوات ميدانية. يعمل أوفلاين." />
+
+<!-- JSON-LD structured data for search engines -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "EngHub Pro",
+  "description": "منصة هندسية متكاملة بـ 56 حاسبة معتمدة، 63 معادلة، 133 مادة، ومستشار ذكي.",
+  "applicationCategory": "Engineering",
+  "operatingSystem": "Any (Web/PWA)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "inLanguage": "ar"
+}
+</script>
 
 <!-- Fonts: Saira (engineering display), Cairo (Arabic), JetBrains Mono (code), Fraunces (editorial) -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -16166,6 +16202,49 @@ document.querySelectorAll('.feed-tabs button').forEach(b => {
   window.addEventListener('resize', () => { if(renderer) resize(); });
 
   window.EngHubSteel3D = { show, hide };
+})();
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     PWA — Service Worker registration + install prompt
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+  // Register service worker (HTTPS or localhost only; GitHub Pages is HTTPS)
+  if('serviceWorker' in navigator && location.protocol !== 'file:'){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js', { scope: './' })
+        .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+        .catch(err => console.warn('[PWA] SW registration failed:', err));
+    });
+  }
+
+  // "Install app" floating button (appears when installable)
+  let deferredPrompt = null;
+  const fab = document.createElement('button');
+  fab.id = 'pwaInstallFab';
+  fab.innerHTML = '⬇ ثبّت التطبيق';
+  fab.style.cssText = 'position:fixed;bottom:20px;left:20px;z-index:9500;background:linear-gradient(135deg,#FF8B5C,#FF6B35);color:#fff;border:none;padding:12px 18px;border-radius:999px;font-family:Cairo,sans-serif;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 8px 28px rgba(255,107,53,0.5);display:none;';
+  document.body.appendChild(fab);
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    fab.style.display = 'inline-flex';
+  });
+  fab.addEventListener('click', async () => {
+    if(!deferredPrompt){
+      // iOS Safari fallback
+      alert('للتثبيت على iPhone: اضغط زر المشاركة ⬆ في Safari ثم "إضافة إلى الشاشة الرئيسية".');
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if(outcome === 'accepted') fab.style.display = 'none';
+    deferredPrompt = null;
+  });
+  window.addEventListener('appinstalled', () => { fab.style.display = 'none'; });
 })();
 </script>
 
