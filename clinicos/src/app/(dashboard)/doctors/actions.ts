@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { actionError, type ActionResult } from "@/lib/actions";
 import { doctorSchema } from "@/lib/validation/doctors";
 import { canManageDoctors } from "@/types/rbac";
+import { assertClinicCanWrite } from "@/lib/subscription";
 
 function parseDoctor(formData: FormData) {
   return doctorSchema.safeParse({
@@ -24,6 +25,9 @@ export async function createDoctor(formData: FormData): Promise<ActionResult> {
   if (!canManageDoctors(user.role) || !user.clinicId) {
     return actionError("ليست لديك صلاحية إضافة طبيب.");
   }
+
+  const gate = await assertClinicCanWrite(user);
+  if (!gate.ok) return actionError(gate.error);
 
   const parsed = parseDoctor(formData);
   if (!parsed.success) {
@@ -67,6 +71,9 @@ export async function updateDoctor(
   if (!canManageDoctors(user.role)) {
     return actionError("ليست لديك صلاحية تعديل الطبيب.");
   }
+
+  const gate = await assertClinicCanWrite(user);
+  if (!gate.ok) return actionError(gate.error);
 
   const parsed = parseDoctor(formData);
   if (!parsed.success) {

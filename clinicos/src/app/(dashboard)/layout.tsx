@@ -20,9 +20,11 @@ function navLinksForRole(role: AppRole): { href: string; label: string }[] {
   if (role !== "super_admin") {
     links.push({ href: "/patients", label: "المرضى" });
     links.push({ href: "/doctors", label: "الأطباء" });
+    links.push({ href: "/invoices", label: "الفواتير" });
   }
   if (role === "clinic_admin") {
     links.push({ href: "/staff", label: "الموظفون" });
+    links.push({ href: "/billing", label: "الاشتراك" });
   }
   return links;
 }

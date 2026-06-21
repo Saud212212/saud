@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/audit";
 import { actionError, type ActionResult } from "@/lib/actions";
 import { patientSchema } from "@/lib/validation/patients";
 import { canManagePatients } from "@/types/rbac";
+import { assertClinicCanWrite } from "@/lib/subscription";
 
 /** يستخرج بيانات المريض من FormData ويتحقق منها على الخادم. */
 function parsePatient(formData: FormData) {
@@ -28,6 +29,9 @@ export async function createPatient(formData: FormData): Promise<ActionResult> {
   if (!canManagePatients(user.role) || !user.clinicId) {
     return actionError("ليست لديك صلاحية إضافة مريض.");
   }
+
+  const gate = await assertClinicCanWrite(user);
+  if (!gate.ok) return actionError(gate.error);
 
   const parsed = parsePatient(formData);
   if (!parsed.success) {
@@ -72,6 +76,9 @@ export async function updatePatient(
   if (!canManagePatients(user.role)) {
     return actionError("ليست لديك صلاحية تعديل المريض.");
   }
+
+  const gate = await assertClinicCanWrite(user);
+  if (!gate.ok) return actionError(gate.error);
 
   const parsed = parsePatient(formData);
   if (!parsed.success) {

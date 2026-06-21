@@ -59,6 +59,7 @@ supabase/
 ## قاعدة البيانات
 - **المرحلة 1:** `roles` (مرجعي عام)، `clinics`، `users` (مرتبط بـ `auth.users`)، `subscriptions`.
 - **المرحلة 2:** `audit_logs` (append-only)، `patients`، `doctors` (مع `user_id` اختياري لربط حساب دخول لاحقاً).
+- **المرحلة 4:** `invoices`، `payments` — المبلغ يُحسب من البنود على الخادم، وحالة الفاتورة تُحدَّث تلقائياً عبر trigger عند تغيّر الدفعات (يشمل دفعات Stripe).
 - دوال مساعدة لـ RLS في مخطط `private` غير المكشوف عبر REST (لتجنّب التكرار وتفادي تحذيرات الأمان):
   `private.current_clinic_id()`, `private.current_user_role()`, `private.is_super_admin()`.
 - Trigger `on_auth_user_created` يُنشئ صف `public.users` تلقائياً من `raw_user_meta_data`.
@@ -67,6 +68,12 @@ supabase/
 - التدقيق: استدعِ `logAudit()` من `lib/audit.ts` بعد كل عملية كتابة/تعديل/حذف.
 - بعد أي تعديل DDL: شغّل مدقّق الأمان (`get_advisors security`) ويجب أن يكون نظيفاً.
 
+## Stripe والاشتراكات
+- مفاتيح Stripe السرّية و`SUPABASE_SERVICE_ROLE_KEY` **خادمية فقط** (`STRIPE_SECRET_KEY` عبر `lib/stripe/server.ts` بـ `server-only`).
+- خطط الاشتراك (Basic/Pro/Enterprise) كـ Stripe Products؛ معرّفات الأسعار في متغيّرات البيئة (`STRIPE_PRICE_*`).
+- الويب هوك `app/api/stripe/webhook/route.ts` يتحقق من التوقيع على الجسم الخام ويحدّث القاعدة عبر Service Role.
+- ربط الاشتراك بالاستخدام: `assertClinicCanWrite()` في `lib/subscription.ts` يمنع الكتابة عند انتهاء الاشتراك (وضع للقراءة فقط).
+
 ## الاختبارات
-- وحدات منطق RBAC: `npm test` (داخل `clinicos/`).
-- عزل RLS: `supabase/tests/rls_isolation.sql` (يُشغَّل عبر psql، ينتهي بـ rollback).
+- وحدات (RBAC، التحقق، توقيع الويب هوك، الفوترة): `npm test` (داخل `clinicos/`).
+- عزل RLS عبر SQL في `supabase/tests/` (تُشغَّل عبر psql وتنتهي بـ rollback).
