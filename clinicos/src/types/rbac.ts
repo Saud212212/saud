@@ -1,0 +1,31 @@
+/**
+ * تعريفات نظام الصلاحيات RBAC والثوابت المشتركة.
+ */
+
+/** الأدوار الأربعة الثابتة في النظام. */
+export const ROLES = [
+  "super_admin",
+  "clinic_admin",
+  "doctor",
+  "receptionist",
+] as const;
+
+export type AppRole = (typeof ROLES)[number];
+
+/** المسار الذي يُوجَّه إليه كل دور بعد تسجيل الدخول. */
+export const ROLE_HOME: Record<AppRole, string> = {
+  super_admin: "/admin",
+  clinic_admin: "/dashboard",
+  doctor: "/doctor",
+  receptionist: "/reception",
+};
+
+/** يتحقق أن القيمة دور صالح. */
+export function isAppRole(value: string | null | undefined): value is AppRole {
+  return !!value && (ROLES as readonly string[]).includes(value);
+}
+
+/** يُعيد المسار الرئيسي لدور معيّن، مع مسار افتراضي آمن. */
+export function homePathForRole(role: string | null | undefined): string {
+  return isAppRole(role) ? ROLE_HOME[role] : "/login";
+}
