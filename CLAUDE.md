@@ -52,15 +52,19 @@ src/
   types/                     # database.types.ts (مولَّد) + rbac.ts
   proxy.ts                   # بديل middleware (Next 16)
 supabase/
-  migrations/                # 0001 schema الأساس، 0002 تحصين دوال RLS
-  tests/rls_isolation.sql    # اختبار عزل RLS
+  migrations/                # 0001-0002 الأساس، 0003-0004 المرضى/الأطباء/التدقيق
+  tests/                     # اختبارات عزل RLS (SQL)
 ```
 
-## قاعدة البيانات (المرحلة 1)
-- الجداول: `roles` (مرجعي عام)، `clinics`، `users` (مرتبط بـ `auth.users`)، `subscriptions`.
+## قاعدة البيانات
+- **المرحلة 1:** `roles` (مرجعي عام)، `clinics`، `users` (مرتبط بـ `auth.users`)، `subscriptions`.
+- **المرحلة 2:** `audit_logs` (append-only)، `patients`، `doctors` (مع `user_id` اختياري لربط حساب دخول لاحقاً).
 - دوال مساعدة لـ RLS في مخطط `private` غير المكشوف عبر REST (لتجنّب التكرار وتفادي تحذيرات الأمان):
   `private.current_clinic_id()`, `private.current_user_role()`, `private.is_super_admin()`.
 - Trigger `on_auth_user_created` يُنشئ صف `public.users` تلقائياً من `raw_user_meta_data`.
+- `patients.file_number` مُدار من الخادم: trigger يحسبه متسلسلاً لكل عيادة (مع advisory lock).
+- صلاحيات حسب الدور مفروضة في RLS: المرضى (clinic_admin + receptionist كتابة، doctor عرض)؛ الأطباء (clinic_admin كتابة).
+- التدقيق: استدعِ `logAudit()` من `lib/audit.ts` بعد كل عملية كتابة/تعديل/حذف.
 - بعد أي تعديل DDL: شغّل مدقّق الأمان (`get_advisors security`) ويجب أن يكون نظيفاً.
 
 ## الاختبارات

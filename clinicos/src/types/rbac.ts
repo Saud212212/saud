@@ -29,3 +29,23 @@ export function isAppRole(value: string | null | undefined): value is AppRole {
 export function homePathForRole(role: string | null | undefined): string {
   return isAppRole(role) ? ROLE_HOME[role] : "/login";
 }
+
+// -----------------------------------------------------------------------------
+// مصفوفة الصلاحيات (Capabilities) — مصدر الحقيقة لإظهار/إخفاء الإجراءات في الواجهة.
+// التحقق النهائي يبقى على الخادم وفي RLS؛ هذه للواجهة فقط.
+// -----------------------------------------------------------------------------
+
+/** هل يستطيع الدور إدارة المرضى (إضافة/تعديل/أرشفة)؟ */
+export function canManagePatients(role: AppRole): boolean {
+  return role === "clinic_admin" || role === "receptionist";
+}
+
+/** هل يستطيع الدور إدارة الأطباء؟ */
+export function canManageDoctors(role: AppRole): boolean {
+  return role === "clinic_admin";
+}
+
+/** هل يستطيع الدور إدارة الموظفين (المستخدمين)؟ */
+export function canManageStaff(role: AppRole): boolean {
+  return role === "clinic_admin";
+}
