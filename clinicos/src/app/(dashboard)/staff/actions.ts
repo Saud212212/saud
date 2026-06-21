@@ -2,11 +2,88 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth/session";
 import { logAudit } from "@/lib/audit";
 import { actionError, type ActionResult } from "@/lib/actions";
-import { staffUpdateSchema } from "@/lib/validation/staff";
+import { staffUpdateSchema, staffCreateSchema } from "@/lib/validation/staff";
 import { canManageStaff } from "@/types/rbac";
+
+/**
+ * إنشاء حساب دخول لموظف جديد داخل عيادة المدير الحالي.
+ * يستخدم Admin API (Service Role). إن كان الدور طبيباً، يُنشأ ملف طبيب مرتبط بحسابه.
+ */
+export async function createStaffAccount(
+  formData: FormData,
+): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return actionError("غير مصرّح. يرجى تسجيل الدخول.");
+  if (!canManageStaff(user.role) || !user.clinicId) {
+    return actionError("ليست لديك صلاحية إنشاء موظفين.");
+  }
+
+  const parsed = staffCreateSchema.safeParse({
+    full_name: formData.get("full_name"),
+    email: formData.get("email"),
+    role: formData.get("role"),
+    password: formData.get("password"),
+  });
+  if (!parsed.success) {
+    return actionError("تحقق من الحقول المدخلة.", z_flatten(parsed.error));
+  }
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return actionError(
+      "مفتاح Service Role غير مُعدّ على الخادم. أضِف SUPABASE_SERVICE_ROLE_KEY.",
+    );
+  }
+
+  const { data: created, error: userError } = await admin.auth.admin.createUser({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    email_confirm: true,
+    user_metadata: {
+      role: parsed.data.role,
+      clinic_id: user.clinicId,
+      full_name: parsed.data.full_name,
+    },
+  });
+
+  if (userError || !created?.user) {
+    return actionError(
+      userError?.message?.includes("already registered")
+        ? "البريد الإلكتروني مسجّل بالفعل."
+        : userError?.message ?? "تعذّر إنشاء الحساب.",
+    );
+  }
+
+  // ربط الطبيب بملف طبيب
+  if (parsed.data.role === "doctor") {
+    const { error: docError } = await admin.from("doctors").insert({
+      clinic_id: user.clinicId,
+      user_id: created.user.id,
+      full_name: parsed.data.full_name,
+    });
+    if (docError) {
+      console.error("[staff] تعذّر إنشاء ملف الطبيب:", docError.message);
+    }
+  }
+
+  await logAudit({
+    actorUserId: user.id,
+    clinicId: user.clinicId,
+    action: "create",
+    entityType: "user",
+    entityId: created.user.id,
+    metadata: { role: parsed.data.role, email: parsed.data.email },
+  });
+
+  revalidatePath("/staff");
+  return { ok: true };
+}
 
 /**
  * تعديل بيانات موظف (مستخدم موجود): الاسم، الدور، حالة التفعيل.

@@ -11,9 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Plus } from "lucide-react";
 import { ListToolbar } from "@/components/data-table/list-toolbar";
 import { Pagination } from "@/components/data-table/pagination";
 import { StaffFormDialog } from "./staff-form-dialog";
+import { StaffCreateDialog } from "./staff-create-dialog";
 
 const PAGE_SIZE = 10;
 
@@ -87,6 +89,16 @@ export default async function StaffPage({
             ],
           },
         ]}
+        action={
+          <StaffCreateDialog
+            trigger={
+              <Button>
+                <Plus className="size-4" />
+                إنشاء موظف
+              </Button>
+            }
+          />
+        }
       />
 
       {error ? (

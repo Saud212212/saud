@@ -14,6 +14,9 @@ const ROLE_LABELS: Record<string, string> = {
 /** روابط التنقّل المتاحة لكل دور. */
 function navLinksForRole(role: AppRole): { href: string; label: string }[] {
   const links = [{ href: homePathForRole(role), label: "الرئيسية" }];
+  if (role === "super_admin") {
+    links.push({ href: "/admin/clinics", label: "العيادات" });
+  }
   if (role !== "super_admin") {
     links.push({ href: "/patients", label: "المرضى" });
     links.push({ href: "/doctors", label: "الأطباء" });
