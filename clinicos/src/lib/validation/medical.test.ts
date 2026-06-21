@@ -23,13 +23,13 @@ test("السجل الطبي: يحوّل الفراغات إلى null", () => {
 
 test("الوصفة: تتطلّب دواءً واحداً على الأقل باسم صالح", () => {
   const ok = prescriptionSchema.safeParse({
-    patient_id: "11111111-1111-1111-1111-111111111111",
+    patient_id: "11111111-1111-4111-8111-111111111111",
     medications: [{ name: "باراسيتامول", dose: "500mg", frequency: "مرتين" }],
   });
   assert.equal(ok.success, true);
 
   const empty = prescriptionSchema.safeParse({
-    patient_id: "11111111-1111-1111-1111-111111111111",
+    patient_id: "11111111-1111-4111-8111-111111111111",
     medications: [],
   });
   assert.equal(empty.success, false);
@@ -37,7 +37,7 @@ test("الوصفة: تتطلّب دواءً واحداً على الأقل با�
 
 test("الموعد: يتطلّب مريضاً ووقتاً", () => {
   const ok = appointmentSchema.safeParse({
-    patient_id: "11111111-1111-1111-1111-111111111111",
+    patient_id: "11111111-1111-4111-8111-111111111111",
     doctor_id: "",
     scheduled_at: "2026-07-01T10:00",
     notes: "",
