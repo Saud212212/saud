@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/session";
@@ -124,7 +125,11 @@ export default async function PatientsPage({
                 patients.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-mono">{p.file_number}</TableCell>
-                    <TableCell className="font-medium">{p.full_name}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link href={`/patients/${p.id}`} className="hover:underline">
+                        {p.full_name}
+                      </Link>
+                    </TableCell>
                     <TableCell dir="ltr" className="text-start">
                       {p.phone ?? "—"}
                     </TableCell>

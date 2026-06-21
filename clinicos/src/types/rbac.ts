@@ -49,3 +49,28 @@ export function canManageDoctors(role: AppRole): boolean {
 export function canManageStaff(role: AppRole): boolean {
   return role === "clinic_admin";
 }
+
+/** هل يرى الدور البيانات السريرية (السجل الطبي/الوصفات)؟ الاستقبال محجوب. */
+export function canViewClinical(role: AppRole): boolean {
+  return role === "clinic_admin" || role === "doctor";
+}
+
+/** هل يكتب الدور السجل الطبي (التشخيص)؟ */
+export function canWriteMedicalRecord(role: AppRole): boolean {
+  return role === "clinic_admin" || role === "doctor";
+}
+
+/** هل يكتب الدور الوصفات؟ الأطباء فقط. */
+export function canWritePrescription(role: AppRole): boolean {
+  return role === "doctor";
+}
+
+/** هل يدير الدور المواعيد؟ */
+export function canManageAppointments(role: AppRole): boolean {
+  return role === "clinic_admin" || role === "receptionist";
+}
+
+/** هل يرفع الدور الملفات؟ */
+export function canUploadFiles(role: AppRole): boolean {
+  return role === "clinic_admin" || role === "doctor" || role === "receptionist";
+}

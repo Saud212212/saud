@@ -60,6 +60,7 @@ supabase/
 - **المرحلة 1:** `roles` (مرجعي عام)، `clinics`، `users` (مرتبط بـ `auth.users`)، `subscriptions`.
 - **المرحلة 2:** `audit_logs` (append-only)، `patients`، `doctors` (مع `user_id` اختياري لربط حساب دخول لاحقاً).
 - **المرحلة 4:** `invoices`، `payments` — المبلغ يُحسب من البنود على الخادم، وحالة الفاتورة تُحدَّث تلقائياً عبر trigger عند تغيّر الدفعات (يشمل دفعات Stripe).
+- **المرحلة 5:** `medical_records` (ملخّص 1:1/مريض)، `prescriptions`، `files`، `appointments`. بيانات سريرية: الاستقبال محجوب عن `medical_records`/`prescriptions`. الملفات في Storage bucket خاص `patient-files` بمسار `clinic_id/patient_id/...` وسياسات تمنع الوصول بين العيادات، والوصول عبر signed URLs فقط.
 - دوال مساعدة لـ RLS في مخطط `private` غير المكشوف عبر REST (لتجنّب التكرار وتفادي تحذيرات الأمان):
   `private.current_clinic_id()`, `private.current_user_role()`, `private.is_super_admin()`.
 - Trigger `on_auth_user_created` يُنشئ صف `public.users` تلقائياً من `raw_user_meta_data`.
