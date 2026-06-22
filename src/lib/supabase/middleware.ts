@@ -9,6 +9,12 @@ const PUBLIC_PATHS = ["/", "/login", "/register", "/auth/callback", "/pricing"];
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // If Supabase isn't configured yet (e.g. env vars not set on the host),
+  // pass requests through so public pages still render instead of 500-ing.
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
