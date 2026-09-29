@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.env
+.env.*
+!.env.example
+/.data/
+/public/pdf.worker.min.mjs
+/test-results/
+.scratch/
