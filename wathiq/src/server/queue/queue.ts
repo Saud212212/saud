@@ -12,7 +12,7 @@ import { processingJobs } from "../db/schema";
 export const MAX_ATTEMPTS = 3;
 const STALE_LOCK_MINUTES = 15;
 
-export async function enqueueJob(tx: Tx, orgId: string, tenderId: string, kind: "extract") {
+export async function enqueueJob(tx: Tx, orgId: string, tenderId: string, kind: "extract" | "analyze") {
   const [job] = await tx.insert(processingJobs).values({ orgId, tenderId, kind }).returning({ id: processingJobs.id });
   await tx.execute(sql`insert into job_queue (job_id, org_id) values (${job.id}, ${orgId})`);
   await tx.execute(sql`select pg_notify('wathiq_jobs', ${job.id})`);

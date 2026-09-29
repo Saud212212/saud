@@ -23,12 +23,17 @@ const bytea = customType<{ data: Buffer; driverData: Buffer }>({
 });
 
 export const memberRole = pgEnum("member_role", ["owner", "editor", "reviewer"]);
-export const tenderStatus = pgEnum("tender_status", ["uploading", "processing", "ready", "failed"]);
+export const tenderStatus = pgEnum("tender_status", ["uploading", "processing", "analyzing", "ready", "failed"]);
 export const tenderFileRole = pgEnum("tender_file_role", ["booklet", "annex", "boq", "other"]);
 export const extractionStatus = pgEnum("extraction_status", ["pending", "processing", "done", "failed"]);
 export const pageKind = pgEnum("page_kind", ["text", "scanned", "hybrid", "broken_text", "blank"]);
 export const textSource = pgEnum("text_source", ["text_layer", "ocr", "none"]);
-export const jobKind = pgEnum("job_kind", ["extract"]);
+export const jobKind = pgEnum("job_kind", ["extract", "analyze"]);
+export const verificationStatus = pgEnum("verification_status", ["verified", "verified_corrected_page", "needs_review", "unverified"]);
+export const reqCategory = pgEnum("req_category", ["regulatory", "administrative", "technical", "financial", "local_content", "quality", "safety", "operations"]);
+export const reqObligation = pgEnum("req_obligation", ["mandatory", "preferred", "informational"]);
+export const reqStatus = pgEnum("req_status", ["available", "missing", "needs_review"]);
+export const itemKind = pgEnum("item_kind", ["staffing", "deliverable", "offer_content", "risk", "verify_note"]);
 export const jobStatus = pgEnum("job_status", ["queued", "running", "succeeded", "failed"]);
 
 const ts = (name: string) => timestamp(name, { withTimezone: true });
@@ -61,8 +66,8 @@ export const memberships = pgTable(
 export const tenders = pgTable("tenders", {
   id: uuid("id").primaryKey().defaultRandom(),
   orgId: uuid("org_id").notNull(),
-  title: text("title").notNull(),
-  referenceNumber: text("reference_number"),
+  /** {title, referenceNumber, agency} مشفّرة بمفتاح المنافسة */
+  metaEnc: bytea("meta_enc").notNull(),
   status: tenderStatus("status").notNull().default("uploading"),
   createdBy: uuid("created_by"),
   createdAt: ts("created_at").notNull().defaultNow(),
@@ -74,7 +79,7 @@ export const files = pgTable("files", {
   orgId: uuid("org_id").notNull(),
   tenderId: uuid("tender_id"),
   storageKey: text("storage_key").notNull(),
-  originalName: text("original_name").notNull(),
+  nameEnc: bytea("name_enc").notNull(),
   mime: text("mime").notNull(),
   sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
   ciphertextSha256: text("ciphertext_sha256").notNull(),
@@ -166,5 +171,92 @@ export const tenderKeys = pgTable("tender_keys", {
   orgId: uuid("org_id").notNull(),
   kekId: text("kek_id").notNull(),
   wrappedDek: bytea("wrapped_dek").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+export const aiRuns = pgTable("ai_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orgId: uuid("org_id").notNull(),
+  tenderId: uuid("tender_id").notNull(),
+  jobId: uuid("job_id"),
+  chunkId: uuid("chunk_id"),
+  task: text("task").notNull(),
+  promptVersion: text("prompt_version").notNull(),
+  rulesVersion: text("rules_version").notNull(),
+  promptSha256: text("prompt_sha256").notNull(),
+  provider: text("provider").notNull(),
+  modelRequested: text("model_requested").notNull(),
+  modelServed: text("model_served"),
+  effort: text("effort").notNull(),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  cacheReadTokens: integer("cache_read_tokens").notNull().default(0),
+  cacheWriteTokens: integer("cache_write_tokens").notNull().default(0),
+  latencyMs: integer("latency_ms").notNull().default(0),
+  attempts: integer("attempts").notNull().default(1),
+  status: text("status").notNull(),
+  error: text("error"),
+  outputEnc: bytea("output_enc"),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+export const tenderFacts = pgTable("tender_facts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orgId: uuid("org_id").notNull(),
+  tenderId: uuid("tender_id").notNull(),
+  field: text("field").notNull(),
+  ordinal: integer("ordinal").notNull().default(0),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  conflict: boolean("conflict").notNull().default(false),
+  tenderFileId: uuid("tender_file_id"),
+  statedPage: integer("stated_page"),
+  matchedPage: integer("matched_page"),
+  verification: verificationStatus("verification").notNull(),
+  reviewReasons: text("review_reasons").array().notNull().default([]),
+  similarity: real("similarity"),
+  chunkId: uuid("chunk_id"),
+  valueEnc: bytea("value_enc").notNull(),
+  sourceEnc: bytea("source_enc").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+export const requirements = pgTable("requirements", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orgId: uuid("org_id").notNull(),
+  tenderId: uuid("tender_id").notNull(),
+  code: text("code").notNull(),
+  ordinal: integer("ordinal").notNull(),
+  category: reqCategory("category"),
+  obligation: reqObligation("obligation"),
+  disqualifying: boolean("disqualifying").notNull().default(false),
+  verification: verificationStatus("verification").notNull(),
+  reviewReasons: text("review_reasons").array().notNull().default([]),
+  similarity: real("similarity"),
+  tenderFileId: uuid("tender_file_id"),
+  statedPage: integer("stated_page"),
+  matchedPage: integer("matched_page"),
+  similarGroupId: uuid("similar_group_id"),
+  mergeDecision: text("merge_decision"),
+  status: reqStatus("status").notNull().default("needs_review"),
+  assigneeId: uuid("assignee_id"),
+  chunkId: uuid("chunk_id"),
+  contentEnc: bytea("content_enc").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});
+
+export const tenderItems = pgTable("tender_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orgId: uuid("org_id").notNull(),
+  tenderId: uuid("tender_id").notNull(),
+  kind: itemKind("kind").notNull(),
+  ordinal: integer("ordinal").notNull(),
+  tenderFileId: uuid("tender_file_id"),
+  statedPage: integer("stated_page"),
+  matchedPage: integer("matched_page"),
+  verification: verificationStatus("verification").notNull(),
+  reviewReasons: text("review_reasons").array().notNull().default([]),
+  chunkId: uuid("chunk_id"),
+  contentEnc: bytea("content_enc").notNull(),
   createdAt: ts("created_at").notNull().defaultNow(),
 });

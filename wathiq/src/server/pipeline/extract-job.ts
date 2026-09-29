@@ -9,7 +9,7 @@ import { aad } from "../crypto/aad";
 import { getTenderKey } from "../crypto/keystore";
 import { storage } from "../storage";
 import { env } from "../env";
-import { setProgress } from "../queue/queue";
+import { enqueueJob, setProgress } from "../queue/queue";
 import { audit } from "../services/audit";
 import { openPdf, analyzeTextLayer } from "./pdf-text";
 import { classifyPage, detectBackgroundSignatures } from "./classify";
@@ -227,7 +227,9 @@ export async function runExtractJob(jobId: string, orgId: string): Promise<void>
       .update(processingJobs)
       .set({ status: "succeeded", stage: "done", progress: 100, detail: { ...detail, stats }, finishedAt: new Date(), updatedAt: new Date() })
       .where(eq(processingJobs.id, jobId));
-    await tx.update(tenders).set({ status: "ready", updatedAt: new Date() }).where(and(eq(tenders.id, tender.id)));
+    // الاستخراج نجح ← التحليل (المرحلة 2) تلقائياً
+    await tx.update(tenders).set({ status: "analyzing", updatedAt: new Date() }).where(and(eq(tenders.id, tender.id)));
+    await enqueueJob(tx, orgId, tender.id, "analyze");
     await audit(tx, ctx, "tender.extraction_completed", "tender", tender.id, { pages: pagesTotal, stats, lowConfidencePages: detail.lowConfidencePages });
   });
 }
@@ -240,10 +242,14 @@ export async function markJobFailed(jobId: string, orgId: string, message: strin
       .update(processingJobs)
       .set({ status: final ? "failed" : "queued", stage: final ? "failed" : "retrying", error: message.slice(0, 1000), updatedAt: new Date(), ...(final ? { finishedAt: new Date() } : {}) })
       .where(eq(processingJobs.id, jobId))
-      .returning({ tenderId: processingJobs.tenderId });
+      .returning({ tenderId: processingJobs.tenderId, kind: processingJobs.kind });
     if (job && final) {
-      await tx.update(tenders).set({ status: "failed", updatedAt: new Date() }).where(eq(tenders.id, job.tenderId));
-      await audit(tx, ctx, "tender.extraction_failed", "tender", job.tenderId, { error: message.slice(0, 200) });
+      // فشل التحليل لا يُسقط المنافسة: نصوصها المستخرجة صالحة، ويمكن إعادة التحليل من الواجهة
+      await tx
+        .update(tenders)
+        .set({ status: job.kind === "analyze" ? "ready" : "failed", updatedAt: new Date() })
+        .where(eq(tenders.id, job.tenderId));
+      await audit(tx, ctx, `tender.${job.kind === "analyze" ? "analysis" : "extraction"}_failed`, "tender", job.tenderId, { error: message.slice(0, 200) });
     }
   });
 }

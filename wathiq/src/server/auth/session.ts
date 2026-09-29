@@ -1,5 +1,4 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
@@ -7,6 +6,7 @@ import { withOrg, withUser } from "../db/client";
 import { memberships, organizations, users } from "../db/schema";
 import { env } from "../env";
 import type { RequestMeta } from "../services/audit";
+import { decodeDevSession, encodeDevSession } from "./dev-login";
 
 /**
  * جلسة مؤقتة للمراحل 1–4: كوكي موقّعة بـ HMAC تحمل معرّف المستخدم.
@@ -15,21 +15,8 @@ import type { RequestMeta } from "../services/audit";
  */
 export const SESSION_COOKIE = "wathiq_session";
 
-const sign = (v: string) => createHmac("sha256", env().SESSION_SECRET).update(v).digest("base64url");
-
-export function encodeSession(userId: string) {
-  return `${userId}.${sign(userId)}`;
-}
-
-function decodeSession(raw: string | undefined): string | null {
-  if (!raw) return null;
-  const i = raw.lastIndexOf(".");
-  if (i <= 0) return null;
-  const userId = raw.slice(0, i);
-  const a = Buffer.from(raw.slice(i + 1));
-  const b = Buffer.from(sign(userId));
-  return a.length === b.length && timingSafeEqual(a, b) ? userId : null;
-}
+export const encodeSession = (userId: string) => encodeDevSession(env().SESSION_SECRET, userId);
+const decodeSession = (raw: string | undefined) => decodeDevSession(env().SESSION_SECRET, raw);
 
 export interface Session {
   userId: string;

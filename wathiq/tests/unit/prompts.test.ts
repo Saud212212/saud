@@ -8,8 +8,19 @@ const file = (id: string, version: string, status: string, body: string) =>
   `---\nid: ${id}\nversion: ${version}\nstatus: ${status}\n---\n\n<!-- note -->\n${body}\n`;
 
 describe("prompt loader", () => {
-  it("refuses placeholder prompts (the repo ships placeholders until the real prompt is pasted)", async () => {
-    await expect(loadPrompt("extract")).rejects.toBeInstanceOf(PromptNotReadyError);
+  it("loads the real prompts shipped in prompts/", async () => {
+    for (const task of ["extract", "gaps", "proposal", "clarifications"] as const) {
+      const p = await loadPrompt(task);
+      expect(p.text).toContain("قواعد لا تُكسر");
+      expect(p.version).toBe("1.0.0");
+    }
+  });
+
+  it("refuses placeholder prompts", async () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "prompts-"));
+    writeFileSync(path.join(dir, "_rules.md"), file("_rules", "1.0.0", "active", "قواعد"));
+    writeFileSync(path.join(dir, "gaps.md"), file("gaps", "0.0.0", "placeholder", ""));
+    await expect(loadPrompt("gaps", dir)).rejects.toBeInstanceOf(PromptNotReadyError);
   });
 
   it("merges _rules with the task, keeps both versions, and fingerprints the result", async () => {

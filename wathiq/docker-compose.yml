@@ -4,6 +4,8 @@ name: wathiq
 
 x-app-env: &app-env
   DATABASE_URL: postgresql://wathiq_app:wathiq_app_dev@postgres:5432/wathiq
+  KEYSTORE_DATABASE_URL: postgresql://wathiq_app:wathiq_app_dev@postgres:5432/wathiq_keys
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   WATHIQ_MASTER_KEYS: ${WATHIQ_MASTER_KEYS:?set WATHIQ_MASTER_KEYS in .env (echo "k1:$(openssl rand -base64 32)")}
   SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
   STORAGE_DRIVER: s3
@@ -23,6 +25,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./infra/postgres/init-roles.sql:/docker-entrypoint-initdb.d/00-roles.sql:ro
       - ./infra/postgres/01-database.sql:/docker-entrypoint-initdb.d/01-database.sql:ro
+      - ./infra/postgres/02-keystore-database.sql:/docker-entrypoint-initdb.d/02-keystore-database.sql:ro
     ports: ["5432:5432"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d wathiq"]
@@ -48,14 +51,20 @@ services:
     depends_on: { postgres: { condition: service_healthy } }
     environment:
       MIGRATION_DATABASE_URL: postgresql://wathiq_owner:wathiq_owner_dev@postgres:5432/wathiq
+      KEYSTORE_MIGRATION_DATABASE_URL: postgresql://wathiq_owner:wathiq_owner_dev@postgres:5432/wathiq_keys
     command: ["sh", "-c", "npx tsx scripts/migrate.ts && DATABASE_URL=postgresql://wathiq_app:wathiq_app_dev@postgres:5432/wathiq WATHIQ_MASTER_KEYS=seed:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= SESSION_SECRET=seed-only-secret npx tsx scripts/seed.ts"]
 
+  # عرض محلي: وضع التطوير لأن الدخول التجريبي معطّل برمجياً في الإنتاج (NODE_ENV=production)
+  # حتى تأتي المصادقة الحقيقية في المرحلة 5. للإنتاج: احذف command وNODE_ENV.
   app:
     build: .
+    command: ["npx", "next", "dev", "-p", "3100"]
     depends_on:
       migrate: { condition: service_completed_successfully }
       s3: { condition: service_healthy }
-    environment: *app-env
+    environment:
+      <<: *app-env
+      NODE_ENV: development
     ports: ["3100:3100"]
 
   worker:

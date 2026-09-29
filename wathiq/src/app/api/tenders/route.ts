@@ -10,7 +10,7 @@ const ROLES: TenderFileRole[] = ["booklet", "annex", "boq", "other"];
 
 export const GET = api(async (s) => NextResponse.json(await listTenders(ctxOf(s))));
 
-/** multipart/form-data: title, reference, files[] و roles[] بنفس الترتيب. */
+/** multipart/form-data: title, reference, agency, files[] و roles[] بنفس الترتيب. */
 export const POST = api(async (s, req: Request) => {
   const form = await req.formData().catch(() => {
     throw invalid("expected multipart/form-data");
@@ -27,7 +27,12 @@ export const POST = api(async (s, req: Request) => {
   );
   const res = await createTender(
     ctxOf(s),
-    { title: String(form.get("title") ?? ""), referenceNumber: String(form.get("reference") ?? "") || null, files },
+    {
+      title: String(form.get("title") ?? ""),
+      referenceNumber: String(form.get("reference") ?? "") || null,
+      agency: String(form.get("agency") ?? "") || null,
+      files,
+    },
     await requestMeta(),
   );
   return NextResponse.json(res, { status: 201 });

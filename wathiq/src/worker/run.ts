@@ -1,5 +1,9 @@
 import { claimJob, completeJob, failJob } from "@/server/queue/queue";
+import { eq } from "drizzle-orm";
 import { JobTargetGoneError, markJobFailed, runExtractJob } from "@/server/pipeline/extract-job";
+import { runAnalyzeJob } from "@/server/pipeline/analyze-job";
+import { withOrg } from "@/server/db/client";
+import { processingJobs } from "@/server/db/schema";
 import { TenderKeyMissingError } from "@/server/crypto/keystore";
 
 export type RunResult = "idle" | "succeeded" | "retrying" | "failed" | "gone";
@@ -10,7 +14,13 @@ export async function processOne(workerId: string, log = console): Promise<RunRe
   if (!claim) return "idle";
   const t0 = Date.now();
   try {
-    await runExtractJob(claim.jobId, claim.orgId);
+    // نوع المهمة يُقرأ تحت RLS: مدخل طابور لا يخص المؤسسة لا يجد مهمته
+    const [job] = await withOrg({ orgId: claim.orgId }, (tx) =>
+      tx.select({ kind: processingJobs.kind }).from(processingJobs).where(eq(processingJobs.id, claim.jobId)),
+    );
+    if (!job) throw new JobTargetGoneError(`job ${claim.jobId} not found in org ${claim.orgId}`);
+    if (job.kind === "analyze") await runAnalyzeJob(claim.jobId, claim.orgId);
+    else await runExtractJob(claim.jobId, claim.orgId);
     await completeJob(claim.jobId);
     log.info(`[worker] job ${claim.jobId} succeeded in ${Date.now() - t0}ms`);
     return "succeeded";

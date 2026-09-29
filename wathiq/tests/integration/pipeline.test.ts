@@ -16,7 +16,7 @@ import {
 } from "@/server/services/tenders";
 import { processOne } from "@/worker/run";
 import { seed } from "../../scripts/seed";
-import { admin, editorA, fixture, orgA, ownerA } from "./helpers";
+import { admin, drainQueue, editorA, fixture, orgA, ownerA } from "./helpers";
 
 let tenderId: string;
 const progressSeen: { stage: string; progress: number }[] = [];
@@ -42,12 +42,30 @@ describe("upload", () => {
     const res = await createTender(editorA, {
       title: "تشغيل وصيانة المباني الإدارية",
       referenceNumber: "240139005712",
+      agency: "أمانة منطقة الرياض",
       files: [fixture("text"), { ...fixture("scanned"), role: "annex" }, { ...fixture("mixed"), role: "annex" }],
     });
     tenderId = res.tenderId;
     const s = await getJobStatus(editorA, tenderId);
     expect(s?.tenderStatus).toBe("processing");
     expect(s?.job).toMatchObject({ status: "queued", progress: 0 });
+  });
+
+  it("stores the tender title, number, agency and file names only encrypted", async () => {
+    const dump = await admin(async (c) => {
+      const t = await c.query(`select row_to_json(t)::text as j, meta_enc from tenders t where id = $1`, [tenderId]);
+      const f = await c.query(`select row_to_json(f)::text as j, name_enc from files f where tender_id = $1`, [tenderId]);
+      return [...t.rows, ...f.rows];
+    });
+    for (const row of dump) {
+      for (const secret of ["تشغيل وصيانة", "240139005712", "أمانة", "text.pdf", "scanned.pdf"]) {
+        expect(row.j).not.toContain(secret);
+        expect((row.meta_enc ?? row.name_enc).includes(Buffer.from(secret))).toBe(false);
+      }
+    }
+    const d = await getTenderDetail(editorA, tenderId);
+    expect(d.tender).toMatchObject({ title: "تشغيل وصيانة المباني الإدارية", referenceNumber: "240139005712", agency: "أمانة منطقة الرياض" });
+    expect(d.files.map((f) => f.name)).toEqual(["text.pdf", "scanned.pdf", "mixed.pdf"]);
   });
 
   it("stores files encrypted at rest", async () => {
@@ -78,9 +96,14 @@ describe("extraction", () => {
     await poll;
     expect(result).toBe("succeeded");
 
-    const final = await getJobStatus(editorA, tenderId);
-    expect(final?.tenderStatus).toBe("ready");
-    expect(final?.job).toMatchObject({ status: "succeeded", stage: "done", progress: 100 });
+    const extractJob = await admin(async (c) => (await c.query(`select status, stage, progress from processing_jobs where tender_id = $1 and kind = 'extract'`, [tenderId])).rows[0]);
+    expect(extractJob).toMatchObject({ status: "succeeded", stage: "done", progress: 100 });
+    // الاستخراج يُطلق التحليل تلقائياً
+    const next = await getJobStatus(editorA, tenderId);
+    expect(next?.tenderStatus).toBe("analyzing");
+    expect(next?.job).toMatchObject({ status: "queued" });
+    expect(await drainQueue()).toEqual(["succeeded"]);
+    expect((await getJobStatus(editorA, tenderId))?.tenderStatus).toBe("ready");
     const values = progressSeen.map((p) => p.progress);
     expect(values.length).toBeGreaterThanOrEqual(4);
     expect([...values].sort((a, b) => a - b)).toEqual(values); // لا يتراجع
@@ -154,7 +177,7 @@ describe("hard delete", () => {
     expect(report.objectsDeleted).toBe(3);
     expect(report.rowsDeleted).toMatchObject({ tenders: 1, files: 3, pages: 12 });
 
-    for (const t of ["tenders", "files", "tender_files", "document_pages", "chunks", "processing_jobs", "tender_keys"]) {
+    for (const t of ["tenders", "files", "tender_files", "document_pages", "chunks", "processing_jobs", "tender_keys", "ai_runs", "requirements", "tender_facts", "tender_items"]) {
       const col = t === "tenders" ? "id" : "tender_id";
       const n = await admin((c) => c.query(`select count(*)::int n from ${t} where ${col} = $1`, [tenderId]));
       expect(n.rows[0].n, t).toBe(0);

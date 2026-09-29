@@ -56,9 +56,11 @@
     "remove": "Remove",
     "submit": "Upload and analyze",
     "uploading": "Uploading… {pct}%",
-    "encryptedNote": "Files are encrypted with a key unique to this tender before storage.",
+    "encryptedNote": "Files, the tender name, number and agency are encrypted with a key unique to this tender before storage.",
     "errorNotPdf": "{name} is not a PDF.",
-    "errorGeneric": "Upload failed: {message}"
+    "errorGeneric": "Upload failed: {message}",
+    "agency": "Agency (optional)",
+    "agencyPh": "Extracted from the booklet if left empty"
   },
   "tender": {
     "back": "All tenders",

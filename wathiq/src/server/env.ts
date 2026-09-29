@@ -37,6 +37,28 @@ const schema = z.object({
 
 export type Env = z.infer<typeof schema>;
 
+/** يعرّف قاعدة بياناتين بالمضيف والمنفذ واسم القاعدة (بغض النظر عن المستخدم). */
+function sameDatabase(a: string, b: string) {
+  const ua = new URL(a);
+  const ub = new URL(b);
+  const key = (u: URL) => `${u.hostname.toLowerCase()}:${u.port || "5432"}/${u.pathname.replace(/^\//, "")}`;
+  return key(ua) === key(ub);
+}
+
+/**
+ * قيود الإنتاج: مخزن المفاتيح في قاعدة مستقلة (قرار معتمد) — وإلا لا يشمل الحذف النهائي
+ * النسخ الاحتياطية للقاعدة الرئيسية إلا بعد انتهاء مدة احتفاظها. انظر docs/security.md.
+ */
+export function assertProductionConfig(e: Env, nodeEnv = process.env.NODE_ENV) {
+  if (nodeEnv !== "production") return;
+  if (!e.KEYSTORE_DATABASE_URL) {
+    throw new Error("production requires KEYSTORE_DATABASE_URL (a separate database with short backup retention)");
+  }
+  if (sameDatabase(e.KEYSTORE_DATABASE_URL, e.DATABASE_URL)) {
+    throw new Error("production requires KEYSTORE_DATABASE_URL to point to a different database than DATABASE_URL");
+  }
+}
+
 let cached: Env | undefined;
 export function env(): Env {
   if (!cached) {
@@ -47,6 +69,7 @@ export function env(): Env {
           parsed.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n"),
       );
     }
+    assertProductionConfig(parsed.data);
     cached = parsed.data;
   }
   return cached;

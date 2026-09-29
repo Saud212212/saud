@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { devLogin } from "../actions";
 import { DEV_ORGS, DEV_USERS } from "@/server/dev-users";
 import { getSession } from "@/server/auth/session";
+import { devLoginEnabled } from "@/server/auth/dev-login";
 import { LogoMark } from "@/components/logo";
 import { Card } from "@/components/ui";
 
@@ -12,7 +13,7 @@ export default async function LoginPage() {
   if (await getSession()) redirect("/tenders");
   const t = await getTranslations("login");
   const tApp = await getTranslations("app");
-  const enabled = process.env.DEV_LOGIN === "true";
+  const enabled = devLoginEnabled();
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-12">

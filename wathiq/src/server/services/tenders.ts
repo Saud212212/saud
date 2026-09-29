@@ -2,7 +2,7 @@ import { randomUUID, createHash } from "node:crypto";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { withOrg, type OrgContext, type Tx } from "../db/client";
 import { chunks, documentPages, files, memberships, processingJobs, tenderFiles, tenders } from "../db/schema";
-import { decryptBytes, decryptJson, encryptBytes } from "../crypto/envelope";
+import { decryptBytes, decryptJson, encryptBytes, encryptJson } from "../crypto/envelope";
 import { aad } from "../crypto/aad";
 import { createTenderKey, destroyTenderKey, getTenderKey } from "../crypto/keystore";
 import { storage, tenderFileKey, tenderPrefix } from "../storage";
@@ -18,10 +18,22 @@ export type TenderFileRole = "booklet" | "annex" | "boq" | "other";
 export interface UploadInput {
   title: string;
   referenceNumber?: string | null;
+  agency?: string | null;
   files: { name: string; mime: string; data: Buffer; role: TenderFileRole }[];
 }
 
 const MAX_FILES = 10;
+
+/** البيانات الوصفية للمنافسة — لا تُخزَّن إلا مشفّرة (tenders.meta_enc). */
+export interface TenderMeta {
+  title: string;
+  referenceNumber: string | null;
+  agency: string | null;
+}
+
+export const decryptMeta = (dek: Buffer, tenderId: string, enc: Buffer) => decryptJson<TenderMeta>(dek, enc, aad.tenderMeta(tenderId));
+export const encryptMeta = (dek: Buffer, tenderId: string, meta: TenderMeta) => encryptJson(dek, meta, aad.tenderMeta(tenderId));
+const decryptName = (dek: Buffer, fileId: string, enc: Buffer) => decryptBytes(dek, enc, aad.fileName(fileId)).toString("utf8");
 
 async function requireRole(tx: Tx, ctx: OrgContext, allowed: ("owner" | "editor" | "reviewer")[]) {
   if (!ctx.userId) throw forbidden("user context required");
@@ -71,8 +83,11 @@ export async function createTender(ctx: OrgContext, input: UploadInput, req?: Re
       await tx.insert(tenders).values({
         id: tenderId,
         orgId: ctx.orgId,
-        title,
-        referenceNumber: input.referenceNumber?.trim() || null,
+        metaEnc: encryptMeta(dek, tenderId, {
+          title,
+          referenceNumber: input.referenceNumber?.trim().slice(0, 100) || null,
+          agency: input.agency?.trim().slice(0, 300) || null,
+        }),
         status: "processing",
         createdBy: ctx.userId ?? null,
       });
@@ -82,7 +97,7 @@ export async function createTender(ctx: OrgContext, input: UploadInput, req?: Re
           orgId: ctx.orgId,
           tenderId,
           storageKey: s.key,
-          originalName: s.f.name.slice(0, 255),
+          nameEnc: encryptBytes(dek, Buffer.from(s.f.name.slice(0, 255), "utf8"), aad.fileName(s.fileId)),
           mime: "application/pdf",
           sizeBytes: s.f.data.length,
           ciphertextSha256: s.sha,
@@ -102,13 +117,13 @@ export async function createTender(ctx: OrgContext, input: UploadInput, req?: Re
   }
 }
 
+/** كل صف يُفك بمفتاح منافسته (مخزّن مؤقتاً في الذاكرة لكل عملية). */
 export async function listTenders(ctx: OrgContext) {
-  return withOrg(ctx, (tx) =>
+  const rows = await withOrg(ctx, (tx) =>
     tx
       .select({
         id: tenders.id,
-        title: tenders.title,
-        referenceNumber: tenders.referenceNumber,
+        metaEnc: tenders.metaEnc,
         status: tenders.status,
         createdAt: tenders.createdAt,
         pages: sql<number>`(select count(*)::int from document_pages p where p.tender_id = ${tenders.id})`,
@@ -117,17 +132,26 @@ export async function listTenders(ctx: OrgContext) {
       .from(tenders)
       .orderBy(desc(tenders.createdAt)),
   );
+  return Promise.all(
+    rows.map(async ({ metaEnc, ...r }) => {
+      const dek = await getTenderKey(ctx.orgId, r.id);
+      return { ...r, ...decryptMeta(dek, r.id, metaEnc) };
+    }),
+  );
 }
 
 export async function getTenderDetail(ctx: OrgContext, tenderId: string) {
   return withOrg(ctx, async (tx) => {
-    const [tender] = await tx.select().from(tenders).where(eq(tenders.id, tenderId));
-    if (!tender) throw notFound("tender");
-    const tfs = await tx
+    const [row] = await tx.select().from(tenders).where(eq(tenders.id, tenderId));
+    if (!row) throw notFound("tender");
+    const dek = await getTenderKey(ctx.orgId, tenderId);
+    const { metaEnc, ...rest } = row;
+    const tender = { ...rest, ...decryptMeta(dek, tenderId, metaEnc) };
+    const tfRows = await tx
       .select({
         id: tenderFiles.id,
         fileId: files.id,
-        name: files.originalName,
+        nameEnc: files.nameEnc,
         sizeBytes: files.sizeBytes,
         role: tenderFiles.role,
         pageCount: tenderFiles.pageCount,
@@ -137,6 +161,7 @@ export async function getTenderDetail(ctx: OrgContext, tenderId: string) {
       .innerJoin(files, eq(files.id, tenderFiles.fileId))
       .where(eq(tenderFiles.tenderId, tenderId))
       .orderBy(asc(tenderFiles.ordinal));
+    const tfs = tfRows.map(({ nameEnc, ...f }) => ({ ...f, name: decryptName(dek, f.fileId, nameEnc) }));
     const pages = await tx
       .select({
         tenderFileId: documentPages.tenderFileId,
@@ -239,7 +264,7 @@ export async function readTenderFile(ctx: OrgContext, tenderId: string, fileId: 
   });
   if (!file) throw notFound("file");
   const dek = await getTenderKey(ctx.orgId, tenderId);
-  return { name: file.originalName, data: decryptBytes(dek, await storage().get(file.storageKey), aad.file(file.id)) };
+  return { name: decryptName(dek, file.id, file.nameEnc), data: decryptBytes(dek, await storage().get(file.storageKey), aad.file(file.id)) };
 }
 
 export interface DeletionReport {

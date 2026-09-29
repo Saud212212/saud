@@ -24,5 +24,8 @@ export function applyTestEnv() {
     STORAGE_DRIVER: "local",
     STORAGE_LOCAL_DIR: ".data/test-storage",
     OCR_CONCURRENCY: "4",
+    // عتبة عالية عمداً: صفحات الـ OCR في الأمثلة (~90%) تُعامل كضعيفة لاختبار قاعدة الأرقام
+    OCR_LOW_CONFIDENCE: "95",
+    AI_CONCURRENCY: "3",
   });
 }

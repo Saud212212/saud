@@ -23,6 +23,7 @@ export function UploadForm({ maxMb }: { maxMb: number }) {
   const [files, setFiles] = useState<Picked[]>([]);
   const [title, setTitle] = useState("");
   const [reference, setReference] = useState("");
+  const [agency, setAgency] = useState("");
   const [drag, setDrag] = useState(false);
   const [pct, setPct] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function UploadForm({ maxMb }: { maxMb: number }) {
     const fd = new FormData();
     fd.set("title", title.trim());
     fd.set("reference", reference.trim());
+    fd.set("agency", agency.trim());
     for (const f of files) {
       fd.append("files", f.file);
       fd.append("roles", f.role);
@@ -105,6 +107,17 @@ export function UploadForm({ maxMb }: { maxMb: number }) {
             />
           </label>
         </div>
+
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium">{t("agency")}</span>
+          <input
+            value={agency}
+            maxLength={300}
+            onChange={(e) => setAgency(e.target.value)}
+            placeholder={t("agencyPh")}
+            className="h-10 w-full rounded-lg border border-line-strong bg-surface px-3 text-sm outline-none placeholder:text-muted focus:border-brand"
+          />
+        </label>
 
         <div>
           <span className="mb-1.5 block text-sm font-medium">{t("files")}</span>

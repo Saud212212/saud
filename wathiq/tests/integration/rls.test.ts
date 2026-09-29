@@ -18,7 +18,10 @@ import { admin, drainQueue, fixture, orgA, orgB, ownerA, ownerB } from "./helper
 const causedBy = (re: RegExp) => (e: unknown) => re.test(String((e as { cause?: Error })?.cause?.message ?? e));
 
 /** كل الجداول التي تحمل بيانات مؤسسة. */
-const TENANT_TABLES = ["tenders", "files", "tender_files", "document_pages", "chunks", "processing_jobs", "audit_logs", "tender_keys", "memberships"];
+const TENANT_TABLES = [
+  "tenders", "files", "tender_files", "document_pages", "chunks", "processing_jobs", "audit_logs", "tender_keys", "memberships",
+  "ai_runs", "tender_facts", "requirements", "tender_items",
+];
 
 let tenderA: string;
 let tenderB: string;
@@ -29,7 +32,8 @@ beforeAll(async () => {
   await seed();
   tenderA = (await createTender(ownerA, { title: "منافسة أ", files: [fixture("text")] })).tenderId;
   tenderB = (await createTender(ownerB, { title: "منافسة ب السرية", files: [fixture("text")] })).tenderId;
-  expect(await drainQueue()).toEqual(["succeeded", "succeeded"]);
+  // استخراج + تحليل لكل منافسة
+  expect(await drainQueue()).toEqual(["succeeded", "succeeded", "succeeded", "succeeded"]);
   const d = await getTenderDetail(ownerB, tenderB);
   tfB = d.files[0].id;
   fileB = d.files[0].fileId;
@@ -107,9 +111,9 @@ describe("company A cannot see any row of company B", () => {
 
   it("A cannot write into, update, or delete B's rows", async () => {
     await expect(
-      withOrg(ownerA, (tx) => tx.execute(sql`insert into tenders (org_id, title) values (${orgB}, 'x')`)),
+      withOrg(ownerA, (tx) => tx.execute(sql`insert into tenders (org_id, meta_enc) values (${orgB}, '\\x00'::bytea)`)),
     ).rejects.toSatisfy(causedBy(/row-level security/));
-    const upd = await withOrg(ownerA, (tx) => tx.execute(sql`update tenders set title = 'hacked' where id = ${tenderB}`));
+    const upd = await withOrg(ownerA, (tx) => tx.execute(sql`update tenders set status = 'failed' where id = ${tenderB}`));
     expect(upd.rowCount).toBe(0);
     const del = await withOrg(ownerA, (tx) => tx.execute(sql`delete from document_pages where tender_id = ${tenderB}`));
     expect(del.rowCount).toBe(0);
@@ -117,8 +121,9 @@ describe("company A cannot see any row of company B", () => {
     await expect(
       withOrg(ownerA, (tx) => tx.execute(sql`insert into processing_jobs (org_id, tender_id, kind) values (${orgA}, ${tenderB}, 'extract')`)),
     ).rejects.toSatisfy(causedBy(/foreign key/));
-    const title = await admin((c) => c.query(`select title from tenders where id = $1`, [tenderB]));
-    expect(title.rows[0].title).toBe("منافسة ب السرية");
+    const still = await admin((c) => c.query(`select status from tenders where id = $1`, [tenderB]));
+    expect(still.rows[0].status).toBe("ready");
+    expect((await getTenderDetail(ownerB, tenderB)).tender.title).toBe("منافسة ب السرية");
   });
 
   it("service functions called with A's context and B's ids fail as not found", async () => {
@@ -128,7 +133,9 @@ describe("company A cannot see any row of company B", () => {
     await expect(hardDeleteTender(ownerA, tenderB)).rejects.toMatchObject({ code: "not_found" });
     await expect(getTenderKey(orgA, tenderB)).rejects.toBeInstanceOf(TenderKeyMissingError);
     expect(await listChunks(ownerA, tenderB)).toEqual([]);
-    expect((await listTenders(ownerA)).map((t) => t.id)).toEqual([tenderA]);
+    const visible = (await listTenders(ownerA)).map((t) => t.id);
+    expect(visible).toContain(tenderA);
+    expect(visible).not.toContain(tenderB);
   });
 });
 
@@ -157,16 +164,16 @@ describe("worker tasks are isolated too", () => {
   });
 
   it("the worker's own writes are checked by RLS: everything it wrote belongs to the job's org", async () => {
-    for (const t of ["document_pages", "chunks"]) {
+    for (const t of ["document_pages", "chunks", "requirements", "tender_facts", "ai_runs"]) {
       const r = await admin((c) =>
         c.query(`select x.org_id = tn.org_id as ok from ${t} x join tenders tn on tn.id = x.tender_id`),
       );
       expect(r.rows.every((row) => row.ok), t).toBe(true);
     }
     const workerAudit = await admin((c) =>
-      c.query(`select a.org_id, t.org_id as tender_org from audit_logs a join tenders t on t.id = a.entity_id where a.actor_kind = 'worker'`),
+      c.query(`select a.org_id, t.org_id as tender_org from audit_logs a join tenders t on t.id = a.entity_id where a.actor_kind = 'worker' and a.entity_id = any($1)`, [[tenderA, tenderB]]),
     );
-    expect(workerAudit.rows.length).toBe(2);
+    expect(workerAudit.rows.length).toBe(4); // استخراج + تحليل × منافستان
     for (const r of workerAudit.rows) expect(r.org_id).toBe(r.tender_org);
   });
 });
