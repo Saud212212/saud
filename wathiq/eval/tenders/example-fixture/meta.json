@@ -1,0 +1,12 @@
+{
+  "slug": "example-fixture",
+  "title": "مثال: تشغيل وصيانة المباني الإدارية (كراسة اصطناعية)",
+  "agency": "وزارة الشؤون البلدية والقروية والإسكان",
+  "reference_number": "240139005712",
+  "files": [
+    { "name": "booklet.pdf", "role": "booklet", "sha256": "662ebad7ebcb6e389e0f4404ba3201f035a5ff66c52d195f6ebc8c8922080202", "pages": 4, "scan_type": "text" }
+  ],
+  "prepared_by": "Wathiq (مثال توضيحي)",
+  "prepared_at": "2026-09-29",
+  "reviewed": false
+}

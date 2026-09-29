@@ -1,5 +1,7 @@
 # الكراسات نفسها لا تُرفع للمستودع افتراضياً (حقوق/سرية). احذف السطر إن كانت عامة وتريد حفظها.
 tenders/*/source/*.pdf
+# المثال التوضيحي كراسة اصطناعية من tests/fixtures — آمن للرفع
+!tenders/example-fixture/source/booklet.pdf
 # نتائج التشغيل
 runs/*
 !runs/.gitkeep

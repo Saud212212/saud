@@ -46,6 +46,11 @@ if (isMain) {
     console.error("MIGRATION_DATABASE_URL is required (wathiq_owner role)");
     process.exit(1);
   }
+  // مخزن مفاتيح مستقل مُعدّ ← لا نطبّق ترحيلاته على القاعدة الرئيسية بصمت
+  if (process.env.KEYSTORE_DATABASE_URL && !process.env.KEYSTORE_MIGRATION_DATABASE_URL) {
+    console.error("KEYSTORE_DATABASE_URL is set: also set KEYSTORE_MIGRATION_DATABASE_URL (wathiq_owner on the keystore database)");
+    process.exit(1);
+  }
   migrateAll({ mainUrl, keystoreUrl: process.env.KEYSTORE_MIGRATION_DATABASE_URL })
     .then(() => console.info("migrations up to date"))
     .catch((e) => {

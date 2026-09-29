@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Badge } from "./ui";
 
-const tones = { uploading: "neutral", processing: "accent", ready: "ok", failed: "danger" } as const;
+const tones = { uploading: "neutral", processing: "accent", analyzing: "accent", ready: "ok", failed: "danger" } as const;
 
 export function TenderStatusBadge({ status }: { status: keyof typeof tones }) {
   const t = useTranslations("tenders.status");

@@ -197,6 +197,7 @@ export async function getJobStatus(ctx: OrgContext, tenderId: string) {
     if (!tender) return null;
     const [job] = await tx
       .select({
+        kind: processingJobs.kind,
         status: processingJobs.status,
         stage: processingJobs.stage,
         progress: processingJobs.progress,

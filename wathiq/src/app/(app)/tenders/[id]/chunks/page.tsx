@@ -27,16 +27,7 @@ export default async function ChunksPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <PageHeader
-        back={
-          <Link href={`/tenders/${id}`} className="inline-flex items-center gap-1 text-muted hover:text-ink">
-            <ArrowRight className="h-4 w-4 ltr:rotate-180" />
-            {detail.tender.title}
-          </Link>
-        }
-        title={t("title")}
-        subtitle={t("subtitle")}
-      />
+      <p className="mb-4 text-sm text-muted">{t("subtitle")}</p>
       <div className="space-y-3">
         {chunks.map((c) => (
           <Card key={c.id} className="p-4">

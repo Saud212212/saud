@@ -13,6 +13,8 @@ interface Props {
   /** أبعاد الصفحة بالنقاط كما خُزّنت (بعد تطبيق الدوران) */
   width: number;
   height: number;
+  /** مستطيلات موضع متطلب أو حقل (الانتقال من المصفوفة/الملخص) */
+  highlights?: [number, number, number, number][];
 }
 
 // نسخة legacy: البناء الحديث يستخدم ميزات JS حديثة جداً (مثل Map.getOrInsertComputed)
@@ -23,13 +25,18 @@ type PdfJs = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
  * يرسم الصفحة الأصلية بـ pdf.js ويضع فوقها مربعات الكلمات المستخرجة.
  * هذا هو نفس الأساس الذي ستستخدمه المرحلة 2 لتظليل موضع الاقتباس عند فتح متطلب.
  */
-export function PageViewer({ fileUrl, pageNo, words, text, width, height }: Props) {
+export function PageViewer({ fileUrl, pageNo, words, text, width, height, highlights = [] }: Props) {
   const t = useTranslations("viewer");
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scale, setScale] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [showBoxes, setShowBoxes] = useState(true);
+  // عند وجود موضع مظلّل نخفي مربعات الكلمات افتراضياً حتى يبرز الموضع
+  const [showBoxes, setShowBoxes] = useState(highlights.length === 0);
+  const firstHl = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!loading) firstHl.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [loading]);
   const [active, setActive] = useState<number | null>(null);
 
   // عرض الحاوية → المقياس
@@ -92,6 +99,14 @@ export function PageViewer({ fileUrl, pageNo, words, text, width, height }: Prop
         <div ref={wrapRef} dir="ltr" className="relative w-full overflow-hidden rounded-lg border border-line bg-white shadow-sm" style={{ aspectRatio: `${width} / ${height}` }}>
           <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
           {loading && <div className="absolute inset-0 flex items-center justify-center text-sm text-muted">{t("loading")}</div>}
+          {highlights.map((b, i) => (
+            <div
+              key={`hl-${i}`}
+              ref={i === 0 ? firstHl : undefined}
+              className="pointer-events-none absolute rounded-[3px] border-2 border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_28%,transparent)] shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_20%,transparent)]"
+              style={{ left: b[0] * scale - 3, top: b[1] * scale - 3, width: (b[2] - b[0]) * scale + 6, height: (b[3] - b[1]) * scale + 6 }}
+            />
+          ))}
           {showBoxes &&
             words.map((w, i) => (
               <div

@@ -16,6 +16,7 @@
     "test": "vitest run",
     "postinstall": "node scripts/copy-pdf-worker.mjs",
     "eval:validate": "tsx eval/validate.ts",
+    "eval": "tsx eval/run.ts",
     "db:reset": "tsx scripts/db-reset.ts"
   },
   "dependencies": {

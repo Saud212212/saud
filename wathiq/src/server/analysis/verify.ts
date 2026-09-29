@@ -21,6 +21,7 @@ export type ReviewReason =
   | "number_mismatch" // أرقام الاقتباس ≠ أرقام النص المطابق
   | "value_numbers_not_in_source" // رقم في القيمة/نص المتطلب غير موجود في المصدر
   | "low_ocr_numbers" // أرقام من صفحة (أو كلمات) OCR ضعيفة الثقة
+  | "ocr_numbers" // أرقام من صفحة ممسوحة (سياسة all): الـ OCR يشوّه الأرقام حتى في الصفحات الجيدة
   | "quote_too_short_for_fuzzy" // أقل من 25 حرفاً ولم تُطابَق حرفياً
   | "not_found" // لم يوجد في الصفحة ولا المجاورة
   | "no_source" // النموذج لم يُرفق مصدراً
@@ -37,7 +38,17 @@ export interface PageForVerify {
   text: string;
   words: Word[];
   lowConfidence: boolean;
+  /** النص من التعرّف الضوئي (لا من طبقة نص) */
+  ocr?: boolean;
 }
+
+/**
+ * سياسة أرقام صفحات OCR:
+ *  - low: فقط الصفحات/الكلمات ضعيفة الثقة (الحد الأدنى المطلوب).
+ *  - all (الافتراضي): أي رقم من صفحة ممسوحة. سبب: في صفحة بثقة 91% قُرئت "2%" على أنها "962"
+ *    فطابق الاقتباس النص المشوّه حرفياً وظهر «موثّقاً».
+ */
+export type OcrNumbersPolicy = "all" | "low";
 
 export interface HighlightRect {
   page: number;
@@ -206,7 +217,8 @@ export interface VerifyInput {
   claims?: (string | null | undefined)[];
 }
 
-export function verifyQuote(input: VerifyInput, index: PageIndex): VerificationResult {
+export function verifyQuote(input: VerifyInput, index: PageIndex, opts: { ocrNumbers?: OcrNumbersPolicy } = {}): VerificationResult {
+  const ocrPolicy = opts.ocrNumbers ?? "all";
   const base = { matchedPage: null, similarity: 0, matchedText: null, rects: [], matchedNumbers: [] };
   const quote = (input.quote ?? "").trim();
   const quoteNumbers = extractNumbers(quote);
@@ -278,6 +290,9 @@ export function verifyQuote(input: VerifyInput, index: PageIndex): VerificationR
   if (hasNumbers && (lowPage || lowDigitWord)) {
     status = worseStatus(status, "needs_review");
     reasons.push("low_ocr_numbers");
+  } else if (hasNumbers && ocrPolicy === "all" && match.spans.some((s) => index.pages.get(s.page)!.ocr)) {
+    status = worseStatus(status, "needs_review");
+    reasons.push("ocr_numbers");
   }
 
   return {

@@ -29,6 +29,8 @@ const schema = z.object({
   OCR_TESSDATA_DIR: z.string().optional(),
   OCR_PSM: z.coerce.number().default(3),
   OCR_LOW_CONFIDENCE: z.coerce.number().default(70),
+  // أرقام صفحات OCR: all = كلها تحتاج مراجعة (افتراضي)، low = ضعيفة الثقة فقط
+  OCR_NUMBERS_REVIEW: z.enum(["all", "low"]).default("all"),
   OCR_CONCURRENCY: z.coerce.number().default(Math.max(1, Math.min(4, os.cpus().length))),
 
   MAX_UPLOAD_MB: z.coerce.number().default(200),

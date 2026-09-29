@@ -142,6 +142,16 @@ describe("quote verification", () => {
     expect(verifyQuote({ quote: "الغرامة 10% من قيمة البند", page: 8 }, lowWord).reasons).toContain("low_ocr_numbers");
   });
 
+  it("by default any number from an OCR page needs review, even on a good page (policy 'all')", () => {
+    const ocrPage = { ...page(["يلتزم المتنافس بتقديم ضمان ابتدائي بنسبة 962 من قيمة العرض"], { conf: 92 }), ocr: true };
+    const pages2 = idx({ 2: ocrPage });
+    const q = { quote: "بتقديم ضمان ابتدائي بنسبة 962 من قيمة العرض", page: 2 };
+    expect(verifyQuote(q, pages2)).toMatchObject({ status: "needs_review", reasons: ["ocr_numbers"] });
+    expect(verifyQuote(q, pages2, { ocrNumbers: "low" }).status).toBe("verified");
+    // بلا أرقام: موثّق حتى من صفحة OCR
+    expect(verifyQuote({ quote: "يلتزم المتنافس بتقديم ضمان ابتدائي", page: 2 }, pages2).status).toBe("verified");
+  });
+
   it("no source / out-of-range page", () => {
     expect(verifyQuote({ quote: "", page: 2 }, pages).reasons).toEqual(["no_source"]);
     expect(verifyQuote({ quote: "أي نص طويل بما يكفي للاختبار هنا", page: 40 }, pages).reasons).toEqual(["page_out_of_range"]);

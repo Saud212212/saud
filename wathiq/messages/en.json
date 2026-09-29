@@ -34,7 +34,8 @@
       "uploading": "Uploading",
       "processing": "Processing",
       "ready": "Ready",
-      "failed": "Failed"
+      "failed": "Failed",
+      "analyzing": "Analyzing"
     }
   },
   "upload": {
@@ -112,12 +113,18 @@
       "chunking": "Splitting the document into chunks",
       "retrying": "An error occurred, retrying automatically",
       "done": "Analysis complete",
-      "failed": "Analysis failed"
+      "failed": "Analysis failed",
+      "analyze": "Analyzing chunks with the language model",
+      "verify": "Verifying every quote and merging requirements",
+      "save": "Saving results"
     },
     "pagesLine": "{done} of {total} pages",
     "ocrLine": "OCR: {done} of {total}",
     "failed": "Processing failed after several attempts.",
-    "note": "Large or scanned booklets can take several minutes. You can leave this page and come back."
+    "note": "Large or scanned booklets can take several minutes. You can leave this page and come back.",
+    "phaseExtract": "Step 1 of 2: text extraction",
+    "phaseAnalyze": "Step 2 of 2: summary and compliance matrix",
+    "chunksLine": "Chunks: {done} of {total}"
   },
   "viewer": {
     "title": "Page {n} — {file}",
@@ -151,5 +158,159 @@
   "errors": {
     "notFound": "Not found",
     "generic": "Something went wrong."
+  },
+  "tabs": {
+    "summary": "Summary",
+    "compliance": "Compliance matrix",
+    "pages": "Pages",
+    "chunks": "Chunks"
+  },
+  "verification": {
+    "verified": "Verified",
+    "verified_corrected_page": "Verified (page corrected)",
+    "needs_review": "Needs review",
+    "unverified": "Unverified",
+    "reasons": {
+      "fuzzy_match": "The quote matches the text approximately, not verbatim",
+      "page_corrected": "The cited page was wrong and has been corrected",
+      "number_mismatch": "Numbers in the quote differ from the source text",
+      "value_numbers_not_in_source": "A number in the extracted value is not in the source text",
+      "low_ocr_numbers": "Numbers from a scanned page with low OCR confidence",
+      "quote_too_short_for_fuzzy": "Short quote without a verbatim match",
+      "not_found": "Quote not found on the cited page or its neighbours",
+      "no_source": "No source provided",
+      "page_out_of_range": "Page number does not exist in the file",
+      "ocr_numbers": "Numbers from a scanned page — check them against the page image"
+    }
+  },
+  "categories": {
+    "regulatory": "Regulatory",
+    "administrative": "Administrative",
+    "technical": "Technical",
+    "financial": "Financial",
+    "local_content": "Local content",
+    "quality": "Quality",
+    "safety": "Safety",
+    "operations": "Operations",
+    "unknown": "Unclassified"
+  },
+  "obligations": {
+    "mandatory": "Mandatory",
+    "preferred": "Preferred",
+    "informational": "Informational",
+    "unknown": "—"
+  },
+  "summary": {
+    "title": "Tender summary",
+    "pending": "Analysis is not complete yet. The summary will appear here when it finishes.",
+    "notMentioned": "Not mentioned",
+    "conflict": "Conflicting values",
+    "conflictHint": "Different values appear in different places. Review the sources; an inquiry to the agency may be needed.",
+    "otherValues": "Other values found",
+    "source": "Source",
+    "page": "p. {n}",
+    "clause": "Clause {c}",
+    "calendar": "Calendar: {c}",
+    "sections": {
+      "basic": "Tender details",
+      "money": "Fees and guarantees",
+      "dates": "Duration and dates",
+      "evaluation": "Evaluation",
+      "localContent": "Local content",
+      "notes": "Notes to verify"
+    },
+    "fields": {
+      "entity": "Agency",
+      "tender_number": "Tender number",
+      "title": "Tender name",
+      "type": "Tender type",
+      "location": "Location",
+      "booklet_price": "Booklet price",
+      "initial_guarantee": "Initial guarantee",
+      "final_guarantee": "Final guarantee",
+      "duration": "Execution period",
+      "dates": {
+        "inquiries_deadline": "Inquiries deadline",
+        "submission_deadline": "Submission deadline",
+        "opening_date": "Envelope opening"
+      },
+      "evaluation": {
+        "technical_weight": "Technical weight",
+        "financial_weight": "Financial weight",
+        "min_technical_score": "Minimum technical score"
+      },
+      "local_content": {
+        "requirements": "Local content requirements",
+        "sme_preference": "SME preference",
+        "mandatory_list_items": "Mandatory list items"
+      }
+    },
+    "criteria": "Technical evaluation criteria",
+    "criterion": "Criterion",
+    "weight": "Weight",
+    "subCriteria": "Sub-criteria",
+    "noCriteria": "No detailed criteria extracted.",
+    "noNotes": "No notes."
+  },
+  "matrix": {
+    "title": "Compliance matrix",
+    "pending": "Analysis is not complete yet. Requirements will appear here when it finishes.",
+    "counts": {
+      "total": "Requirements",
+      "mandatory": "Mandatory",
+      "disqualifying": "Disqualifying if missing",
+      "needsReview": "Need review",
+      "unverified": "Unverified",
+      "similar": "Similar groups"
+    },
+    "tabs": {
+      "requirements": "Requirements",
+      "unverified": "Unverified",
+      "similar": "Similar — review merge"
+    },
+    "search": "Search requirements…",
+    "all": "All",
+    "filters": {
+      "category": "Category",
+      "obligation": "Obligation",
+      "verification": "Verification",
+      "disqualifyingOnly": "Disqualifying only"
+    },
+    "cols": {
+      "code": "Code",
+      "requirement": "Requirement",
+      "category": "Category",
+      "obligation": "Obligation",
+      "disqualifying": "Disqualifies",
+      "source": "Source",
+      "verification": "Verification"
+    },
+    "evidence": "Evidence: {e}",
+    "yes": "Yes",
+    "no": "No",
+    "similarBadge": "Similar",
+    "empty": "No requirements match the filters.",
+    "openSource": "Open location in the booklet",
+    "unverifiedIntro": "Items the model returned whose quote was not found on the cited page or its neighbours. They are not confirmed requirements and are excluded from the matrix; review them manually if you wish.",
+    "unverifiedNone": "No unverified items.",
+    "claimedQuote": "Quote returned by the model",
+    "similarIntro": "Close requirements that were not merged automatically because their text, source or attributes are not identical. For each group, keep them separate or keep one and remove the rest.",
+    "similarNone": "No groups need review.",
+    "keepAll": "Keep all separate",
+    "keepOnly": "Merge: keep {code}",
+    "group": "Group {n}",
+    "failedChunks": "{count, plural, one {# chunk was not analyzed} other {# chunks were not analyzed}}",
+    "failedChunksBody": "Requirements may be missing from: {where}. Re-run the analysis or review these pages manually.",
+    "fileShort": "file {f} p. {p}"
+  },
+  "analysis": {
+    "rerun": "Re-run analysis",
+    "failed": "Analysis failed after several attempts: {error}",
+    "failedHint": "The extracted text is intact and you can browse the pages. Re-run the analysis later."
+  },
+  "viewer2": {
+    "highlighted": "Highlighted location",
+    "quote": "Quote",
+    "noHighlight": "No matching location on this page."
   }
 }

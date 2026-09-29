@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "requirements": [
+    { "id": "G-001", "category": "regulatory", "text": "سجل تجاري ساري يتضمن نشاط التشغيل والصيانة", "file": "booklet.pdf", "page": 2, "section_ref": "2.1",
+      "quote": "يجب على المتنافس تقديم سجل تجاري ساري المفعول يتضمن نشاط التشغيل", "obligation": "mandatory", "disqualifying": false, "evidence_required": "صورة السجل التجاري", "notes": null },
+    { "id": "G-002", "category": "regulatory", "text": "شهادة سارية من هيئة الزكاة والضريبة والجمارك", "file": "booklet.pdf", "page": 2, "section_ref": "2.2",
+      "quote": "يجب تقديم شهادة سارية من هيئة الزكاة والضريبة والجمارك", "obligation": "mandatory", "disqualifying": false, "evidence_required": "شهادة الزكاة", "notes": null },
+    { "id": "G-003", "category": "financial", "text": "ضمان ابتدائي بنسبة 2% من قيمة العرض", "file": "booklet.pdf", "page": 2, "section_ref": "2.3",
+      "quote": "يلتزم المتنافس بتقديم ضمان ابتدائي بنسبة 2% من قيمة العرض", "obligation": "mandatory", "disqualifying": true, "evidence_required": "خطاب الضمان", "notes": null },
+    { "id": "G-004", "category": "quality", "text": "شهادة الأيزو 9001", "file": "booklet.pdf", "page": 2, "section_ref": "2.4",
+      "quote": "يفضّل أن يكون لدى المتنافس شهادة الأيزو 9001 في إدارة الجودة", "obligation": "preferred", "disqualifying": false, "evidence_required": null, "notes": null },
+    { "id": "G-005", "category": "technical", "text": "فريق صيانة وقائية على مدار الساعة", "file": "booklet.pdf", "page": 3, "section_ref": "3.1",
+      "quote": "يلتزم المقاول بتوفير فريق صيانة وقائية يعمل على مدار الساعة طوال مدة العقد", "obligation": "mandatory", "disqualifying": false, "evidence_required": null, "notes": null },
+    { "id": "G-006", "category": "technical", "text": "خبرة مدير المشروع لا تقل عن عشر سنوات", "file": "booklet.pdf", "page": 3, "section_ref": "3.2",
+      "quote": "يجب ألا تقل خبرة مدير المشروع عن عشر سنوات في مشاريع مماثلة", "obligation": "mandatory", "disqualifying": false, "evidence_required": "السيرة الذاتية", "notes": null },
+    { "id": "G-007", "category": "local_content", "text": "نسبة محتوى محلي لا تقل عن 40%", "file": "booklet.pdf", "page": 3, "section_ref": "3.3",
+      "quote": "نسبة المحتوى المحلي المطلوبة لا تقل عن 40%", "obligation": "mandatory", "disqualifying": false, "evidence_required": null, "notes": "صياغتها خبرية بلا (يجب/يلتزم) — اختبار جيد لقدرة الاستخراج" }
+  ]
+}

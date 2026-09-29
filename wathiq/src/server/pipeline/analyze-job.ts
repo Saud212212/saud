@@ -16,6 +16,7 @@ import { decryptJson, encryptJson } from "../crypto/envelope";
 import { aad } from "../crypto/aad";
 import { getTenderKey } from "../crypto/keystore";
 import { setProgress } from "../queue/queue";
+import { env } from "../env";
 import { audit } from "../services/audit";
 import { decryptMeta, encryptMeta } from "../services/tenders";
 import { loadPrompt, type LoadedPrompt } from "../ai/prompts";
@@ -214,7 +215,9 @@ export async function runAnalyzeJob(jobId: string, orgId: string): Promise<void>
 
   // ── التحقق من كل اقتباس ──
   const verify = (chunk: ChunkCtx, src: Source, claims: (string | null | undefined)[] = []) =>
-    verifyQuote({ quote: src.quote, page: src.page, claims }, indexes.get(chunk.tenderFileId) ?? new PageIndex(new Map()));
+    verifyQuote({ quote: src.quote, page: src.page, claims }, indexes.get(chunk.tenderFileId) ?? new PageIndex(new Map()), {
+      ocrNumbers: env().OCR_NUMBERS_REVIEW,
+    });
 
   const reqCandidates: RequirementCandidate[] = [];
   const facts: FactCandidate[] = [];
@@ -294,7 +297,10 @@ export async function runAnalyzeJob(jobId: string, orgId: string): Promise<void>
     add("offer_content", out.technical_offer_required_contents, []);
     // المخاطر قد تنقل رقماً مشوّهاً عمداً (القاعدة 5) فلا نفحص أرقامها مقابل المصدر
     add("risk", out.risks_and_ambiguities, []);
-    for (const note of out.verify_notes) items.push({ kind: "verify_note", content: { note }, source: null, chunk, verification: null });
+    for (const note of out.verify_notes) {
+      if (items.some((i) => i.kind === "verify_note" && normalizeText(String(i.content.note)) === normalizeText(note))) continue;
+      items.push({ kind: "verify_note", content: { note }, source: null, chunk, verification: null });
+    }
   }
 
   for (const c of reqCandidates) c.sortKey = firstRectKey(c.verification);

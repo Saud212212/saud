@@ -5,7 +5,8 @@ import { z } from "zod";
  * تُستخدم في المرحلة 2 لقياس نسبة التقاط المتطلبات الإلزامية.
  * نفس تصنيفات مصفوفة الامتثال في المنتج.
  */
-export const CATEGORIES = ["regulatory", "administrative", "technical", "financial", "local_content", "quality_safety"] as const;
+/** نفس فئات البرومت (extract.md): نظامي، إداري، فني، مالي، محتوى محلي، جودة، سلامة، تشغيل */
+export const CATEGORIES = ["regulatory", "administrative", "technical", "financial", "local_content", "quality", "safety", "operations"] as const;
 
 export const GoldRequirement = z.object({
   /** معرّف ثابت داخل الملف: G-001 ... */
@@ -19,7 +20,7 @@ export const GoldRequirement = z.object({
   section_ref: z.string().nullable().default(null),
   /** اقتباس حرفي من الكراسة — يجب أن يطابق نص الصفحة (يُتحقق منه آلياً في المرحلة 2) */
   quote: z.string().min(10),
-  obligation: z.enum(["mandatory", "preferred"]),
+  obligation: z.enum(["mandatory", "preferred", "informational"]),
   /** هل غيابه يستبعد العرض؟ */
   disqualifying: z.boolean(),
   evidence_required: z.string().nullable().default(null),
