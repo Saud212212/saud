@@ -91,11 +91,15 @@ export function chunkPages(pages: { pageNo: number; text: string }[]): Chunk[] {
       if (buf && ((heading && size >= CHUNK_LIMITS.headingFlushChars) || (clause && size >= CHUNK_LIMITS.minChars))) flush();
       if (buf && size + line.length > CHUNK_LIMITS.maxChars) flush();
 
-      if (heading) currentHeading = line.trim();
+      if (heading) {
+        currentHeading = line.trim();
+        currentRef = null; // قسم جديد: لا نورّث رقم بند القسم السابق
+      }
       const ref = detectSectionRef(line);
       if (ref) currentRef = ref;
 
       if (!buf) buf = { text: "", spans: [], ref: ref ?? currentRef, heading: currentHeading };
+      else if (buf.ref === null && ref) buf.ref = ref; // مقطع يبدأ بعنوان قسم يأخذ رقم أول بند فيه
       buf.text += line + "\n";
       const last = buf.spans[buf.spans.length - 1];
       if (last && last.page === page.pageNo && last.end + 1 >= start) last.end = start + line.length;

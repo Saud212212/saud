@@ -203,8 +203,15 @@ export async function getPageContent(ctx: OrgContext, tenderId: string, tenderFi
 }
 
 export async function listChunks(ctx: OrgContext, tenderId: string) {
-  const rows = await withOrg(ctx, (tx) =>
-    tx.select().from(chunks).where(eq(chunks.tenderId, tenderId)).orderBy(asc(chunks.tenderFileId), asc(chunks.ordinal)),
+  const rows = await withOrg(ctx, async (tx) =>
+    (
+      await tx
+        .select({ c: chunks })
+        .from(chunks)
+        .innerJoin(tenderFiles, eq(tenderFiles.id, chunks.tenderFileId))
+        .where(eq(chunks.tenderId, tenderId))
+        .orderBy(asc(tenderFiles.ordinal), asc(chunks.ordinal))
+    ).map((r) => r.c),
   );
   if (!rows.length) return [];
   const dek = await getTenderKey(ctx.orgId, tenderId);

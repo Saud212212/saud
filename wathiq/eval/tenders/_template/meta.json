@@ -1,0 +1,12 @@
+{
+  "slug": "example-slug",
+  "title": "اسم المنافسة كما في الكراسة",
+  "agency": "الجهة الحكومية",
+  "reference_number": null,
+  "files": [
+    { "name": "booklet.pdf", "role": "booklet", "sha256": null, "pages": null, "scan_type": "text" }
+  ],
+  "prepared_by": null,
+  "prepared_at": null,
+  "reviewed": false
+}

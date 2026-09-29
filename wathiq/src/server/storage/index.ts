@@ -2,6 +2,8 @@ import { mkdir, readFile, rm, writeFile, readdir, stat } from "node:fs/promises"
 import path from "node:path";
 import {
   S3Client,
+  HeadBucketCommand,
+  CreateBucketCommand,
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectsCommand,
@@ -77,7 +79,19 @@ class S3Storage implements ObjectStorage {
           : undefined,
     });
   }
+  private bucketReady?: Promise<void>;
+  /** ينشئ الحاوية إن لم توجد (مفيد للتطوير المحلي؛ في الإنتاج تُنشأ مسبقاً بلا versioning). */
+  private ensureBucket() {
+    this.bucketReady ??= this.client
+      .send(new HeadBucketCommand({ Bucket: this.bucket }))
+      .then(() => undefined)
+      .catch(async () => {
+        await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
+      });
+    return this.bucketReady;
+  }
   async put(key: string, body: Buffer) {
+    await this.ensureBucket();
     await this.client.send(
       new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: "application/octet-stream" }),
     );

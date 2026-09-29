@@ -1,0 +1,14 @@
+{
+  "_comment": "مثال لعنصر واحد في gold.json → requirements[]. لا يُقرأ هذا الملف آلياً.",
+  "id": "G-001",
+  "category": "regulatory",
+  "text": "سجل تجاري ساري يتضمن نشاط التشغيل والصيانة",
+  "file": "booklet.pdf",
+  "page": 12,
+  "section_ref": "2.1",
+  "quote": "يجب على المتنافس تقديم سجل تجاري ساري المفعول يتضمن نشاط التشغيل والصيانة",
+  "obligation": "mandatory",
+  "disqualifying": true,
+  "evidence_required": "صورة السجل التجاري",
+  "notes": null
+}

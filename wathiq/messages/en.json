@@ -1,0 +1,153 @@
+{
+  "app": {
+    "name": "Wathiq",
+    "tagline": "Your assistant for government tenders",
+    "switchLang": "العربية",
+    "signOut": "Sign out"
+  },
+  "nav": {
+    "tenders": "Tenders",
+    "newTender": "New tender"
+  },
+  "login": {
+    "title": "Sign in to Wathiq",
+    "devNote": "Development environment: pick a demo account. Real sign-in and invitations arrive in phase 5.",
+    "disabled": "Demo sign-in is disabled in this environment.",
+    "as": "Sign in as",
+    "roles": {
+      "owner": "Owner",
+      "editor": "Editor",
+      "reviewer": "Reviewer"
+    }
+  },
+  "tenders": {
+    "title": "Tenders",
+    "empty": "No tenders yet. Upload a tender booklet to get started.",
+    "uploadFirst": "Upload booklet",
+    "colTitle": "Tender",
+    "colRef": "Reference",
+    "colFiles": "Files",
+    "colPages": "Pages",
+    "colStatus": "Status",
+    "colCreated": "Uploaded",
+    "status": {
+      "uploading": "Uploading",
+      "processing": "Processing",
+      "ready": "Ready",
+      "failed": "Failed"
+    }
+  },
+  "upload": {
+    "title": "Upload a new tender",
+    "subtitle": "Upload the terms & specifications booklet with any annexes and bills of quantities. Text and scanned PDFs are supported.",
+    "tenderTitle": "Tender name",
+    "tenderTitlePh": "e.g. Operation and maintenance of administrative buildings, Riyadh",
+    "reference": "Tender number (optional)",
+    "files": "Files",
+    "drop": "Drop PDF files here or click to choose",
+    "dropHint": "Up to {max} MB per file, 10 files max",
+    "role": "File type",
+    "roles": {
+      "booklet": "Booklet",
+      "annex": "Annex",
+      "boq": "Bill of quantities",
+      "other": "Other"
+    },
+    "remove": "Remove",
+    "submit": "Upload and analyze",
+    "uploading": "Uploading… {pct}%",
+    "encryptedNote": "Files are encrypted with a key unique to this tender before storage.",
+    "errorNotPdf": "{name} is not a PDF.",
+    "errorGeneric": "Upload failed: {message}"
+  },
+  "tender": {
+    "back": "All tenders",
+    "reference": "Reference",
+    "files": "Files",
+    "pages": "Pages",
+    "chunks": "Chunks",
+    "viewChunks": "View chunks",
+    "overview": "Page classification",
+    "file": "File",
+    "page": "Page",
+    "kind": "Type",
+    "source": "Text source",
+    "chars": "Chars",
+    "words": "Words",
+    "confidence": "OCR confidence",
+    "open": "Open",
+    "weakPagesTitle": "{count, plural, one {# page has} other {# pages have}} low OCR confidence",
+    "weakPagesBody": "Text on these pages may contain recognition errors. Review them before relying on them, and request a clearer copy from the agency if possible.",
+    "lowBadge": "Low confidence",
+    "kinds": {
+      "text": "Text",
+      "scanned": "Scanned",
+      "hybrid": "Mixed",
+      "broken_text": "Broken text layer",
+      "blank": "Blank"
+    },
+    "sources": {
+      "text_layer": "Text layer",
+      "ocr": "OCR",
+      "none": "—"
+    },
+    "kindStats": "{text} text · {scanned} scanned · {other} other",
+    "fileRoles": {
+      "booklet": "Booklet",
+      "annex": "Annex",
+      "boq": "Bill of quantities",
+      "other": "Other"
+    },
+    "pageCount": "{count, plural, one {# page} other {# pages}}"
+  },
+  "progress": {
+    "title": "Analyzing documents",
+    "stages": {
+      "queued": "Queued",
+      "prepare": "Decrypting and preparing files",
+      "text_layer": "Reading text layer and classifying pages",
+      "ocr": "Running OCR on scanned pages",
+      "chunking": "Splitting the document into chunks",
+      "retrying": "An error occurred, retrying automatically",
+      "done": "Analysis complete",
+      "failed": "Analysis failed"
+    },
+    "pagesLine": "{done} of {total} pages",
+    "ocrLine": "OCR: {done} of {total}",
+    "failed": "Processing failed after several attempts.",
+    "note": "Large or scanned booklets can take several minutes. You can leave this page and come back."
+  },
+  "viewer": {
+    "title": "Page {n} — {file}",
+    "prev": "Previous",
+    "next": "Next",
+    "showBoxes": "Show word positions",
+    "extracted": "Extracted text",
+    "empty": "No text was extracted from this page.",
+    "loading": "Loading page…",
+    "backToTender": "Back to tender"
+  },
+  "chunks": {
+    "title": "Document chunks",
+    "subtitle": "The document is split at clause boundaries and each chunk keeps its page numbers. These chunks are what phase 2 will send for analysis.",
+    "pages": "pp. {start}–{end}",
+    "page": "p. {n}",
+    "section": "Clause {ref}",
+    "tokens": "≈ {n} tokens"
+  },
+  "delete": {
+    "button": "Delete permanently",
+    "title": "Permanently delete tender",
+    "body": "The tender's encryption key will be destroyed and its files and all extracted text deleted. This cannot be undone.",
+    "confirmLabel": "Type \"delete\" to confirm",
+    "confirmWord": "delete",
+    "cancel": "Cancel",
+    "confirm": "Delete permanently",
+    "ownerOnly": "Only the account owner can permanently delete.",
+    "done": "Tender permanently deleted."
+  },
+  "errors": {
+    "notFound": "Not found",
+    "generic": "Something went wrong."
+  }
+}

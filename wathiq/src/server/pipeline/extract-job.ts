@@ -196,7 +196,8 @@ export async function runExtractJob(jobId: string, orgId: string): Promise<void>
     }
 
     // ── التقطيع ──
-    await report("chunking", i === docs.length - 1 ? 92 : current, true);
+    // مرحلة "التقطيع" تُعرض عند آخر ملف فقط، حتى لا يبدو أن التحليل تجاوز OCR لملفات لم تُعالج بعد
+    if (i === docs.length - 1) await report("chunking", 92, true);
     const ordered = [...saved.values()].sort((a, b) => a.pageNo - b.pageNo);
     const parts = chunkPages(ordered.map((s) => ({ pageNo: s.pageNo, text: s.content.text })));
     await withOrg(ctx, async (tx) => {

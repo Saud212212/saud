@@ -150,6 +150,13 @@ export function buildPageContent(frags: Fragment[]): PageContent {
       if (!isMark) prev = f;
     }
 
+    // علامة تشكيل (تنوين/شدة) وقعت بعد مسافة بسبب موضعها الهندسي → نُعيدها لحرفها
+    for (let k = 1; k < glyphs.length; k++) {
+      if (/^\p{M}$/u.test(glyphs[k].ch) && /\s/.test(glyphs[k - 1].ch)) {
+        [glyphs[k - 1], glyphs[k]] = [glyphs[k], glyphs[k - 1]];
+      }
+    }
+
     // تحويل الحروف إلى كلمات ونص
     let lineText = "";
     let cur: { chars: string; b: BBox; start: number; confSum: number; confN: number } | null = null;

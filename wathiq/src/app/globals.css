@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* هوية هادئة تناسب القطاع الحكومي: أخضر داكن رصين، أسطح دافئة، وذهبي خافت للتمييز */
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --surface-2: #fbfaf7;
+  --ink: #17221e;
+  --ink-2: #3c4a44;
+  --muted: #66746d;
+  --line: #e2e3dc;
+  --line-strong: #cfd2c8;
+  --brand: #0d5c4b;
+  --brand-ink: #ffffff;
+  --brand-hover: #0a4a3c;
+  --brand-soft: #e5efeb;
+  --accent: #a8843a;
+  --accent-soft: #f6efe0;
+  --ok: #1d7446;
+  --ok-soft: #e4f2e9;
+  --warn: #9a5a06;
+  --warn-soft: #fcf1e1;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --focus: #2f7d6b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1513;
+    --surface: #161e1b;
+    --surface-2: #1b2521;
+    --ink: #e8ece9;
+    --ink-2: #c6cfca;
+    --muted: #93a19a;
+    --line: #26322d;
+    --line-strong: #34433c;
+    --brand: #3fa88c;
+    --brand-ink: #06120e;
+    --brand-hover: #56bca0;
+    --brand-soft: #173029;
+    --accent: #d2ad62;
+    --accent-soft: #2c2616;
+    --ok: #5cc38b;
+    --ok-soft: #16301f;
+    --warn: #e5a54a;
+    --warn-soft: #33260f;
+    --danger: #f07167;
+    --danger-soft: #3a1714;
+    --focus: #56bca0;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}

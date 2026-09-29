@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "wathiq",
+      "credentials": [{ "accessKey": "wathiq", "secretKey": "wathiq-dev-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

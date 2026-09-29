@@ -31,6 +31,17 @@ describe("line reconstruction", () => {
     expect(content.text.slice(w.o, w.o + w.t.length)).toBe("ثان");
   });
 
+  it("keeps diacritics attached to their letter even when positioned past a space", () => {
+    // "شهراً من": التنوين بعرض صفر يقع هندسياً يسار الألف، بعد فراغ الكلمة
+    const content = buildPageContent([
+      frag("من", 10, 30, "rtl"),
+      frag(" ", 30, 36, "rtl"),
+      frag("ً", 36.2, 36.2, "rtl"),
+      frag("شهرا", 37, 70, "rtl"),
+    ]);
+    expect(content.text).toBe("شهراً من");
+  });
+
   it("detects garbled text layers (mis-encoded Arabic)", () => {
     expect(garbleRatio("ÇáÔÑæØ æÇáãæÇÕÝÇÊ")).toBeGreaterThan(0.5);
     expect(garbleRatio("الشروط والمواصفات")).toBe(0);
